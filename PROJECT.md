@@ -25,6 +25,10 @@ blocker while development and verification use the desktop host.
 - Preserve the original `poc-game-feel` behaviour as a reference, but do not port Unity
   singletons, `Time`, `Rigidbody2D` behaviour or presentation-driven state.
 - Build one verified vertical slice before expanding content.
+- Run `./tools/harness fast` while iterating and `./tools/harness prepush` before opening or
+  updating a pull request. Release candidates must pass `./tools/harness release`.
+- Use short-lived `issue/<number>-<slug>` branches and squash them into protected `main` through
+  pull requests. Do not maintain a permanent `develop` branch.
 
 ## Decisions
 
