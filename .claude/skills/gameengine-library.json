@@ -1,0 +1,298 @@
+{
+  "version": 2,
+  "selected": [],
+  "skills": {
+    "animation-2d-agent": {
+      "version": "2.1.0",
+      "source": "engine"
+    },
+    "architecture-review": {
+      "version": "1.2.0",
+      "source": "engine"
+    },
+    "asset-memory": {
+      "version": "1.13.0",
+      "source": "engine"
+    },
+    "atlasing": {
+      "version": "1.10.0",
+      "source": "engine"
+    },
+    "audio": {
+      "version": "1.2.0",
+      "source": "engine"
+    },
+    "cheats": {
+      "version": "1.6.0",
+      "source": "engine"
+    },
+    "content-database": {
+      "version": "1.9.0",
+      "source": "engine"
+    },
+    "dependency-injection": {
+      "version": "1.0.0",
+      "source": "engine"
+    },
+    "determinism": {
+      "version": "1.6.0",
+      "source": "engine"
+    },
+    "device-tiers": {
+      "version": "1.3.0",
+      "source": "engine"
+    },
+    "ecs-systems": {
+      "version": "1.6.1",
+      "source": "engine"
+    },
+    "editor-modes": {
+      "version": "1.5.0",
+      "source": "engine"
+    },
+    "editor-windows": {
+      "version": "1.0.0",
+      "source": "engine"
+    },
+    "flipbook-2d": {
+      "version": "1.3.0",
+      "source": "engine"
+    },
+    "haptics": {
+      "version": "1.1.0",
+      "source": "engine"
+    },
+    "mcp-tools": {
+      "version": "1.18.0",
+      "source": "engine"
+    },
+    "meta-economy": {
+      "version": "1.3.0",
+      "source": "engine"
+    },
+    "mobile-performance-review": {
+      "version": "1.13.0",
+      "source": "engine"
+    },
+    "models-3d": {
+      "version": "1.5.0",
+      "source": "engine"
+    },
+    "multiplayer": {
+      "version": "1.6.1",
+      "source": "engine"
+    },
+    "navigation-3d": {
+      "version": "1.0.1",
+      "source": "engine"
+    },
+    "open-world-streaming": {
+      "version": "1.3.0",
+      "source": "engine"
+    },
+    "overlap-queries": {
+      "version": "1.0.0",
+      "source": "engine"
+    },
+    "packages": {
+      "version": "1.8.0",
+      "source": "engine"
+    },
+    "perf-to-rust": {
+      "version": "1.5.0",
+      "source": "engine"
+    },
+    "physics": {
+      "version": "1.0.2",
+      "source": "engine"
+    },
+    "platform-services": {
+      "version": "1.6.0",
+      "source": "engine"
+    },
+    "playable-ad-porting": {
+      "version": "1.8.0",
+      "source": "engine"
+    },
+    "playable-ads": {
+      "version": "1.3.0",
+      "source": "engine"
+    },
+    "project-tools": {
+      "version": "1.1.0",
+      "source": "engine"
+    },
+    "rollback-multiplayer": {
+      "version": "1.2.0",
+      "source": "engine"
+    },
+    "screen-fit": {
+      "version": "1.0.0",
+      "source": "engine"
+    },
+    "ship-mobile": {
+      "version": "1.10.1",
+      "source": "engine"
+    },
+    "signals": {
+      "version": "1.0.0",
+      "source": "engine"
+    },
+    "sim-boundaries": {
+      "version": "1.8.0",
+      "source": "engine"
+    },
+    "skeleton-2d": {
+      "version": "1.11.2",
+      "source": "engine"
+    },
+    "spine-import": {
+      "version": "1.7.1",
+      "source": "engine"
+    },
+    "story-dialogue": {
+      "version": "1.0.0",
+      "source": "engine"
+    },
+    "testing": {
+      "version": "1.11.0",
+      "source": "engine"
+    },
+    "tilemaps-nav": {
+      "version": "1.1.1",
+      "source": "engine"
+    },
+    "ui-mvc-views": {
+      "version": "1.18.0",
+      "source": "engine"
+    },
+    "vfx": {
+      "version": "1.7.0",
+      "source": "engine"
+    },
+    "vfx-materials": {
+      "version": "1.12.1",
+      "source": "engine"
+    },
+    "video": {
+      "version": "1.0.0",
+      "source": "engine"
+    },
+    "work-loop": {
+      "version": "1.11.0",
+      "source": "engine"
+    }
+  },
+  "files": {
+    ".claude/agents/architecture-reviewer.md": "c36c50def86f1b90",
+    ".claude/agents/mobile-performance-reviewer.md": "502a429b7fd1d462",
+    ".claude/settings.json": "6d62e8bbb59df743",
+    ".codex/agents/architecture-reviewer.toml": "0684ee45f99614da",
+    ".codex/agents/mobile-performance-reviewer.toml": "afa35c2df7459c1e",
+    ".codex/config.toml": "6435acfe4e7c7cc0",
+    ".mcp.json": "921c2e9b14931ceb",
+    "AGENTS.md": "e806fe35afa65b1c",
+    "CLAUDE.md": "bcdbd7f464d79af4",
+    ".claude/skills/animation-2d-agent/SKILL.md": "1de22de961d6ad30",
+    ".agents/skills/animation-2d-agent/SKILL.md": "1de22de961d6ad30",
+    ".claude/skills/animation-2d-agent/references/editor.md": "6fe43854d258a671",
+    ".agents/skills/animation-2d-agent/references/editor.md": "6fe43854d258a671",
+    ".claude/skills/animation-2d-agent/references/ops.md": "5938712df4ec30cc",
+    ".agents/skills/animation-2d-agent/references/ops.md": "5938712df4ec30cc",
+    ".claude/skills/animation-2d-agent/references/performance.md": "1ee3f7044289f4c1",
+    ".agents/skills/animation-2d-agent/references/performance.md": "1ee3f7044289f4c1",
+    ".claude/skills/architecture-review/SKILL.md": "3def47608e982555",
+    ".agents/skills/architecture-review/SKILL.md": "3def47608e982555",
+    ".claude/skills/asset-memory/SKILL.md": "81ee6becd2a0fa73",
+    ".agents/skills/asset-memory/SKILL.md": "81ee6becd2a0fa73",
+    ".claude/skills/atlasing/SKILL.md": "e5960af6371b9a73",
+    ".agents/skills/atlasing/SKILL.md": "e5960af6371b9a73",
+    ".claude/skills/audio/SKILL.md": "a60faf9613d3b5e3",
+    ".agents/skills/audio/SKILL.md": "a60faf9613d3b5e3",
+    ".claude/skills/cheats/SKILL.md": "d60dcca8cb464cea",
+    ".agents/skills/cheats/SKILL.md": "d60dcca8cb464cea",
+    ".claude/skills/content-database/SKILL.md": "429b939ae2cc57c4",
+    ".agents/skills/content-database/SKILL.md": "429b939ae2cc57c4",
+    ".claude/skills/dependency-injection/SKILL.md": "3693d643e3ed1f99",
+    ".agents/skills/dependency-injection/SKILL.md": "3693d643e3ed1f99",
+    ".claude/skills/determinism/SKILL.md": "6f02cbf855a0ce2c",
+    ".agents/skills/determinism/SKILL.md": "6f02cbf855a0ce2c",
+    ".claude/skills/device-tiers/SKILL.md": "7c28dafc702aaf7b",
+    ".agents/skills/device-tiers/SKILL.md": "7c28dafc702aaf7b",
+    ".claude/skills/ecs-systems/SKILL.md": "c5f4d0802fe3d947",
+    ".agents/skills/ecs-systems/SKILL.md": "c5f4d0802fe3d947",
+    ".claude/skills/editor-modes/SKILL.md": "11ea49ee1a20f35f",
+    ".agents/skills/editor-modes/SKILL.md": "11ea49ee1a20f35f",
+    ".claude/skills/editor-windows/SKILL.md": "cf8f42f1752f775f",
+    ".agents/skills/editor-windows/SKILL.md": "cf8f42f1752f775f",
+    ".claude/skills/flipbook-2d/SKILL.md": "e11c6d6466219a99",
+    ".agents/skills/flipbook-2d/SKILL.md": "e11c6d6466219a99",
+    ".claude/skills/haptics/SKILL.md": "993ebe088f54d8f2",
+    ".agents/skills/haptics/SKILL.md": "993ebe088f54d8f2",
+    ".claude/skills/mcp-tools/SKILL.md": "15637a56d7bb4e92",
+    ".agents/skills/mcp-tools/SKILL.md": "15637a56d7bb4e92",
+    ".claude/skills/meta-economy/SKILL.md": "2ede88bc8c20da01",
+    ".agents/skills/meta-economy/SKILL.md": "2ede88bc8c20da01",
+    ".claude/skills/mobile-performance-review/SKILL.md": "ddd9a0f15ac5513b",
+    ".agents/skills/mobile-performance-review/SKILL.md": "ddd9a0f15ac5513b",
+    ".claude/skills/mobile-performance-review/budgets.md": "4af2d8fb60dfd0d7",
+    ".agents/skills/mobile-performance-review/budgets.md": "4af2d8fb60dfd0d7",
+    ".claude/skills/models-3d/SKILL.md": "6939acafe8216fc6",
+    ".agents/skills/models-3d/SKILL.md": "6939acafe8216fc6",
+    ".claude/skills/multiplayer/SKILL.md": "9071a91795afbfb0",
+    ".agents/skills/multiplayer/SKILL.md": "9071a91795afbfb0",
+    ".claude/skills/navigation-3d/SKILL.md": "41ceac8fb8cd8427",
+    ".agents/skills/navigation-3d/SKILL.md": "41ceac8fb8cd8427",
+    ".claude/skills/open-world-streaming/SKILL.md": "7e647b0b16db9f8c",
+    ".agents/skills/open-world-streaming/SKILL.md": "7e647b0b16db9f8c",
+    ".claude/skills/overlap-queries/SKILL.md": "4760330dec6be72f",
+    ".agents/skills/overlap-queries/SKILL.md": "4760330dec6be72f",
+    ".claude/skills/packages/SKILL.md": "626f21d7cabd422a",
+    ".agents/skills/packages/SKILL.md": "626f21d7cabd422a",
+    ".claude/skills/perf-to-rust/SKILL.md": "f33e63fa896adbdf",
+    ".agents/skills/perf-to-rust/SKILL.md": "f33e63fa896adbdf",
+    ".claude/skills/physics/SKILL.md": "f9d60f1d0987cbf4",
+    ".agents/skills/physics/SKILL.md": "f9d60f1d0987cbf4",
+    ".claude/skills/platform-services/SKILL.md": "92e3815c09c44b31",
+    ".agents/skills/platform-services/SKILL.md": "92e3815c09c44b31",
+    ".claude/skills/playable-ad-porting/SKILL.md": "279056365f484a93",
+    ".agents/skills/playable-ad-porting/SKILL.md": "279056365f484a93",
+    ".claude/skills/playable-ads/SKILL.md": "be79fc4a532f93f0",
+    ".agents/skills/playable-ads/SKILL.md": "be79fc4a532f93f0",
+    ".claude/skills/project-tools/SKILL.md": "707ed616e92bbc3c",
+    ".agents/skills/project-tools/SKILL.md": "707ed616e92bbc3c",
+    ".claude/skills/rollback-multiplayer/SKILL.md": "f6d3d6cf560813a5",
+    ".agents/skills/rollback-multiplayer/SKILL.md": "f6d3d6cf560813a5",
+    ".claude/skills/screen-fit/SKILL.md": "938173d05b40c481",
+    ".agents/skills/screen-fit/SKILL.md": "938173d05b40c481",
+    ".claude/skills/ship-mobile/SKILL.md": "dbbe744d018699dc",
+    ".agents/skills/ship-mobile/SKILL.md": "dbbe744d018699dc",
+    ".claude/skills/signals/SKILL.md": "6b18351698686e59",
+    ".agents/skills/signals/SKILL.md": "6b18351698686e59",
+    ".claude/skills/sim-boundaries/SKILL.md": "8dcfb2e16d1f0198",
+    ".agents/skills/sim-boundaries/SKILL.md": "8dcfb2e16d1f0198",
+    ".claude/skills/skeleton-2d/SKILL.md": "47534d3a510f5ac5",
+    ".agents/skills/skeleton-2d/SKILL.md": "47534d3a510f5ac5",
+    ".claude/skills/spine-import/SKILL.md": "f2eabed2c9e4ecf7",
+    ".agents/skills/spine-import/SKILL.md": "f2eabed2c9e4ecf7",
+    ".claude/skills/story-dialogue/SKILL.md": "78a0e867bf5470a3",
+    ".agents/skills/story-dialogue/SKILL.md": "78a0e867bf5470a3",
+    ".claude/skills/testing/SKILL.md": "50d2e5ba800c0199",
+    ".agents/skills/testing/SKILL.md": "50d2e5ba800c0199",
+    ".claude/skills/tilemaps-nav/SKILL.md": "7920c3ce45d34c4a",
+    ".agents/skills/tilemaps-nav/SKILL.md": "7920c3ce45d34c4a",
+    ".claude/skills/ui-mvc-views/SKILL.md": "408b4e009f29716f",
+    ".agents/skills/ui-mvc-views/SKILL.md": "408b4e009f29716f",
+    ".claude/skills/vfx/SKILL.md": "b09e4c6b5ce5747f",
+    ".agents/skills/vfx/SKILL.md": "b09e4c6b5ce5747f",
+    ".claude/skills/vfx-materials/SKILL.md": "81383448ac72b071",
+    ".agents/skills/vfx-materials/SKILL.md": "81383448ac72b071",
+    ".claude/skills/video/SKILL.md": "f2105d403309b649",
+    ".agents/skills/video/SKILL.md": "f2105d403309b649",
+    ".claude/skills/work-loop/SKILL.md": "636f3c56763c44a2",
+    ".agents/skills/work-loop/SKILL.md": "636f3c56763c44a2"
+  },
+  "settings": "{\n  \"hooks\": {\n    \"SessionStart\": [\n      {\n        \"hooks\": [\n          {\n            \"type\": \"command\",\n            \"command\": \"if command -v gameengine >/dev/null 2>&1; then gameengine skills update --auto || true; elif [ -f \\\"$CLAUDE_PROJECT_DIR/.gameengine/engine/tools/cli/bin/gameengine.mjs\\\" ]; then node \\\"$CLAUDE_PROJECT_DIR/.gameengine/engine/tools/cli/bin/gameengine.mjs\\\" skills update --auto || true; echo 'note: gameengine is not on PATH (skills were updated through .gameengine/engine); fix: node .gameengine/engine/tools/cli/bin/gameengine.mjs setup --path'; else echo 'warning: gameengine is not on PATH (skills not updated, gameengine commands will fail); fix: in the engine checkout run: node tools/cli/bin/gameengine.mjs setup --path'; fi\",\n            \"timeout\": 60\n          }\n        ]\n      }\n    ]\n  }\n}\n",
+  "codex": "# Installed by `gameengine skills update` (the engine's templates/_shared), which merges it table by\n# table: your own keys and tables stay. Codex reads it once the project is trusted. `.gameengine/engine` links to the engine checkout (`gameengine new` and\n# `skills update` make it), so this works without `gameengine` on PATH, and `node` is a real\n# executable on every OS (a `gameengine.cmd` launcher is not spawnable without a shell on Windows).\n[mcp_servers.gameengine]\ncommand = \"node\"\nargs = [\".gameengine/engine/tools/cli/bin/gameengine.mjs\", \"mcp\"]\n# `test`, `check` and cooks run up to the server's own 10-minute limit (LONG_TIMEOUT_MS in\n# tools/cli/src/mcp.ts), which stops their hosts and reports; Codex's 60 s default would cut them off first.\ntool_timeout_sec = 660\n",
+  "mcp": "{\n  \"mcpServers\": {\n    \"gameengine\": {\n      \"command\": \"node\",\n      \"args\": [\".gameengine/engine/tools/cli/bin/gameengine.mjs\", \"mcp\"]\n    }\n  }\n}\n"
+}

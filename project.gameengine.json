@@ -1,0 +1,21 @@
+{
+  "$schemaVersion": 1,
+  "name": "SewerAction",
+  "bundleId": { "ios": "com.tactile.seweraction", "android": "com.tactile.seweraction" },
+  "version": "0.1.0",
+  "sim": { "dt": 0.016666667, "maxStepsPerFrame": 5, "physicsThreads": 1, "hashInDev": true, "seed": 1 },
+  "js": { "entry": "src/main.ts", "target": "es2020" },
+  "render": {
+    "defaultTier": "auto",
+    "tiers": { "mobile": { "msaa": 1, "hdr": false }, "compat": { "msaa": 1, "hdr": false } },
+    "clearColor": [0.035, 0.055, 0.075, 1],
+    "sortingLayers": ["Background", "World", "Characters", "Effects", "Foreground"],
+    "pixelsPerUnit": 100
+  },
+  "ui": { "referenceResolution": [1920, 1080], "orientation": "landscape" },
+  "bundles": [{ "name": "base", "include": ["**"], "delivery": "in-app" }],
+  "targets": ["ios", "android"],
+  "platforms": ["web"],
+  "startScene": "scenes/main.scene.json",
+  "check": { "smoke": { "frames": 120 } }
+}

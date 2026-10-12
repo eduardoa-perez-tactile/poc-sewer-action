@@ -1,0 +1,26 @@
+{
+  "$schemaVersion": 2,
+  "id": "main",
+  "entities": [
+    { "name": "Camera", "id": "camera", "Camera": { "clearColor": "#09131cff" }, "LocalTransform": {} },
+    {
+      "name": "Backdrop",
+      "id": "backdrop",
+      "LocalTransform": { "position": [0, 0, -2] },
+      "Shape": { "size": [18, 10], "color": "#102631ff" }
+    },
+    {
+      "name": "Ground",
+      "id": "ground",
+      "LocalTransform": { "position": [0, -3.75, 0] },
+      "Shape": { "size": [18, 2.5], "color": "#31464aff" }
+    },
+    {
+      "name": "Player",
+      "id": "player",
+      "LocalTransform": { "position": [-5, -2, 0] },
+      "Player": {},
+      "Shape": { "size": [0.8, 1.6], "color": "#ff3b97ff" }
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "package": "SewerAction",
+  "enums": [],
+  "types": [
+    {
+      "name": "GameState",
+      "kind": "resource",
+      "sim": true,
+      "fields": [
+        {
+          "name": "initialized",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "The deterministic game bootstrap has run."
+        }
+      ],
+      "package": "SewerAction"
+    },
+    {
+      "name": "Player",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "moveSpeed",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 8.5,
+          "doc": "Maximum horizontal movement speed."
+        },
+        {
+          "name": "jumpSpeed",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 9.2,
+          "doc": "Initial vertical jump speed."
+        }
+      ],
+      "package": "SewerAction"
+    }
+  ],
+  "commands": [],
+  "protocol": [],
+  "services": []
+}
