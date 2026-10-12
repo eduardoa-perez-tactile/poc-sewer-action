@@ -40,6 +40,14 @@
         "Contact"
       ],
       "package": "SewerAction"
+    },
+    {
+      "name": "FacingDirection",
+      "values": [
+        "Left",
+        "Right"
+      ],
+      "package": "SewerAction"
     }
   ],
   "types": [
@@ -317,13 +325,49 @@
       "sim": true,
       "fields": [
         {
-          "name": "moveSpeed",
+          "name": "maxHorizontalSpeed",
           "kind": "f32",
           "scalar": "f32",
           "lanes": 1,
           "default": 8.5,
           "min": 0,
-          "doc": "Maximum horizontal movement speed in world units per second."
+          "doc": "Maximum horizontal speed in world units per second."
+        },
+        {
+          "name": "groundAcceleration",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 60,
+          "min": 0,
+          "doc": "Grounded acceleration in world units per second squared."
+        },
+        {
+          "name": "groundDeceleration",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 80,
+          "min": 0,
+          "doc": "Grounded braking and reversal rate in world units per second squared."
+        },
+        {
+          "name": "airAcceleration",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 30,
+          "min": 0,
+          "doc": "Airborne acceleration in world units per second squared."
+        },
+        {
+          "name": "airDeceleration",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 12,
+          "min": 0,
+          "doc": "Airborne braking and reversal rate in world units per second squared."
         },
         {
           "name": "jumpSpeed",
@@ -456,6 +500,39 @@
       ],
       "package": "SewerAction",
       "doc": "Recorded boundary event produced by keyboard, gamepad, touch, or UI adapters."
+    },
+    {
+      "name": "PlayerMotion",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "horizontalVelocity",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Authoritative horizontal velocity in world units per second."
+        },
+        {
+          "name": "grounded",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true,
+          "doc": "Ground contact supplied by deterministic traversal/collision systems."
+        },
+        {
+          "name": "facing",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "FacingDirection",
+          "default": "Right"
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Authoritative player movement state. Presentation may observe but never write it."
     }
   ],
   "commands": [],

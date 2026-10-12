@@ -21,6 +21,7 @@
       "LocalTransform": { "position": [-5, -2.5, 0] },
       "Player": {},
       "PlayerControl": {},
+      "PlayerMotion": {},
       "Sprite": {
         "image": "art/player/idle/idle1",
         "size": [1.28, 1.54],

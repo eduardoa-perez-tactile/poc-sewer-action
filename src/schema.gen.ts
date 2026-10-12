@@ -46,6 +46,14 @@ export const schemaIr = {
         "Contact"
       ],
       "package": "SewerAction"
+    },
+    {
+      "name": "FacingDirection",
+      "values": [
+        "Left",
+        "Right"
+      ],
+      "package": "SewerAction"
     }
   ],
   "types": [
@@ -323,13 +331,49 @@ export const schemaIr = {
       "sim": true,
       "fields": [
         {
-          "name": "moveSpeed",
+          "name": "maxHorizontalSpeed",
           "kind": "f32",
           "scalar": "f32",
           "lanes": 1,
           "default": 8.5,
           "min": 0,
-          "doc": "Maximum horizontal movement speed in world units per second."
+          "doc": "Maximum horizontal speed in world units per second."
+        },
+        {
+          "name": "groundAcceleration",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 60,
+          "min": 0,
+          "doc": "Grounded acceleration in world units per second squared."
+        },
+        {
+          "name": "groundDeceleration",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 80,
+          "min": 0,
+          "doc": "Grounded braking and reversal rate in world units per second squared."
+        },
+        {
+          "name": "airAcceleration",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 30,
+          "min": 0,
+          "doc": "Airborne acceleration in world units per second squared."
+        },
+        {
+          "name": "airDeceleration",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 12,
+          "min": 0,
+          "doc": "Airborne braking and reversal rate in world units per second squared."
         },
         {
           "name": "jumpSpeed",
@@ -462,6 +506,39 @@ export const schemaIr = {
       ],
       "package": "SewerAction",
       "doc": "Recorded boundary event produced by keyboard, gamepad, touch, or UI adapters."
+    },
+    {
+      "name": "PlayerMotion",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "horizontalVelocity",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Authoritative horizontal velocity in world units per second."
+        },
+        {
+          "name": "grounded",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true,
+          "doc": "Ground contact supplied by deterministic traversal/collision systems."
+        },
+        {
+          "name": "facing",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "FacingDirection",
+          "default": "Right"
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Authoritative player movement state. Presentation may observe but never write it."
     }
   ],
   "commands": [],
@@ -500,6 +577,12 @@ export const HazardKind = {
   Contact: 2,
 } as const;
 export type HazardKindName = 'Water' | 'Explosive' | 'Contact';
+
+export const FacingDirection = {
+  Left: 0,
+  Right: 1,
+} as const;
+export type FacingDirectionName = 'Left' | 'Right';
 
 export interface ActorDiedViews {
   actor: Uint32Array;
@@ -623,19 +706,35 @@ export interface MenuIntentValue {
 export const MenuIntent = typeToken<MenuIntentViews, MenuIntentValue>('MenuIntent', 'event', { sig: 'moveX:f32:1,moveY:f32:1,confirm:bool:1,back:bool:1,pause:bool:1', read: (v: MenuIntentViews, i: number, o: Record<string, unknown>) => { o.moveX = v.moveX[i]; o.moveY = v.moveY[i]; o.confirm = v.confirm[i] !== 0; o.back = v.back[i] !== 0; o.pause = v.pause[i] !== 0; return o; } });
 
 export interface PlayerViews {
-  /** Maximum horizontal movement speed in world units per second. */
-  moveSpeed: Float32Array;
+  /** Maximum horizontal speed in world units per second. */
+  maxHorizontalSpeed: Float32Array;
+  /** Grounded acceleration in world units per second squared. */
+  groundAcceleration: Float32Array;
+  /** Grounded braking and reversal rate in world units per second squared. */
+  groundDeceleration: Float32Array;
+  /** Airborne acceleration in world units per second squared. */
+  airAcceleration: Float32Array;
+  /** Airborne braking and reversal rate in world units per second squared. */
+  airDeceleration: Float32Array;
   /** Initial vertical jump speed in world units per second. */
   jumpSpeed: Float32Array;
 }
 export interface PlayerValue {
-  /** Maximum horizontal movement speed in world units per second. */
-  moveSpeed: number;
+  /** Maximum horizontal speed in world units per second. */
+  maxHorizontalSpeed: number;
+  /** Grounded acceleration in world units per second squared. */
+  groundAcceleration: number;
+  /** Grounded braking and reversal rate in world units per second squared. */
+  groundDeceleration: number;
+  /** Airborne acceleration in world units per second squared. */
+  airAcceleration: number;
+  /** Airborne braking and reversal rate in world units per second squared. */
+  airDeceleration: number;
   /** Initial vertical jump speed in world units per second. */
   jumpSpeed: number;
 }
 /** Player-owned deterministic movement configuration. (component, sim) */
-export const Player = typeToken<PlayerViews, PlayerValue>('Player', 'component', { sig: 'moveSpeed:f32:1,jumpSpeed:f32:1', read: (v: PlayerViews, i: number, o: Record<string, unknown>) => { o.moveSpeed = v.moveSpeed[i]; o.jumpSpeed = v.jumpSpeed[i]; return o; } });
+export const Player = typeToken<PlayerViews, PlayerValue>('Player', 'component', { sig: 'maxHorizontalSpeed:f32:1,groundAcceleration:f32:1,groundDeceleration:f32:1,airAcceleration:f32:1,airDeceleration:f32:1,jumpSpeed:f32:1', read: (v: PlayerViews, i: number, o: Record<string, unknown>) => { o.maxHorizontalSpeed = v.maxHorizontalSpeed[i]; o.groundAcceleration = v.groundAcceleration[i]; o.groundDeceleration = v.groundDeceleration[i]; o.airAcceleration = v.airAcceleration[i]; o.airDeceleration = v.airDeceleration[i]; o.jumpSpeed = v.jumpSpeed[i]; return o; } });
 
 export interface PlayerActionStateViews {
   moveX: Float32Array;
@@ -685,3 +784,20 @@ export interface PlayerIntentValue {
 }
 /** Recorded boundary event produced by keyboard, gamepad, touch, or UI adapters. (event, sim) */
 export const PlayerIntent = typeToken<PlayerIntentViews, PlayerIntentValue>('PlayerIntent', 'event', { sig: 'moveX:f32:1,jump:bool:1,dash:bool:1,fire:bool:1,crouch:bool:1', read: (v: PlayerIntentViews, i: number, o: Record<string, unknown>) => { o.moveX = v.moveX[i]; o.jump = v.jump[i] !== 0; o.dash = v.dash[i] !== 0; o.fire = v.fire[i] !== 0; o.crouch = v.crouch[i] !== 0; return o; } });
+
+export interface PlayerMotionViews {
+  /** Authoritative horizontal velocity in world units per second. */
+  horizontalVelocity: Float32Array;
+  /** Ground contact supplied by deterministic traversal/collision systems. */
+  grounded: Uint8Array;
+  facing: Uint8Array;
+}
+export interface PlayerMotionValue {
+  /** Authoritative horizontal velocity in world units per second. */
+  horizontalVelocity: number;
+  /** Ground contact supplied by deterministic traversal/collision systems. */
+  grounded: boolean;
+  facing: FacingDirectionName | number;
+}
+/** Authoritative player movement state. Presentation may observe but never write it. (component, sim) */
+export const PlayerMotion = typeToken<PlayerMotionViews, PlayerMotionValue>('PlayerMotion', 'component', { sig: 'horizontalVelocity:f32:1,grounded:bool:1,facing:enum:1', read: (v: PlayerMotionViews, i: number, o: Record<string, unknown>) => { o.horizontalVelocity = v.horizontalVelocity[i]; o.grounded = v.grounded[i] !== 0; o.facing = $r.enm('FacingDirection', v.facing[i]!); return o; } });
