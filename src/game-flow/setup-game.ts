@@ -1,13 +1,21 @@
-import { defineSystem, write, WorldView } from '@gameengine/runtime';
-import { GameState } from '../schema.gen.ts';
+import { defineSystem, query, read, write, WorldView } from '@gameengine/runtime';
+import { GameState, PlatformCollisionCell, RoomCollisionState } from '../schema.gen.ts';
 
-const VIEW_HEIGHT = 10;
+const VIEW_HEIGHT = 9;
 
 export const SetupGame = defineSystem({
   name: 'SetupGame',
-  resources: [write(GameState), write(WorldView)],
+  after: ['BuildRoomCollision'],
+  query: query(read(PlatformCollisionCell)),
+  resources: [write(GameState), read(RoomCollisionState), write(WorldView)],
   runIf: { resource: GameState, field: 'initialized', value: false },
-  run(ctx) {
+  run(ctx, collisionCells) {
+    const collisionState = ctx.get(RoomCollisionState);
+    if (!collisionState.built) return;
+    let spawnedCellCount = 0;
+    for (const chunk of collisionCells.chunks()) spawnedCellCount += chunk.length;
+    if (spawnedCellCount !== collisionState.cellCount) return;
+
     ctx.set(GameState, { initialized: true, phase: 'Playing' });
 
     const view = ctx.get(WorldView);

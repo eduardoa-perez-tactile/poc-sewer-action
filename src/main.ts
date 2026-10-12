@@ -1,4 +1,5 @@
 export { SetupGame } from './game-flow/setup-game.ts';
+export { BuildRoomCollision } from './room/build-room-collision.ts';
 export { MapInputActions } from './player/map-input-actions.ts';
 export { CapturePlayerIntent } from './player/capture-player-intent.ts';
 export { StartPlayerDash } from './player/start-player-dash.ts';

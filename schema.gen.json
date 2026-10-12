@@ -41,6 +41,15 @@
       "package": "SewerAction"
     },
     {
+      "name": "RoomLandmarkKind",
+      "values": [
+        "Encounter",
+        "WaterEdge",
+        "Exit"
+      ],
+      "package": "SewerAction"
+    },
+    {
       "name": "HazardKind",
       "values": [
         "Water",
@@ -277,6 +286,49 @@
       ],
       "package": "SewerAction",
       "doc": "Read-only presentation snapshot derived from consequential simulation state."
+    },
+    {
+      "name": "RoomCollisionState",
+      "kind": "resource",
+      "sim": true,
+      "fields": [
+        {
+          "name": "built",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Whether the current room tilemap has queued its static collision cells."
+        },
+        {
+          "name": "cellCount",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Expected derived cell count; confirms deferred spawns are visible before play begins."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "One-shot deterministic bootstrap state for tilemap-derived collision."
+    },
+    {
+      "name": "RoomLandmark",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "kind",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "RoomLandmarkKind",
+          "default": "Encounter",
+          "doc": "Authored room landmark used by later gameplay tickets and content verification."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "A deterministic marker placed in the room scene without duplicating collision geometry."
     },
     {
       "name": "Hazard",

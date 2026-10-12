@@ -47,6 +47,15 @@ export const schemaIr = {
       "package": "SewerAction"
     },
     {
+      "name": "RoomLandmarkKind",
+      "values": [
+        "Encounter",
+        "WaterEdge",
+        "Exit"
+      ],
+      "package": "SewerAction"
+    },
+    {
       "name": "HazardKind",
       "values": [
         "Water",
@@ -283,6 +292,49 @@ export const schemaIr = {
       ],
       "package": "SewerAction",
       "doc": "Read-only presentation snapshot derived from consequential simulation state."
+    },
+    {
+      "name": "RoomCollisionState",
+      "kind": "resource",
+      "sim": true,
+      "fields": [
+        {
+          "name": "built",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Whether the current room tilemap has queued its static collision cells."
+        },
+        {
+          "name": "cellCount",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Expected derived cell count; confirms deferred spawns are visible before play begins."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "One-shot deterministic bootstrap state for tilemap-derived collision."
+    },
+    {
+      "name": "RoomLandmark",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "kind",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "RoomLandmarkKind",
+          "default": "Encounter",
+          "doc": "Authored room landmark used by later gameplay tickets and content verification."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "A deterministic marker placed in the room scene without duplicating collision geometry."
     },
     {
       "name": "Hazard",
@@ -969,6 +1021,13 @@ export const PresentationDashDirection = {
 } as const;
 export type PresentationDashDirectionName = 'Left' | 'Right';
 
+export const RoomLandmarkKind = {
+  Encounter: 0,
+  WaterEdge: 1,
+  Exit: 2,
+} as const;
+export type RoomLandmarkKindName = 'Encounter' | 'WaterEdge' | 'Exit';
+
 export const HazardKind = {
   Water: 0,
   Explosive: 1,
@@ -1088,6 +1147,32 @@ export interface GameplayPresentationValue {
 }
 /** Read-only presentation snapshot derived from consequential simulation state. (resource, presentation-only) */
 export const GameplayPresentation = typeToken<GameplayPresentationViews, GameplayPresentationValue>('GameplayPresentation', 'resource', { sig: 'phase:enum:1,moveX:enum:1,dashing:bool:1,dashDirection:enum:1,dashReady:bool:1', read: (v: GameplayPresentationViews, i: number, o: Record<string, unknown>) => { o.phase = $r.enm('GamePhase', v.phase[i]!); o.moveX = $r.enm('MoveDirection', v.moveX[i]!); o.dashing = v.dashing[i] !== 0; o.dashDirection = $r.enm('PresentationDashDirection', v.dashDirection[i]!); o.dashReady = v.dashReady[i] !== 0; return o; } });
+
+export interface RoomCollisionStateViews {
+  /** Whether the current room tilemap has queued its static collision cells. */
+  built: Uint8Array;
+  /** Expected derived cell count; confirms deferred spawns are visible before play begins. */
+  cellCount: Uint32Array;
+}
+export interface RoomCollisionStateValue {
+  /** Whether the current room tilemap has queued its static collision cells. */
+  built: boolean;
+  /** Expected derived cell count; confirms deferred spawns are visible before play begins. */
+  cellCount: number;
+}
+/** One-shot deterministic bootstrap state for tilemap-derived collision. (resource, sim) */
+export const RoomCollisionState = typeToken<RoomCollisionStateViews, RoomCollisionStateValue>('RoomCollisionState', 'resource', { sig: 'built:bool:1,cellCount:u32:1', read: (v: RoomCollisionStateViews, i: number, o: Record<string, unknown>) => { o.built = v.built[i] !== 0; o.cellCount = v.cellCount[i]; return o; } });
+
+export interface RoomLandmarkViews {
+  /** Authored room landmark used by later gameplay tickets and content verification. */
+  kind: Uint8Array;
+}
+export interface RoomLandmarkValue {
+  /** Authored room landmark used by later gameplay tickets and content verification. */
+  kind: RoomLandmarkKindName | number;
+}
+/** A deterministic marker placed in the room scene without duplicating collision geometry. (component, sim) */
+export const RoomLandmark = typeToken<RoomLandmarkViews, RoomLandmarkValue>('RoomLandmark', 'component', { sig: 'kind:enum:1', read: (v: RoomLandmarkViews, i: number, o: Record<string, unknown>) => { o.kind = $r.enm('RoomLandmarkKind', v.kind[i]!); return o; } });
 
 export interface HazardViews {
   kind: Uint8Array;

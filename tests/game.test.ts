@@ -1,5 +1,5 @@
 import { expect, renderTest, worldTest } from '@gameengine/test';
-import { ActionState, LocalTransform, WorldView } from '@gameengine/runtime';
+import { ActionState, LocalTransform, NavGrid, Tilemap, WorldView } from '@gameengine/runtime';
 import {
   GameState,
   GameplayPresentation,
@@ -13,7 +13,10 @@ import {
   PlayerGroundContact,
   PlayerIntent,
   PlayerMotion,
+  RoomCollisionState,
+  RoomLandmark,
 } from '../src/schema.gen.ts';
+import { FIRST_SEWER_ROOM_TILEMAP, isStaticCollisionTile } from '../src/room/build-room-collision.ts';
 
 worldTest('boots the sewer action vertical slice', async ({ world, step, input }) => {
   input.view(1920, 1080, 1);
@@ -26,6 +29,65 @@ worldTest('boots the sewer action vertical slice', async ({ world, step, input }
   const view = world.resource(WorldView);
   expect(view.designAspect).toBeCloseTo(16 / 9);
   expect(view.fit).toBe('Contain');
+});
+
+worldTest('the first sewer tilemap deterministically derives every static collision cell', async ({ world, step }) => {
+  await step(2);
+
+  const [tilemapEntity] = world.entities(Tilemap);
+  expect(tilemapEntity).toBeDefined();
+  const tilemap = world.get(tilemapEntity!, Tilemap);
+  const mapping = world.resource(PlatformCollisionGrid);
+  const transform = world.get(tilemapEntity!, LocalTransform);
+  expect(tilemap.data).toBe(FIRST_SEWER_ROOM_TILEMAP);
+  expect(transform.position.slice(0, 2)).toEqual([mapping.originX, mapping.originY]);
+  expect(tilemap.tileSize).toEqual([mapping.cellSize, mapping.cellSize]);
+  expect(isStaticCollisionTile(22)).toBe(true);
+  expect(isStaticCollisionTile(66)).toBe(true);
+  expect(isStaticCollisionTile(18)).toBe(false);
+  expect(isStaticCollisionTile(-1)).toBe(false);
+
+  const grid = NavGrid.fromTilemap(FIRST_SEWER_ROOM_TILEMAP, isStaticCollisionTile, {
+    origin: [mapping.originX, mapping.originY],
+    cellSize: mapping.cellSize,
+  });
+  const expected = new Set<string>();
+  for (let y = 0; y < grid.height; y++) {
+    for (let x = 0; x < grid.width; x++) {
+      if (grid.isWalkable(x, y)) expected.add(`${x},${y}`);
+    }
+  }
+
+  const actual = new Set(
+    world.entities(PlatformCollisionCell).map((entity) => {
+      const cell = world.get(entity, PlatformCollisionCell);
+      return `${cell.x},${cell.y}`;
+    }),
+  );
+  expect(world.entities(PlatformCollisionCell).length).toBe(expected.size);
+  expect(actual.size).toBe(expected.size);
+  expect([...actual].sort()).toEqual([...expected].sort());
+  expect(actual.has('5,3')).toBe(true);
+  expect(actual.has('10,8')).toBe(true);
+  expect(actual.has('24,8')).toBe(true);
+  expect(actual.has('28,3')).toBe(false);
+});
+
+worldTest('the first sewer room exposes spawn, encounter, water edge and exit landmarks', async ({ world, step }) => {
+  await step(2);
+
+  const [player] = world.entities(Player);
+  expect(world.get(player!, LocalTransform).position).toEqual([-5.25, -2.5, 0]);
+
+  const landmarks = new Map(
+    world.entities(RoomLandmark).map((entity) => {
+      const kind = world.get(entity, RoomLandmark).kind;
+      return [kind, world.get(entity, LocalTransform).position] as const;
+    }),
+  );
+  expect(landmarks.get('Encounter')).toEqual([1.5, -2.5, 0]);
+  expect(landmarks.get('WaterEdge')).toEqual([5.5, -3, 0]);
+  expect(landmarks.get('Exit')).toEqual([7, -1.5, 0]);
 });
 
 worldTest('recorded player intent becomes simulation state and a presentation snapshot', async ({ world, step, input }) => {
@@ -358,6 +420,9 @@ worldTest('gravity carries a jump through its apex and lands on deterministic ge
 });
 
 worldTest('platform collision lands on floors and owns grounded transitions', async ({ world, step }) => {
+  world.setResource(GameState, { initialized: true, phase: 'Playing' });
+  world.setResource(RoomCollisionState, { built: true, cellCount: 0 });
+  world.setResource(PlatformCollisionGrid, { originX: 0, originY: -0.5, cellSize: 1 });
   await step(1);
   world.spawn({ PlatformCollisionCell: { x: 20, y: 0 } });
   const player = world.spawn({
@@ -379,6 +444,9 @@ worldTest('platform collision lands on floors and owns grounded transitions', as
 });
 
 worldTest('platform collision stops upward motion at ceilings', async ({ world, step }) => {
+  world.setResource(GameState, { initialized: true, phase: 'Playing' });
+  world.setResource(RoomCollisionState, { built: true, cellCount: 0 });
+  world.setResource(PlatformCollisionGrid, { originX: 0, originY: -0.5, cellSize: 1 });
   await step(1);
   world.spawn({ PlatformCollisionCell: { x: 22, y: 3 } });
   const player = world.spawn({
@@ -398,6 +466,9 @@ worldTest('platform collision stops upward motion at ceilings', async ({ world, 
 });
 
 worldTest('platform collision stops at walls and cannot tunnel at extreme dash speed', async ({ world, step }) => {
+  world.setResource(GameState, { initialized: true, phase: 'Playing' });
+  world.setResource(RoomCollisionState, { built: true, cellCount: 0 });
+  world.setResource(PlatformCollisionGrid, { originX: 0, originY: -0.5, cellSize: 1 });
   await step(1);
   world.spawn({ PlatformCollisionCell: { x: 25, y: 1 } });
   const player = world.spawn({
@@ -413,10 +484,13 @@ worldTest('platform collision stops at walls and cannot tunnel at extreme dash s
 
   expect(world.get(player, LocalTransform).position[0]).toBeCloseTo(24.58);
   expect(world.get(player, PlayerMotion).horizontalVelocity).toBe(0);
-  expect(world.hash()).toBe('9a749dac40936c35');
+  expect(world.hash()).toBe('bdc2ab3474f4276d');
 });
 
 worldTest('platform collision resolves a diagonal floor-wall corner without penetration', async ({ world, step }) => {
+  world.setResource(GameState, { initialized: true, phase: 'Playing' });
+  world.setResource(RoomCollisionState, { built: true, cellCount: 0 });
+  world.setResource(PlatformCollisionGrid, { originX: 0, originY: -0.5, cellSize: 1 });
   await step(1);
   world.spawn({ PlatformCollisionCell: { x: 30, y: 0 } });
   world.spawn({ PlatformCollisionCell: { x: 31, y: 1 } });
@@ -435,10 +509,12 @@ worldTest('platform collision resolves a diagonal floor-wall corner without pene
   expect(position[0]).toBeCloseTo(30.58);
   expect(position[1]).toBeCloseTo(0.5);
   expect(world.get(player, PlayerGroundContact).grounded).toBe(true);
-  expect(world.hash()).toBe('afdb5d71a9e6d213');
+  expect(world.hash()).toBe('d2b718c7ce3d8493');
 });
 
 worldTest('small-step assistance climbs only ledges within its configured boundary', async ({ world, step, input }) => {
+  world.setResource(GameState, { initialized: true, phase: 'Playing' });
+  world.setResource(RoomCollisionState, { built: true, cellCount: 0 });
   world.setResource(PlatformCollisionGrid, { originX: 0, originY: 0, cellSize: 0.25 });
   await step(1);
   for (let x = 160; x <= 168; x++) world.spawn({ PlatformCollisionCell: { x, y: 0 } });
@@ -464,10 +540,13 @@ worldTest('small-step assistance climbs only ledges within its configured bounda
   }
   expect(world.get(player, LocalTransform).position[0]).toBeLessThanOrEqual(41.58);
   expect(world.get(player, LocalTransform).position[1]).toBeCloseTo(0.5);
-  expect(world.hash()).toBe('945ba67614220589');
+  expect(world.hash()).toBe('a01a4e912fdddbbf');
 });
 
 worldTest('cliff edges end ground contact exactly after support and preserve coyote integration', async ({ world, step, input }) => {
+  world.setResource(GameState, { initialized: true, phase: 'Playing' });
+  world.setResource(RoomCollisionState, { built: true, cellCount: 0 });
+  world.setResource(PlatformCollisionGrid, { originX: 0, originY: -0.5, cellSize: 1 });
   await step(1);
   world.spawn({ PlatformCollisionCell: { x: 44, y: 0 } });
   const player = world.spawn({
@@ -628,7 +707,7 @@ worldTest('dash mechanics produce a stable deterministic state hash', async ({ w
   input.action('dash', 1);
   await step(9);
 
-  expect(world.hash()).toBe('44658e4b82341160');
+  expect(world.hash()).toBe('1f3aebf2ec81dc0d');
 });
 
 worldTest('jump mechanics produce a stable deterministic state hash', async ({ world, step, input }) => {
@@ -642,7 +721,7 @@ worldTest('jump mechanics produce a stable deterministic state hash', async ({ w
   input.action('moveX', -0.75);
   await step(17);
 
-  expect(world.hash()).toBe('43e5131cde570ca2');
+  expect(world.hash()).toBe('3dd365b1bd7717ca');
 });
 
 worldTest('horizontal movement produces a stable deterministic state hash', async ({ world, step, input }) => {
@@ -657,7 +736,7 @@ worldTest('horizontal movement produces a stable deterministic state hash', asyn
   }
   await step(5);
 
-  expect(world.hash()).toBe('08d9828aecff9a46');
+  expect(world.hash()).toBe('e542db52db61f7f7');
 });
 
 renderTest('the vertical slice stays within its 2D draw-call budget', async ({ step, render }) => {
@@ -667,3 +746,27 @@ renderTest('the vertical slice stays within its 2D draw-call budget', async ({ s
   expect(stats.atlasPages).toBeLessThanOrEqual(5);
   render.expectDrawCalls('<=', 4, { width: 1920, height: 1080 });
 });
+
+renderTest('the complete first sewer room matches its golden frame', async ({ step, render, input }) => {
+  input.view(1920, 1080, 1);
+  await step(2);
+  render.expectScreenshot('first-sewer-room', { width: 960, height: 540 });
+});
+
+for (const viewport of [
+  { name: 'narrow landscape', width: 1024, height: 768 },
+  { name: 'wide landscape', width: 2560, height: 1080 },
+] as const) {
+  renderTest(`the whole sewer room remains visible at ${viewport.name}`, async ({ step, render, input }) => {
+    input.view(viewport.width, viewport.height, 1);
+    await step(2);
+
+    const [left, top] = input.worldToScreen([-8, 4.5]);
+    const [right, bottom] = input.worldToScreen([8, -4.5]);
+    expect(left).toBeGreaterThanOrEqual(-0.01);
+    expect(top).toBeGreaterThanOrEqual(-0.01);
+    expect(right).toBeLessThanOrEqual(viewport.width + 0.01);
+    expect(bottom).toBeLessThanOrEqual(viewport.height + 0.01);
+    render.stats({ width: viewport.width, height: viewport.height });
+  });
+}
