@@ -1,8 +1,182 @@
 {
   "version": 1,
   "package": "SewerAction",
-  "enums": [],
+  "enums": [
+    {
+      "name": "EnemyState",
+      "values": [
+        "Idle",
+        "Patrol",
+        "Attack",
+        "Stunned",
+        "Dead"
+      ],
+      "package": "SewerAction"
+    },
+    {
+      "name": "GamePhase",
+      "values": [
+        "Booting",
+        "Playing",
+        "PlayerDead",
+        "Completed"
+      ],
+      "package": "SewerAction"
+    },
+    {
+      "name": "MoveDirection",
+      "values": [
+        "Left",
+        "Neutral",
+        "Right"
+      ],
+      "package": "SewerAction"
+    },
+    {
+      "name": "HazardKind",
+      "values": [
+        "Water",
+        "Explosive",
+        "Contact"
+      ],
+      "package": "SewerAction"
+    }
+  ],
   "types": [
+    {
+      "name": "ActorDied",
+      "kind": "event",
+      "sim": true,
+      "fields": [
+        {
+          "name": "actor",
+          "kind": "entity",
+          "scalar": "u32",
+          "lanes": 2
+        },
+        {
+          "name": "killer",
+          "kind": "entity",
+          "scalar": "u32",
+          "lanes": 2,
+          "optional": true
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Fact emitted after health reaches zero; game flow and presentation may react."
+    },
+    {
+      "name": "DamageRequested",
+      "kind": "event",
+      "sim": true,
+      "fields": [
+        {
+          "name": "source",
+          "kind": "entity",
+          "scalar": "u32",
+          "lanes": 2
+        },
+        {
+          "name": "target",
+          "kind": "entity",
+          "scalar": "u32",
+          "lanes": 2
+        },
+        {
+          "name": "amount",
+          "kind": "u16",
+          "scalar": "u16",
+          "lanes": 1,
+          "min": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Combat and hazards request damage; the health system validates and applies it."
+    },
+    {
+      "name": "Health",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "current",
+          "kind": "u16",
+          "scalar": "u16",
+          "lanes": 1,
+          "default": 1,
+          "min": 0
+        },
+        {
+          "name": "maximum",
+          "kind": "u16",
+          "scalar": "u16",
+          "lanes": 1,
+          "default": 1,
+          "min": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Single source of truth for actor survivability."
+    },
+    {
+      "name": "Weapon",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "cooldownSeconds",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0.15,
+          "min": 0
+        },
+        {
+          "name": "cooldownRemaining",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "min": 0
+        },
+        {
+          "name": "damage",
+          "kind": "u16",
+          "scalar": "u16",
+          "lanes": 1,
+          "default": 1,
+          "min": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Deterministic weapon cadence and damage configuration."
+    },
+    {
+      "name": "EnemyBrain",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "state",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "EnemyState",
+          "default": "Idle"
+        },
+        {
+          "name": "decisionRemaining",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "min": 0,
+          "doc": "Simulation-time delay until the next decision."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Deterministic soldier decision state; visuals derive animation from it."
+    },
     {
       "name": "GameState",
       "kind": "resource",
@@ -15,9 +189,79 @@
           "lanes": 1,
           "default": false,
           "doc": "The deterministic game bootstrap has run."
+        },
+        {
+          "name": "phase",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "GamePhase",
+          "default": "Booting",
+          "doc": "Authoritative vertical-slice phase."
         }
       ],
-      "package": "SewerAction"
+      "package": "SewerAction",
+      "doc": "Simulation-owned level flow. Presentation may observe it but never advance it."
+    },
+    {
+      "name": "GameplayPresentation",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "phase",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "GamePhase",
+          "default": "Booting",
+          "doc": "Authoritative vertical-slice phase."
+        },
+        {
+          "name": "moveX",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "MoveDirection",
+          "default": "Neutral"
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Read-only presentation snapshot derived from consequential simulation state."
+    },
+    {
+      "name": "Hazard",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "kind",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "HazardKind",
+          "default": "Contact"
+        },
+        {
+          "name": "damage",
+          "kind": "u16",
+          "scalar": "u16",
+          "lanes": 1,
+          "default": 1,
+          "min": 1
+        },
+        {
+          "name": "repeatSeconds",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "min": 0,
+          "doc": "Simulation-time interval; zero means one hit per contact."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Data-driven environmental damage contract."
     },
     {
       "name": "Player",
@@ -30,7 +274,8 @@
           "scalar": "f32",
           "lanes": 1,
           "default": 8.5,
-          "doc": "Maximum horizontal movement speed."
+          "min": 0,
+          "doc": "Maximum horizontal movement speed in world units per second."
         },
         {
           "name": "jumpSpeed",
@@ -38,10 +283,70 @@
           "scalar": "f32",
           "lanes": 1,
           "default": 9.2,
-          "doc": "Initial vertical jump speed."
+          "min": 0,
+          "doc": "Initial vertical jump speed in world units per second."
         }
       ],
-      "package": "SewerAction"
+      "package": "SewerAction",
+      "doc": "Player-owned deterministic movement configuration."
+    },
+    {
+      "name": "PlayerControl",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "moveX",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "min": -1,
+          "max": 1,
+          "doc": "Recorded horizontal intent normalized to [-1, 1]."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Latest recorded held player control. Action systems consume step-scoped intent events directly."
+    },
+    {
+      "name": "PlayerIntent",
+      "kind": "event",
+      "sim": true,
+      "fields": [
+        {
+          "name": "moveX",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "min": -1,
+          "max": 1
+        },
+        {
+          "name": "jump",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "dash",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "fire",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Recorded boundary event produced by keyboard, gamepad, touch, or UI adapters."
     }
   ],
   "commands": [],

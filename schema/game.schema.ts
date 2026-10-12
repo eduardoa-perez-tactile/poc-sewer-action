@@ -1,16 +1,25 @@
-import { bool, component, f32, resource } from '@gameengine/schema';
+import { bool, enumOf, resource } from '@gameengine/schema';
+
+const gamePhase = () =>
+  enumOf('GamePhase', ['Booting', 'Playing', 'PlayerDead', 'Completed'], {
+    default: 'Booting',
+    doc: 'Authoritative vertical-slice phase.',
+  });
 
 export const GameState = resource(
   'GameState',
-  { initialized: bool({ default: false, doc: 'The deterministic game bootstrap has run.' }) },
-  { sim: true },
+  {
+    initialized: bool({ default: false, doc: 'The deterministic game bootstrap has run.' }),
+    phase: gamePhase(),
+  },
+  { sim: true, doc: 'Simulation-owned level flow. Presentation may observe it but never advance it.' },
 );
 
-export const Player = component(
-  'Player',
+export const GameplayPresentation = resource(
+  'GameplayPresentation',
   {
-    moveSpeed: f32({ default: 8.5, doc: 'Maximum horizontal movement speed.' }),
-    jumpSpeed: f32({ default: 9.2, doc: 'Initial vertical jump speed.' }),
+    phase: gamePhase(),
+    moveX: enumOf('MoveDirection', ['Left', 'Neutral', 'Right'], { default: 'Neutral' }),
   },
-  { sim: true },
+  { sim: false, doc: 'Read-only presentation snapshot derived from consequential simulation state.' },
 );
