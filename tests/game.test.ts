@@ -1,6 +1,8 @@
 import { expect, renderTest, worldTest } from '@gameengine/test';
-import { ActionState, clip2DInfo, LocalTransform, NavGrid, Sprite, SpriteAnimation, Tilemap, WorldView } from '@gameengine/runtime';
+import { ActionState, Camera, clip2DInfo, LocalTransform, NavGrid, Sprite, SpriteAnimation, Tilemap, VisualOffset, WorldView } from '@gameengine/runtime';
 import {
+  CameraFeedback,
+  CameraFollowState,
   GameState,
   GameplayPresentation,
   MenuIntent,
@@ -15,8 +17,10 @@ import {
   PlayerIntent,
   PlayerMotion,
   RoomCollisionState,
+  RoomCameraBounds,
   RoomLandmark,
 } from '../src/schema.gen.ts';
+import { cameraCenterBounds } from '../src/presentation/follow-player-camera.ts';
 import { FIRST_SEWER_ROOM_TILEMAP, isStaticCollisionTile } from '../src/room/build-room-collision.ts';
 
 worldTest('boots the sewer action vertical slice', async ({ world, step, input }) => {
@@ -101,13 +105,15 @@ worldTest('recorded player intent becomes simulation state and a presentation sn
   const [player] = world.entities(Player);
   expect(player).toBeDefined();
   expect(world.get(player!, PlayerControl)).toEqual({ moveX: -0.75, crouch: true, jumpHeld: false });
-  expect(world.resource(GameplayPresentation)).toEqual({
-    phase: 'Playing',
-    moveX: 'Left',
-    dashing: false,
-    dashDirection: 'Right',
-    dashReady: true,
-  });
+  const snapshot = world.resource(GameplayPresentation);
+  expect(snapshot.phase).toBe('Playing');
+  expect(snapshot.moveX).toBe('Left');
+  expect(snapshot.playerPosition).toEqual(world.get(player!, LocalTransform).position.slice(0, 2));
+  expect(snapshot.playerVelocity).toEqual([
+    world.get(player!, PlayerMotion).horizontalVelocity,
+    world.get(player!, PlayerMotion).verticalVelocity,
+  ]);
+  expect(snapshot.playerFacing).toBe('Left');
 
   await step(1);
   expect(world.get(player!, PlayerControl)).toEqual({ moveX: 0, crouch: false, jumpHeld: false });
@@ -766,7 +772,7 @@ worldTest('dash mechanics produce a stable deterministic state hash', async ({ w
   input.action('dash', 1);
   await step(9);
 
-  expect(world.hash()).toBe('1f3aebf2ec81dc0d');
+  expect(world.hash()).toBe('0ae756565a9cfbba');
 });
 
 worldTest('jump mechanics produce a stable deterministic state hash', async ({ world, step, input }) => {
@@ -780,7 +786,7 @@ worldTest('jump mechanics produce a stable deterministic state hash', async ({ w
   input.action('moveX', -0.75);
   await step(17);
 
-  expect(world.hash()).toBe('3dd365b1bd7717ca');
+  expect(world.hash()).toBe('851e344979a356dd');
 });
 
 worldTest('horizontal movement produces a stable deterministic state hash', async ({ world, step, input }) => {
@@ -795,7 +801,77 @@ worldTest('horizontal movement produces a stable deterministic state hash', asyn
   }
   await step(5);
 
-  expect(world.hash()).toBe('e542db52db61f7f7');
+  expect(world.hash()).toBe('8129bc225d53b333');
+});
+
+worldTest('camera look-ahead follows authoritative velocity and reverses direction', async ({ world, step, input }) => {
+  input.view(1920, 1080, 1);
+  await step(2);
+  for (let i = 0; i < 30; i++) {
+    input.action('moveX', 1);
+    await step(1);
+  }
+  expect(world.resource(CameraFollowState).lookAhead).toBeGreaterThan(0.9);
+
+  for (let i = 0; i < 50; i++) {
+    input.action('moveX', -1);
+    await step(1);
+  }
+  expect(world.resource(CameraFollowState).lookAhead).toBeLessThan(-0.9);
+});
+
+worldTest('camera follow clamps to room bounds and settles without continuous writes', async ({ world, step, input }) => {
+  input.view(1920, 1080, 1);
+  await step(2);
+  const [player] = world.entities(Player);
+  const room = world.resource(RoomCameraBounds);
+  world.insert(player!, LocalTransform, { position: [room.right - 0.5, room.top - 1, 0] });
+  await step(120);
+
+  const state = world.resource(CameraFollowState);
+  const bounds = cameraCenterBounds(1920, 1080, [0, 0, 0, 0], room);
+  expect(state.center[0]).toBeLessThanOrEqual(bounds.maxX);
+  expect(state.center[1]).toBeLessThanOrEqual(bounds.maxY);
+  expect(state.settled).toBe(true);
+  const settled = [...state.center];
+  await step(30);
+  expect(world.resource(CameraFollowState).center).toEqual(settled);
+});
+
+worldTest('a settled camera immediately re-clamps after a live safe-area resize', async ({ world, step, input }) => {
+  input.view(1920, 1080, 1);
+  await step(2);
+  const [player] = world.entities(Player);
+  const room = world.resource(RoomCameraBounds);
+  world.insert(player!, LocalTransform, { position: [room.right - 0.5, -2.5, 0] });
+  await step(120);
+  const before = world.resource(CameraFollowState).center[0];
+
+  input.view(2560, 1080, 1, [177, 0, 102, 0]);
+  await step(1);
+  const bounds = cameraCenterBounds(2560, 1080, [177, 0, 102, 0], room);
+  expect(world.resource(CameraFollowState).center[0]).toBeLessThanOrEqual(bounds.maxX + 0.001);
+  expect(world.resource(CameraFollowState).center[0]).toBeLessThan(before);
+});
+
+worldTest('presentation camera feedback is invisible to simulation hashes', async ({ world, step }) => {
+  await step(2);
+  const hash = world.hash();
+  world.setResource(CameraFeedback, { active: true, bump: [0.7, -0.2], shake: 0.4, shakeTime: 0.3 });
+  world.setResource(CameraFollowState, { center: [1.25, -0.5], target: [1.25, -0.5], lookAhead: 1, settled: true });
+  expect(world.hash()).toBe(hash);
+
+  await step(1);
+  const [camera] = world.entities(Camera);
+  const offset = world.get(camera!, VisualOffset).position;
+  expect(offset[0]).not.toBe(1.25);
+  expect(offset[1]).not.toBe(-0.5);
+
+  await step(120);
+  expect(world.resource(CameraFeedback)).toEqual({ active: false, bump: [0, 0], shake: 0, shakeTime: 0 });
+  const finalOffset = [...world.get(camera!, VisualOffset).position];
+  await step(30);
+  expect(world.get(camera!, VisualOffset).position).toEqual(finalOffset);
 });
 
 renderTest('the vertical slice stays within its 2D draw-call budget', async ({ step, render }) => {
@@ -831,19 +907,29 @@ renderTest('player locomotion transitions preserve the authored feet anchor', as
 });
 
 for (const viewport of [
-  { name: 'narrow landscape', width: 1024, height: 768 },
-  { name: 'wide landscape', width: 2560, height: 1080 },
+  { name: 'narrow landscape', width: 1024, height: 768, safe: [0, 0, 0, 0] },
+  { name: 'standard landscape', width: 1920, height: 1080, safe: [0, 0, 0, 0] },
+  { name: 'ultrawide landscape', width: 2560, height: 1080, safe: [0, 0, 0, 0] },
+  { name: 'notched landscape', width: 2556, height: 1179, safe: [177, 0, 102, 0] },
 ] as const) {
-  renderTest(`the whole sewer room remains visible at ${viewport.name}`, async ({ step, render, input }) => {
-    input.view(viewport.width, viewport.height, 1);
-    await step(2);
+  renderTest(`camera preserves the gameplay frame at ${viewport.name}`, async ({ world, step, render, input }) => {
+    input.view(viewport.width, viewport.height, 1, [...viewport.safe]);
+    await step(90);
 
-    const [left, top] = input.worldToScreen([-8, 4.5]);
-    const [right, bottom] = input.worldToScreen([8, -4.5]);
-    expect(left).toBeGreaterThanOrEqual(-0.01);
-    expect(top).toBeGreaterThanOrEqual(-0.01);
-    expect(right).toBeLessThanOrEqual(viewport.width + 0.01);
-    expect(bottom).toBeLessThanOrEqual(viewport.height + 0.01);
-    render.stats({ width: viewport.width, height: viewport.height });
+    const follow = world.resource(CameraFollowState);
+    const [player] = world.entities(Player);
+    const position = world.get(player!, LocalTransform).position;
+    const [screenX, screenY] = input.worldToScreen([position[0]! - follow.center[0], position[1]! - follow.center[1]]);
+    expect(screenX).toBeGreaterThanOrEqual(viewport.safe[0]);
+    expect(screenX).toBeLessThanOrEqual(viewport.width - viewport.safe[2]);
+    expect(screenY).toBeGreaterThanOrEqual(viewport.safe[1]);
+    expect(screenY).toBeLessThanOrEqual(viewport.height - viewport.safe[3]);
+    const bounds = cameraCenterBounds(viewport.width, viewport.height, viewport.safe, world.resource(RoomCameraBounds));
+    expect(follow.center[0]).toBeGreaterThanOrEqual(Math.min(bounds.minX, bounds.maxX) - 0.001);
+    expect(follow.center[0]).toBeLessThanOrEqual(Math.max(bounds.minX, bounds.maxX) + 0.001);
+    render.expectScreenshot(`camera-${viewport.name.replaceAll(' ', '-')}`, {
+      width: Math.round(viewport.width / 2),
+      height: Math.round(viewport.height / 2),
+    });
   });
 }

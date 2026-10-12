@@ -1,9 +1,18 @@
 {
   "$schemaVersion": 2,
   "id": "main",
-  "resources": { "PlatformCollisionGrid": { "originX": -8, "originY": -4.5, "cellSize": 0.5 } },
+  "resources": {
+    "PlatformCollisionGrid": { "originX": -8, "originY": -4.5, "cellSize": 0.5 },
+    "RoomCameraBounds": { "left": -8, "right": 8, "bottom": -4.5, "top": 4.5 }
+  },
   "entities": [
-    { "name": "Camera", "id": "camera", "Camera": { "clearColor": "#09131cff" }, "LocalTransform": {} },
+    {
+      "name": "Camera",
+      "id": "camera",
+      "Camera": { "clearColor": "#09131cff" },
+      "LocalTransform": {},
+      "VisualOffset": {}
+    },
     {
       "name": "SewerBackdrop",
       "id": "sewer-backdrop",

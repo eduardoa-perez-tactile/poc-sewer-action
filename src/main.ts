@@ -9,3 +9,5 @@ export { ResolvePlatformCollision } from './player/resolve-platform-collision.ts
 export { AdvancePlayerDash } from './player/advance-player-dash.ts';
 export { DrivePlayerAnimation } from './presentation/drive-player-animation.ts';
 export { BuildGameplayPresentation } from './presentation/build-gameplay-presentation.ts';
+export { FollowPlayerCamera } from './presentation/follow-player-camera.ts';
+export { bumpCamera, DriveCameraFeedback, shakeCamera } from './presentation/drive-camera-feedback.ts';

@@ -1,4 +1,4 @@
-import { bool, component, enumOf, resource, u32 } from '@gameengine/schema';
+import { bool, component, enumOf, f32, resource, u32, vec2 } from '@gameengine/schema';
 
 const gamePhase = () =>
   enumOf('GamePhase', ['Booting', 'Playing', 'PlayerDead', 'Completed'], {
@@ -26,8 +26,47 @@ export const GameplayPresentation = resource(
       doc: 'Presentation-readable dash direction for animation and effects.',
     }),
     dashReady: bool({ default: true, doc: 'Whether the deterministic dash cooldown has completed.' }),
+    playerPosition: vec2({ default: [0, 0], doc: 'Latest authoritative player position copied for presentation systems.' }),
+    playerVelocity: vec2({ default: [0, 0], doc: 'Latest authoritative player velocity copied for presentation systems.' }),
+    playerFacing: enumOf('PresentationFacingDirection', ['Left', 'Right'], {
+      default: 'Right',
+      doc: 'Authoritative facing direction copied for presentation look-ahead and feedback.',
+    }),
   },
   { sim: false, doc: 'Read-only presentation snapshot derived from consequential simulation state.' },
+);
+
+export const CameraFollowState = resource(
+  'CameraFollowState',
+  {
+    center: vec2({ default: [0, 0], doc: 'Settled presentation camera center applied as a visual offset.' }),
+    target: vec2({ default: [0, 0], doc: 'Bounded target after dead-zone and directional look-ahead.' }),
+    lookAhead: f32({ default: 0, doc: 'Current horizontal look-ahead in world units.' }),
+    settled: bool({ default: false, doc: 'True once the follow rig can stop rewriting camera state.' }),
+  },
+  { sim: false, doc: 'Presentation-owned camera state excluded from gameplay hashes and queries.' },
+);
+
+export const CameraFeedback = resource(
+  'CameraFeedback',
+  {
+    active: bool({ default: false, doc: 'Whether transient feedback still needs presentation frames.' }),
+    bump: vec2({ default: [0, 0], doc: 'Short presentation-only camera impulse requested by a feedback adapter.' }),
+    shake: f32({ default: 0, min: 0, doc: 'Presentation-only shake strength; never visible to gameplay.' }),
+    shakeTime: f32({ default: 0, min: 0, doc: 'Remaining presentation seconds for the current shake.' }),
+  },
+  { sim: false, doc: 'Transient camera feedback hooks consumed only by LateUpdate.' },
+);
+
+export const RoomCameraBounds = resource(
+  'RoomCameraBounds',
+  {
+    left: f32({ default: -8, doc: 'Authored left edge of the room camera envelope.' }),
+    right: f32({ default: 8, doc: 'Authored right edge of the room camera envelope.' }),
+    bottom: f32({ default: -4.5, doc: 'Authored bottom edge of the room camera envelope.' }),
+    top: f32({ default: 4.5, doc: 'Authored top edge of the room camera envelope.' }),
+  },
+  { sim: false, doc: 'Scene-authored presentation bounds for the active room camera.' },
 );
 
 export const RoomLandmark = component(
