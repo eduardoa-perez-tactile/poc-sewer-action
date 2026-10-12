@@ -1,2 +1,7 @@
 guid = "7f8d1c43-a440-47b5-9998-51f268264510"
 importer = "texture"
+
+[settings]
+atlas = "player"
+compression = "none"
+trim = true
