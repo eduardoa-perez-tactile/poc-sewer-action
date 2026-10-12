@@ -24,6 +24,20 @@ Use `HARNESS_JS=both ./tools/harness prepush` when Hermes is available. The rele
 requires both runtimes and must never silently downgrade. Issue #6 tracks the currently missing
 Hermes host in the installed engine package.
 
+## CI bootstrap and diagnostics
+
+`.github/workflows/ci.yml` runs the pre-push gate on pull requests and on `main`. It uses a GitHub-
+hosted Apple-silicon macOS runner because the published engine archive is macOS arm64, installs the
+version pinned in `.gameengine-version`, and checks the archive against the SHA-256 pinned in
+`tools/ci/install-gameengine`. The app is extracted under `/Applications`, matching the SDK paths
+generated in `tsconfig.json`. Upgrade the version and checksum in the same pull request.
+
+The workflow sets `HARNESS_JS=v8` explicitly. It does not probe for Hermes and silently fall back;
+Hermes remains mandatory in the release gate and unavailable until issue #6 provides the host.
+Every CI run uploads `artifacts/ci/harness.log`, even when a harness command fails, so the output
+from generation, formatting, deterministic tests, typecheck, validation, cook and smoke remains
+available from the workflow run for 14 days.
+
 ## Inner development loop
 
 1. Start from an issue with explicit acceptance criteria.

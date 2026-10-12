@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+root_dir=$(cd "$(dirname "$0")/../.." && pwd)
+version=$(tr -d '[:space:]' < "$root_dir/.gameengine-version")
+install_root=${1:?usage: tools/ci/install-gameengine <install-directory>}
+archive="TactileGameEngine-${version}-mac-arm64.zip"
+archive_sha256='ab15d282796cf240b72bf6009c07c771063d335f5bb34bc7d632540035640f6c'
+release_url="https://github.com/tactilegames/game-engine-releases/releases/download/v${version}/${archive}"
+app_dir="$install_root/Tactile Game Engine.app"
+cli="$app_dir/Contents/Resources/engine/tools/cli/bin/gameengine.mjs"
+bin_dir="$install_root/bin"
+
+if [[ $(uname -s) != Darwin || $(uname -m) != arm64 ]]; then
+  printf '%s\n' 'Tactile Game Engine CI requires a macOS arm64 runner.' >&2
+  exit 1
+fi
+
+mkdir -p "$install_root"
+
+if [[ ! -f "$cli" ]]; then
+  temp_dir=$(mktemp -d "${TMPDIR:-/tmp}/sewer-action-engine.XXXXXX")
+  trap 'rm -rf "$temp_dir"' EXIT
+
+  printf 'Downloading Tactile Game Engine %s\n' "$version" >&2
+  curl --fail --location --retry 3 --show-error --silent \
+    --output "$temp_dir/$archive" "$release_url"
+
+  actual_sha256=$(shasum -a 256 "$temp_dir/$archive" | awk '{print $1}')
+  if [[ "$actual_sha256" != "$archive_sha256" ]]; then
+    printf 'Checksum mismatch for %s\nexpected: %s\nactual:   %s\n' \
+      "$archive" "$archive_sha256" "$actual_sha256" >&2
+    exit 1
+  fi
+
+  ditto -x -k "$temp_dir/$archive" "$install_root"
+fi
+
+if [[ ! -f "$cli" ]]; then
+  printf 'Game Engine CLI missing after extraction: %s\n' "$cli" >&2
+  exit 1
+fi
+
+mkdir -p "$bin_dir"
+ln -sfn "$cli" "$bin_dir/gameengine.mjs"
+cat > "$bin_dir/gameengine" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+bin_dir=$(cd "$(dirname "$0")" && pwd)
+exec node "$bin_dir/gameengine.mjs" "$@"
+EOF
+chmod +x "$bin_dir/gameengine"
+
+printf '%s\n' "$bin_dir"
