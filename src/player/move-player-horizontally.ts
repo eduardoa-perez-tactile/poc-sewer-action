@@ -9,7 +9,7 @@ const moveTowards = (current: number, target: number, maxDelta: number): number 
 
 export const MovePlayerHorizontally = defineSystem({
   name: 'MovePlayerHorizontally',
-  after: ['CapturePlayerIntent'],
+  after: ['MovePlayerVertically'],
   query: query(read(Player), read(PlayerControl), write(PlayerMotion), write(LocalTransform)),
   resources: [read(GameState)],
   runIf: { resource: GameState, field: 'phase', value: 'Playing' },

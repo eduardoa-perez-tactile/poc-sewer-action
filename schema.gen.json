@@ -377,6 +377,58 @@
           "default": 9.2,
           "min": 0,
           "doc": "Initial vertical jump speed in world units per second."
+        },
+        {
+          "name": "gravity",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 24,
+          "min": 0,
+          "doc": "Downward acceleration in world units per second squared."
+        },
+        {
+          "name": "maxFallSpeed",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 18,
+          "min": 0,
+          "doc": "Maximum downward speed in world units per second."
+        },
+        {
+          "name": "jumpCutMultiplier",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0.5,
+          "min": 0,
+          "max": 1,
+          "doc": "Upward velocity multiplier applied when jump is released early."
+        },
+        {
+          "name": "coyoteSteps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 6,
+          "doc": "Fixed simulation steps after leaving ground in which the ground jump remains available."
+        },
+        {
+          "name": "jumpBufferSteps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 6,
+          "doc": "Fixed simulation steps for which a jump edge remains queued."
+        },
+        {
+          "name": "airJumps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 1,
+          "doc": "Air jumps restored on grounded contact."
         }
       ],
       "package": "SewerAction",
@@ -398,6 +450,13 @@
         },
         {
           "name": "jump",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "jumpHeld",
           "kind": "bool",
           "scalar": "u8",
           "lanes": 1,
@@ -450,10 +509,35 @@
           "lanes": 1,
           "default": false,
           "doc": "Whether the recorded crouch control is held."
+        },
+        {
+          "name": "jumpHeld",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Whether jump is currently held for release-cut detection."
         }
       ],
       "package": "SewerAction",
       "doc": "Latest recorded held player control. Action systems consume step-scoped intent events directly."
+    },
+    {
+      "name": "PlayerGroundContact",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "grounded",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true,
+          "doc": "Collision-owned ground contact fact consumed by movement."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Deterministic traversal/collision output. Movement reads but never writes this component."
     },
     {
       "name": "PlayerIntent",
@@ -471,6 +555,13 @@
         },
         {
           "name": "jump",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "jumpHeld",
           "kind": "bool",
           "scalar": "u8",
           "lanes": 1,
@@ -515,12 +606,20 @@
           "doc": "Authoritative horizontal velocity in world units per second."
         },
         {
+          "name": "verticalVelocity",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Authoritative vertical velocity in world units per second."
+        },
+        {
           "name": "grounded",
           "kind": "bool",
           "scalar": "u8",
           "lanes": 1,
           "default": true,
-          "doc": "Ground contact supplied by deterministic traversal/collision systems."
+          "doc": "Movement-owned grounded state derived from collision contact."
         },
         {
           "name": "facing",
@@ -529,10 +628,67 @@
           "lanes": 1,
           "enumName": "FacingDirection",
           "default": "Right"
+        },
+        {
+          "name": "coyoteStepsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Remaining fixed steps in the grounded grace window."
+        },
+        {
+          "name": "jumpBufferStepsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Remaining fixed steps for a queued jump request."
+        },
+        {
+          "name": "airJumpsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 1,
+          "doc": "Air jumps available before the next grounded contact."
+        },
+        {
+          "name": "jumpWasHeld",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Jump hold state from the previous fixed step for deterministic release detection."
+        },
+        {
+          "name": "ignoreGroundContact",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Whether contact is ignored until the actor has separated after jumping."
         }
       ],
       "package": "SewerAction",
       "doc": "Authoritative player movement state. Presentation may observe but never write it."
+    },
+    {
+      "name": "PlayerStepInput",
+      "kind": "resource",
+      "sim": true,
+      "fields": [
+        {
+          "name": "jumpRequested",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Jump press for the current fixed step only."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Unconditionally overwritten input sample consumed in the same fixed step."
     }
   ],
   "commands": [],
