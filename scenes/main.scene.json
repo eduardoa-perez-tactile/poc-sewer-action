@@ -14,10 +14,12 @@
       "VisualOffset": {}
     },
     {
-      "name": "SewerBackdrop",
-      "id": "sewer-backdrop",
+      "name": "MiddleSewer",
+      "id": "middle-sewer",
       "LocalTransform": { "position": [0, 0, -2] },
-      "Sprite": { "image": "art/environment/middle", "size": [46.4, 12], "sortingLayer": "Background" }
+      "ParallaxLayer": { "factor": [0.32, 0.18] },
+      "Sprite": { "image": "art/environment/middle", "size": [46.4, 12], "sortingLayer": "Background", "order": -20 },
+      "VisualOffset": {}
     },
     {
       "name": "FirstSewerRoom",
@@ -92,6 +94,110 @@
         "sortingLayer": "Characters"
       },
       "SpriteAnimation": { "frames": "art/player/idle/idle1", "fps": 1 }
+    },
+    {
+      "name": "DistantSewerLeft",
+      "id": "distant-sewer-left",
+      "LocalTransform": { "position": [-9.6, 0, -3] },
+      "ParallaxLayer": { "factor": [0.12, 0.08] },
+      "Sprite": { "image": "art/environment/back", "size": [9.6, 12], "sortingLayer": "Background", "order": -30 },
+      "VisualOffset": {}
+    },
+    {
+      "name": "DistantSewerCentre",
+      "id": "distant-sewer-centre",
+      "LocalTransform": { "position": [0, 0, -3] },
+      "ParallaxLayer": { "factor": [0.12, 0.08] },
+      "Sprite": { "image": "art/environment/back", "size": [9.6, 12], "sortingLayer": "Background", "order": -30 },
+      "VisualOffset": {}
+    },
+    {
+      "name": "DistantSewerRight",
+      "id": "distant-sewer-right",
+      "LocalTransform": { "position": [9.6, 0, -3] },
+      "ParallaxLayer": { "factor": [0.12, 0.08] },
+      "Sprite": { "image": "art/environment/back", "size": [9.6, 12], "sortingLayer": "Background", "order": -30 },
+      "VisualOffset": {}
+    },
+    {
+      "name": "BackWaterLeft",
+      "id": "back-water-left",
+      "LocalTransform": { "position": [-6.4, -3.45, -1] },
+      "ParallaxLayer": { "factor": [0.5, 0.32] },
+      "Sprite": {
+        "image": "art/environment/back-water-1",
+        "size": [12.8, 1.2],
+        "sortingLayer": "Background",
+        "order": -10
+      },
+      "SpriteAnimation": {
+        "frames": "art/environment/back-water-1,art/environment/back-water-2,art/environment/back-water-3",
+        "fps": 4,
+        "loop": false
+      },
+      "VisualOffset": {}
+    },
+    {
+      "name": "BackWaterRight",
+      "id": "back-water-right",
+      "LocalTransform": { "position": [6.4, -3.45, -1] },
+      "ParallaxLayer": { "factor": [0.5, 0.32] },
+      "Sprite": {
+        "image": "art/environment/back-water-1",
+        "size": [12.8, 1.2],
+        "sortingLayer": "Background",
+        "order": -10
+      },
+      "SpriteAnimation": {
+        "frames": "art/environment/back-water-1,art/environment/back-water-2,art/environment/back-water-3",
+        "fps": 4,
+        "loop": false
+      },
+      "VisualOffset": {}
+    },
+    {
+      "name": "FrontSewer",
+      "id": "front-sewer",
+      "LocalTransform": { "position": [0, 0, 1] },
+      "ParallaxLayer": { "factor": [0.82, 0.72] },
+      "Sprite": { "image": "art/environment/front", "size": [29.6, 12], "sortingLayer": "Background" },
+      "VisualOffset": {}
+    },
+    {
+      "name": "FrontWaterLeft",
+      "id": "front-water-left",
+      "LocalTransform": { "position": [-6.4, -3.8, 2] },
+      "ParallaxLayer": {},
+      "Sprite": {
+        "image": "art/environment/front-water/front-water1",
+        "size": [12.8, 1.6],
+        "sortingLayer": "World",
+        "order": 10
+      },
+      "SpriteAnimation": {
+        "frames": "art/environment/front-water/front-water1,art/environment/front-water/front-water2,art/environment/front-water/front-water3,art/environment/front-water/front-water4",
+        "fps": 6,
+        "loop": false
+      },
+      "VisualOffset": {}
+    },
+    {
+      "name": "FrontWaterRight",
+      "id": "front-water-right",
+      "LocalTransform": { "position": [6.4, -3.8, 2] },
+      "ParallaxLayer": {},
+      "Sprite": {
+        "image": "art/environment/front-water/front-water1",
+        "size": [12.8, 1.6],
+        "sortingLayer": "World",
+        "order": 10
+      },
+      "SpriteAnimation": {
+        "frames": "art/environment/front-water/front-water1,art/environment/front-water/front-water2,art/environment/front-water/front-water3,art/environment/front-water/front-water4",
+        "fps": 6,
+        "loop": false
+      },
+      "VisualOffset": {}
     }
   ]
 }

@@ -6,6 +6,7 @@ import {
   GameState,
   GameplayPresentation,
   MenuIntent,
+  ParallaxLayer,
   PlatformCollisionCell,
   PlatformCollisionGrid,
   Player,
@@ -175,6 +176,73 @@ worldTest('authored player clips preserve reviewed timing, looping and feedback 
   expect(jump.events.map((event) => event.name)).toEqual(['takeoff-feedback']);
   expect(shoot.events.map((event) => event.name)).toEqual(['muzzle-feedback']);
   expect(hurt.events.map((event) => event.name)).toEqual(['hurt-feedback']);
+});
+
+worldTest('water splash keeps a reusable one-shot presentation contract', async () => {
+  const splash = clip2DInfo('art/effects/water-splash.clip2d.json');
+
+  expect(splash.frames.length).toBe(5);
+  expect(splash.loop).toBe('once');
+  expect(splash.duration).toBeCloseTo(0.5);
+});
+
+worldTest('parallax factors and water startup animation settle at bounded cost', async ({ world, step }) => {
+  await step(2);
+  const layers = world.entities(ParallaxLayer).map((entity) => ({
+    factor: world.get(entity, ParallaxLayer).factor,
+    sortingLayer: world.get(entity, Sprite).sortingLayer,
+    order: world.get(entity, Sprite).order,
+  }));
+  expect(layers.filter((layer) => layer.order === -30)).toEqual([
+    { factor: [0.12, 0.08], sortingLayer: 'Background', order: -30 },
+    { factor: [0.12, 0.08], sortingLayer: 'Background', order: -30 },
+    { factor: [0.12, 0.08], sortingLayer: 'Background', order: -30 },
+  ]);
+  expect(layers.filter((layer) => layer.order === -20)).toEqual([
+    { factor: [0.32, 0.18], sortingLayer: 'Background', order: -20 },
+  ]);
+  expect(layers.filter((layer) => layer.order === -10)).toEqual([
+    { factor: [0.5, 0.32], sortingLayer: 'Background', order: -10 },
+    { factor: [0.5, 0.32], sortingLayer: 'Background', order: -10 },
+  ]);
+  expect(layers.filter((layer) => layer.order === 0)).toEqual([
+    { factor: [0.82, 0.72], sortingLayer: 'Background', order: 0 },
+  ]);
+  const frontWater = layers.filter((layer) => layer.order === 10);
+  expect(frontWater.length).toBe(2);
+  expect(frontWater.every(
+    (layer) => layer.sortingLayer === 'World' && layer.order === 10 && layer.factor[0] === 1 && layer.factor[1] === 1,
+  )).toBe(true);
+
+  const animatedWater = world.entities(SpriteAnimation).filter((entity) => {
+    const frames = world.get(entity, SpriteAnimation).frames;
+    return frames.includes('water');
+  });
+  expect(animatedWater.length).toBe(4);
+  expect(animatedWater.map((entity) => world.get(entity, SpriteAnimation).fps).sort()).toEqual([4, 4, 6, 6]);
+  expect(animatedWater.every((entity) => world.get(entity, SpriteAnimation).loop === false)).toBe(true);
+  await step(60);
+  expect(animatedWater.every((entity) => world.get(entity, SpriteAnimation).playing === false)).toBe(true);
+  const settledFrames = animatedWater.map((entity) => world.get(entity, SpriteAnimation).frame);
+  await step(60);
+  expect(animatedWater.map((entity) => world.get(entity, SpriteAnimation).frame)).toEqual(settledFrames);
+});
+
+worldTest('camera-relative parallax stays presentation-only', async ({ world, step }) => {
+  await step(2);
+  const hash = world.hash();
+  world.setResource(CameraFollowState, { center: [2, -1], target: [2, -1], lookAhead: 0, settled: true });
+  expect(world.hash()).toBe(hash);
+  await step(1);
+
+  const offsets = world.entities(ParallaxLayer).map((entity) => ({
+    factor: world.get(entity, ParallaxLayer).factor,
+    offset: world.get(entity, VisualOffset).position,
+  }));
+  for (const layer of offsets) {
+    expect(layer.offset[0]).toBeCloseTo(2 * (1 - layer.factor[0]));
+    expect(layer.offset[1]).toBeCloseTo(-1 * (1 - layer.factor[1]));
+  }
 });
 
 worldTest('the latest recorded intent wins deterministically within a step', async ({ world, step, input }) => {
@@ -549,7 +617,7 @@ worldTest('platform collision stops at walls and cannot tunnel at extreme dash s
 
   expect(world.get(player, LocalTransform).position[0]).toBeCloseTo(24.58);
   expect(world.get(player, PlayerMotion).horizontalVelocity).toBe(0);
-  expect(world.hash()).toBe('bdc2ab3474f4276d');
+  expect(world.hash()).toBe('5b13481e1a063f72');
 });
 
 worldTest('platform collision resolves a diagonal floor-wall corner without penetration', async ({ world, step }) => {
@@ -574,7 +642,7 @@ worldTest('platform collision resolves a diagonal floor-wall corner without pene
   expect(position[0]).toBeCloseTo(30.58);
   expect(position[1]).toBeCloseTo(0.5);
   expect(world.get(player, PlayerGroundContact).grounded).toBe(true);
-  expect(world.hash()).toBe('d2b718c7ce3d8493');
+  expect(world.hash()).toBe('f952bbf6259b0cac');
 });
 
 worldTest('small-step assistance climbs only ledges within its configured boundary', async ({ world, step, input }) => {
@@ -605,7 +673,7 @@ worldTest('small-step assistance climbs only ledges within its configured bounda
   }
   expect(world.get(player, LocalTransform).position[0]).toBeLessThanOrEqual(41.58);
   expect(world.get(player, LocalTransform).position[1]).toBeCloseTo(0.5);
-  expect(world.hash()).toBe('a01a4e912fdddbbf');
+  expect(world.hash()).toBe('093ab475857bdfef');
 });
 
 worldTest('cliff edges end ground contact exactly after support and preserve coyote integration', async ({ world, step, input }) => {
@@ -772,7 +840,7 @@ worldTest('dash mechanics produce a stable deterministic state hash', async ({ w
   input.action('dash', 1);
   await step(9);
 
-  expect(world.hash()).toBe('0ae756565a9cfbba');
+  expect(world.hash()).toBe('7ebb6838141b90fa');
 });
 
 worldTest('jump mechanics produce a stable deterministic state hash', async ({ world, step, input }) => {
@@ -786,7 +854,7 @@ worldTest('jump mechanics produce a stable deterministic state hash', async ({ w
   input.action('moveX', -0.75);
   await step(17);
 
-  expect(world.hash()).toBe('851e344979a356dd');
+  expect(world.hash()).toBe('7924c356b85153a5');
 });
 
 worldTest('horizontal movement produces a stable deterministic state hash', async ({ world, step, input }) => {
@@ -801,7 +869,7 @@ worldTest('horizontal movement produces a stable deterministic state hash', asyn
   }
   await step(5);
 
-  expect(world.hash()).toBe('8129bc225d53b333');
+  expect(world.hash()).toBe('f2d501cf68686af9');
 });
 
 worldTest('camera look-ahead follows authoritative velocity and reverses direction', async ({ world, step, input }) => {

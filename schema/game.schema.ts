@@ -80,6 +80,14 @@ export const RoomLandmark = component(
   { sim: true, doc: 'A deterministic marker placed in the room scene without duplicating collision geometry.' },
 );
 
+export const ParallaxLayer = component(
+  'ParallaxLayer',
+  {
+    factor: vec2({ default: [1, 1], doc: 'Fraction of camera motion retained by this presentation layer.' }),
+  },
+  { sim: false, doc: 'Authored presentation-only parallax configuration.' },
+);
+
 export const RoomCollisionState = resource(
   'RoomCollisionState',
   {

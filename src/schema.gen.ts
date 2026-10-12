@@ -426,6 +426,26 @@ export const schemaIr = {
       "doc": "Read-only presentation snapshot derived from consequential simulation state."
     },
     {
+      "name": "ParallaxLayer",
+      "kind": "component",
+      "sim": false,
+      "fields": [
+        {
+          "name": "factor",
+          "kind": "vec2",
+          "scalar": "f32",
+          "lanes": 2,
+          "default": [
+            1,
+            1
+          ],
+          "doc": "Fraction of camera motion retained by this presentation layer."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Authored presentation-only parallax configuration."
+    },
+    {
       "name": "RoomCameraBounds",
       "kind": "resource",
       "sim": false,
@@ -1401,6 +1421,17 @@ export interface GameplayPresentationValue {
 }
 /** Read-only presentation snapshot derived from consequential simulation state. (resource, presentation-only) */
 export const GameplayPresentation = typeToken<GameplayPresentationViews, GameplayPresentationValue>('GameplayPresentation', 'resource', { sig: 'phase:enum:1,moveX:enum:1,dashing:bool:1,dashDirection:enum:1,dashReady:bool:1,playerPosition:vec2:2,playerVelocity:vec2:2,playerFacing:enum:1', read: (v: GameplayPresentationViews, i: number, o: Record<string, unknown>) => { o.phase = $r.enm('GamePhase', v.phase[i]!); o.moveX = $r.enm('MoveDirection', v.moveX[i]!); o.dashing = v.dashing[i] !== 0; o.dashDirection = $r.enm('PresentationDashDirection', v.dashDirection[i]!); o.dashReady = v.dashReady[i] !== 0; o.playerPosition = $r.lanes(v.playerPosition, i, 2, o.playerPosition); o.playerVelocity = $r.lanes(v.playerVelocity, i, 2, o.playerVelocity); o.playerFacing = $r.enm('PresentationFacingDirection', v.playerFacing[i]!); return o; } });
+
+export interface ParallaxLayerViews {
+  /** Fraction of camera motion retained by this presentation layer. */
+  factor: Float32Array;
+}
+export interface ParallaxLayerValue {
+  /** Fraction of camera motion retained by this presentation layer. */
+  factor: [number, number];
+}
+/** Authored presentation-only parallax configuration. (component, presentation-only) */
+export const ParallaxLayer = typeToken<ParallaxLayerViews, ParallaxLayerValue>('ParallaxLayer', 'component', { sig: 'factor:vec2:2', read: (v: ParallaxLayerViews, i: number, o: Record<string, unknown>) => { o.factor = $r.lanes(v.factor, i, 2, o.factor); return o; } });
 
 export interface RoomCameraBoundsViews {
   /** Authored left edge of the room camera envelope. */
