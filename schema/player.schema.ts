@@ -1,4 +1,4 @@
-import { bool, component, enumOf, event, f32, resource, u32 } from '@gameengine/schema';
+import { bool, component, enumOf, event, f32, i32, resource, u32 } from '@gameengine/schema';
 
 export const Player = component(
   'Player',
@@ -20,8 +20,31 @@ export const Player = component(
     dashCooldownSteps: u32({ default: 48, doc: 'Fixed simulation steps from activation until another dash may start.' }),
     dashControlLockSteps: u32({ default: 6, doc: 'Fixed simulation steps after a dash before movement and jump control return.' }),
     dashGravityMultiplier: f32({ default: 0.2, min: 0, max: 1, doc: 'Gravity multiplier while an airborne dash is active.' }),
+    collisionHalfWidth: f32({ default: 0.42, min: 0.01, doc: 'Half-width of the deterministic player collision box.' }),
+    collisionHeight: f32({ default: 1.2, min: 0.01, doc: 'Height of the deterministic player collision box measured upward from the actor origin.' }),
+    maxStepHeight: f32({ default: 0.35, min: 0, doc: 'Maximum ledge height climbed automatically while grounded.' }),
+    groundSnapDistance: f32({ default: 0.12, min: 0, doc: 'Maximum downward floor snap used to stay stable over shallow cliff edges.' }),
   },
   { sim: true, doc: 'Player-owned deterministic movement configuration.' },
+);
+
+export const PlatformCollisionCell = component(
+  'PlatformCollisionCell',
+  {
+    x: i32({ default: 0, doc: 'Grid-space x coordinate.' }),
+    y: i32({ default: 0, doc: 'Grid-space y coordinate.' }),
+  },
+  { sim: true, doc: 'A solid cell in the deterministic platform collision grid. Rendering is independent.' },
+);
+
+export const PlatformCollisionGrid = resource(
+  'PlatformCollisionGrid',
+  {
+    originX: f32({ default: 0, doc: 'World x coordinate of cell (0, 0) lower-left corner.' }),
+    originY: f32({ default: -0.5, doc: 'World y coordinate of cell (0, 0) lower-left corner.' }),
+    cellSize: f32({ default: 1, min: 0.01, doc: 'Square cell size in world units.' }),
+  },
+  { sim: true, doc: 'World mapping for deterministic platform collision cells.' },
 );
 
 export const PlayerMotion = component(
@@ -29,7 +52,7 @@ export const PlayerMotion = component(
   {
     horizontalVelocity: f32({ default: 0, doc: 'Authoritative horizontal velocity in world units per second.' }),
     verticalVelocity: f32({ default: 0, doc: 'Authoritative vertical velocity in world units per second.' }),
-    grounded: bool({ default: true, doc: 'Movement-owned grounded state derived from collision contact.' }),
+    groundedForMovement: bool({ default: true, doc: 'Movement-interpreted grounded state, one fixed step behind raw collision support.' }),
     facing: enumOf('FacingDirection', ['Left', 'Right'], { default: 'Right' }),
     coyoteStepsRemaining: u32({ default: 0, doc: 'Remaining fixed steps in the grounded grace window.' }),
     jumpBufferStepsRemaining: u32({ default: 0, doc: 'Remaining fixed steps for a queued jump request.' }),

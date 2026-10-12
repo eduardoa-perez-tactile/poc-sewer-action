@@ -1,10 +1,10 @@
-import { defineSystem, LocalTransform, query, read, write } from '@gameengine/runtime';
+import { defineSystem, query, read, write } from '@gameengine/runtime';
 import { GameState, Player, PlayerControl, PlayerDashState, PlayerGroundContact, PlayerMotion, PlayerStepInput } from '../schema.gen.ts';
 
 export const MovePlayerVertically = defineSystem({
   name: 'MovePlayerVertically',
   after: ['CapturePlayerIntent'],
-  query: query(read(Player), read(PlayerControl), read(PlayerDashState), read(PlayerGroundContact), write(PlayerMotion), write(LocalTransform)),
+  query: query(read(Player), read(PlayerControl), read(PlayerDashState), read(PlayerGroundContact), write(PlayerMotion)),
   resources: [read(GameState), read(PlayerStepInput)],
   runIf: { resource: GameState, field: 'phase', value: 'Playing' },
   run(ctx, players) {
@@ -15,11 +15,10 @@ export const MovePlayerVertically = defineSystem({
       const dash = chunk.col(PlayerDashState);
       const contact = chunk.col(PlayerGroundContact);
       const motion = chunk.col(PlayerMotion);
-      const position = chunk.col(LocalTransform).position;
 
       for (let row = 0; row < chunk.length; row++) {
         const hasGroundContact = contact.grounded[row] !== 0;
-        let grounded = motion.grounded[row] !== 0;
+        let grounded = motion.groundedForMovement[row] !== 0;
         let ignoreGroundContact = motion.ignoreGroundContact[row] !== 0;
         let coyote = motion.coyoteStepsRemaining[row]!;
         let buffered = motion.jumpBufferStepsRemaining[row]!;
@@ -43,12 +42,11 @@ export const MovePlayerVertically = defineSystem({
           if (!grounded) {
             velocity = velocity < 0 ? velocity * 0.12 : 0;
             velocity -= config.gravity[row]! * config.dashGravityMultiplier[row]! * ctx.dt;
-            position[row * 3 + 1] = position[row * 3 + 1]! + velocity * ctx.dt;
           } else {
             velocity = 0;
           }
           motion.verticalVelocity[row] = velocity;
-          motion.grounded[row] = grounded ? 1 : 0;
+          motion.groundedForMovement[row] = grounded ? 1 : 0;
           motion.coyoteStepsRemaining[row] = coyote;
           motion.airJumpsRemaining[row] = airJumps;
           motion.jumpWasHeld[row] = control.jumpHeld[row]!;
@@ -82,7 +80,6 @@ export const MovePlayerVertically = defineSystem({
           velocity -= config.gravity[row]! * ctx.dt;
           const maxFallSpeed = config.maxFallSpeed[row]!;
           if (velocity < -maxFallSpeed) velocity = -maxFallSpeed;
-          position[row * 3 + 1] = position[row * 3 + 1]! + velocity * ctx.dt;
         } else {
           velocity = 0;
         }
@@ -91,7 +88,7 @@ export const MovePlayerVertically = defineSystem({
         if (buffered > 0) buffered -= 1;
 
         motion.verticalVelocity[row] = velocity;
-        motion.grounded[row] = grounded ? 1 : 0;
+        motion.groundedForMovement[row] = grounded ? 1 : 0;
         motion.coyoteStepsRemaining[row] = coyote;
         motion.jumpBufferStepsRemaining[row] = buffered;
         motion.airJumpsRemaining[row] = airJumps;
