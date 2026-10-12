@@ -30,7 +30,7 @@ jobs:
         id: engine
         shell: bash
         run: |
-          engine_bin=$(./tools/ci/install-gameengine "$RUNNER_TEMP/tactile-game-engine")
+          engine_bin=$(./tools/ci/install-gameengine "/Applications")
           echo "$engine_bin" >> "$GITHUB_PATH"
 
       - name: Verify engine toolchain

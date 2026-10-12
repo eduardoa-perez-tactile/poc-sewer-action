@@ -29,7 +29,8 @@ Hermes host in the installed engine package.
 `.github/workflows/ci.yml` runs the pre-push gate on pull requests and on `main`. It uses a GitHub-
 hosted Apple-silicon macOS runner because the published engine archive is macOS arm64, installs the
 version pinned in `.gameengine-version`, and checks the archive against the SHA-256 pinned in
-`tools/ci/install-gameengine`. Upgrade those two values in the same pull request.
+`tools/ci/install-gameengine`. The app is extracted under `/Applications`, matching the SDK paths
+generated in `tsconfig.json`. Upgrade the version and checksum in the same pull request.
 
 The workflow sets `HARNESS_JS=v8` explicitly. It does not probe for Hermes and silently fall back;
 Hermes remains mandatory in the release gate and unavailable until issue #6 provides the host.
