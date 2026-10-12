@@ -96,6 +96,132 @@ worldTest('the first sewer room exposes spawn, encounter, water edge and exit la
   expect(landmarks.get('Exit')).toEqual([7, -1.5, 0]);
 });
 
+worldTest('the vertical slice replay traverses the first room with the complete movement kit', async ({ world, step, input }) => {
+  input.view(1920, 1080, 1);
+  await step(2);
+
+  const [player] = world.entities(Player);
+  expect(player).toBeDefined();
+  const landmarks = new Map(
+    world.entities(RoomLandmark).map((entity) => [
+      world.get(entity, RoomLandmark).kind,
+      world.get(entity, LocalTransform).position[0]!,
+    ] as const),
+  );
+  const encounterX = landmarks.get('Encounter')!;
+  const waterEdgeX = landmarks.get('WaterEdge')!;
+  const exitX = landmarks.get('Exit')!;
+  let reachedEncounter = false;
+  let reachedWaterEdge = false;
+  let usedDoubleJump = false;
+  let usedBufferedJump = false;
+  let usedCoyoteJump = false;
+  let usedDash = false;
+  let traversalStep = 0;
+  let previousX = world.get(player!, LocalTransform).position[0]!;
+  const crossings = new Map<string, { step: number; x: number; y: number; clip: string }>();
+  const orderedLandmarks = [
+    ['Encounter', encounterX],
+    ['WaterEdge', waterEdgeX],
+    ['Exit', exitX],
+  ] as const;
+  const locomotionClips = new Set([
+    'art/player/idle.clip2d.json',
+    'art/player/run.clip2d.json',
+    'art/player/jump.clip2d.json',
+    'art/player/fall.clip2d.json',
+  ]);
+
+  const advance = async (actions: { moveX?: number; jump?: number; dash?: number } = {}) => {
+    input.action('moveX', actions.moveX ?? 1);
+    if (actions.jump !== undefined) input.action('jump', actions.jump);
+    if (actions.dash !== undefined) input.action('dash', actions.dash);
+    await step(1);
+    traversalStep += 1;
+    const position = world.get(player!, LocalTransform).position;
+    const x = position[0]!;
+    expect(Math.abs(x - previousX)).toBeLessThanOrEqual(12 / 60 + 0.00001);
+    const presentation = world.resource(GameplayPresentation);
+    expect(presentation.playerPosition).toEqual(position.slice(0, 2));
+    const clip = world.get(player!, PlayerAnimationPresentation).clip ?? '';
+    expect(locomotionClips.has(clip)).toBe(true);
+    const camera = world.resource(CameraFollowState);
+    const room = world.resource(RoomCameraBounds);
+    const cameraBounds = cameraCenterBounds(1920, 1080, [0, 0, 0, 0], room);
+    expect(camera.center[0]!).toBeGreaterThanOrEqual(cameraBounds.minX);
+    expect(camera.center[0]!).toBeLessThanOrEqual(cameraBounds.maxX);
+    expect(camera.center[1]!).toBeGreaterThanOrEqual(cameraBounds.minY);
+    expect(camera.center[1]!).toBeLessThanOrEqual(cameraBounds.maxY);
+    expect(Math.abs(x - camera.center[0]!)).toBeLessThanOrEqual(6);
+    for (const [kind, landmarkX] of orderedLandmarks) {
+      if (!crossings.has(kind) && previousX < landmarkX && x >= landmarkX) {
+        crossings.set(kind, { step: traversalStep, x, y: position[1]!, clip });
+      }
+    }
+    previousX = x;
+    reachedEncounter ||= x >= encounterX;
+    reachedWaterEdge ||= x >= waterEdgeX;
+  };
+
+  for (let i = 0; i < 18; i++) await advance();
+  await advance({ moveX: 0, jump: 1 });
+  for (let i = 0; i < 4; i++) await advance({ moveX: 0, jump: 1 });
+  await advance({ moveX: 0, jump: 0 });
+  await advance({ moveX: 0, jump: 1 });
+  usedDoubleJump = world.get(player!, PlayerMotion).airJumpsRemaining === 0;
+  await advance({ moveX: 0, jump: 0 });
+
+  let queuedBufferedJump = false;
+  for (let i = 0; i < 180 && !usedBufferedJump; i++) {
+    const motion = world.get(player!, PlayerMotion);
+    const contact = world.get(player!, PlayerGroundContact);
+    const y = world.get(player!, LocalTransform).position[1]!;
+    if (!queuedBufferedJump && !contact.grounded && motion.airJumpsRemaining === 0 && motion.verticalVelocity < 0 && y < -2) {
+      await advance({ moveX: 0, jump: 1 });
+      queuedBufferedJump = world.get(player!, PlayerMotion).jumpBufferStepsRemaining > 0;
+      await advance({ moveX: 0, jump: 0 });
+      continue;
+    }
+    await advance({ moveX: 0 });
+    const next = world.get(player!, PlayerMotion);
+    usedBufferedJump = queuedBufferedJump && next.airJumpsRemaining === 1 && next.verticalVelocity > 0;
+  }
+
+  await advance({ dash: 1 });
+  usedDash = world.get(player!, PlayerDashState).active;
+  await advance({ dash: 0 });
+
+  for (let i = 0; i < 240 && world.get(player!, LocalTransform).position[0]! < exitX; i++) {
+    const before = world.get(player!, PlayerMotion);
+    const contact = world.get(player!, PlayerGroundContact);
+    if (!usedCoyoteJump && !contact.grounded && before.coyoteStepsRemaining > 0 && before.verticalVelocity <= 0) {
+      await advance({ jump: 1 });
+      usedCoyoteJump = world.get(player!, PlayerMotion).verticalVelocity > 0;
+      await advance({ jump: 0 });
+    } else {
+      await advance();
+    }
+  }
+
+  const finish = world.get(player!, LocalTransform).position;
+  const encounter = crossings.get('Encounter')!;
+  const waterEdge = crossings.get('WaterEdge')!;
+  const exit = crossings.get('Exit')!;
+  expect(reachedEncounter).toBe(true);
+  expect(reachedWaterEdge).toBe(true);
+  expect(finish[0]!).toBeGreaterThanOrEqual(exitX);
+  expect(encounter.step).toBeLessThan(waterEdge.step);
+  expect(waterEdge.step).toBeLessThan(exit.step);
+  expect(encounter.x - encounterX).toBeLessThanOrEqual(12 / 60 + 0.00001);
+  expect(waterEdge.x - waterEdgeX).toBeLessThanOrEqual(12 / 60 + 0.00001);
+  expect(exit.x - exitX).toBeLessThanOrEqual(12 / 60 + 0.00001);
+  expect([encounter.y, waterEdge.y, exit.y].every((y) => y >= -4.5 && y <= 4.5)).toBe(true);
+  expect(usedDoubleJump).toBe(true);
+  expect(usedBufferedJump).toBe(true);
+  expect(usedCoyoteJump).toBe(true);
+  expect(usedDash).toBe(true);
+});
+
 worldTest('recorded player intent becomes simulation state and a presentation snapshot', async ({ world, step, input }) => {
   input.view(1920, 1080, 1);
   await step(1);
