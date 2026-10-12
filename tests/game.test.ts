@@ -7,6 +7,7 @@ import {
   Player,
   PlayerActionState,
   PlayerControl,
+  PlayerDashState,
   PlayerGroundContact,
   PlayerIntent,
   PlayerMotion,
@@ -35,7 +36,13 @@ worldTest('recorded player intent becomes simulation state and a presentation sn
   const [player] = world.entities(Player);
   expect(player).toBeDefined();
   expect(world.get(player!, PlayerControl)).toEqual({ moveX: -0.75, crouch: true, jumpHeld: false });
-  expect(world.resource(GameplayPresentation)).toEqual({ phase: 'Playing', moveX: 'Left' });
+  expect(world.resource(GameplayPresentation)).toEqual({
+    phase: 'Playing',
+    moveX: 'Left',
+    dashing: false,
+    dashDirection: 'Right',
+    dashReady: true,
+  });
 
   await step(1);
   expect(world.get(player!, PlayerControl)).toEqual({ moveX: 0, crouch: false, jumpHeld: false });
@@ -170,6 +177,7 @@ worldTest('airborne movement uses reduced acceleration and braking', async ({ wo
     LocalTransform: {},
     Player: {},
     PlayerControl: {},
+    PlayerDashState: {},
     PlayerGroundContact: { grounded: false },
     PlayerMotion: { grounded: false },
   });
@@ -227,6 +235,7 @@ worldTest('coyote time accepts its final eligible step and then expires', async 
     LocalTransform: {},
     Player: {},
     PlayerControl: {},
+    PlayerDashState: {},
     PlayerGroundContact: { grounded: false },
     PlayerMotion: { grounded: false, coyoteStepsRemaining: 1, airJumpsRemaining: 0 },
   });
@@ -234,6 +243,7 @@ worldTest('coyote time accepts its final eligible step and then expires', async 
     LocalTransform: {},
     Player: {},
     PlayerControl: {},
+    PlayerDashState: {},
     PlayerGroundContact: { grounded: false },
     PlayerMotion: { grounded: false, coyoteStepsRemaining: 0, airJumpsRemaining: 0 },
   });
@@ -251,6 +261,7 @@ worldTest('a buffered jump fires on grounded contact within the configured windo
     LocalTransform: {},
     Player: {},
     PlayerControl: {},
+    PlayerDashState: {},
     PlayerGroundContact: { grounded: false },
     PlayerMotion: { grounded: false, coyoteStepsRemaining: 0, airJumpsRemaining: 0 },
   });
@@ -274,6 +285,7 @@ worldTest('an expired jump buffer does not fire on later grounded contact', asyn
     LocalTransform: {},
     Player: {},
     PlayerControl: {},
+    PlayerDashState: {},
     PlayerGroundContact: { grounded: false },
     PlayerMotion: { grounded: false, coyoteStepsRemaining: 0, airJumpsRemaining: 0 },
   });
@@ -342,6 +354,143 @@ worldTest('gravity carries a jump through its apex and clamps falling speed', as
   expect(world.get(player!, LocalTransform).position[1]!).toBeLessThan(apexY);
 });
 
+worldTest('dash activates from a press edge and chooses input before facing fallback', async ({ world, step, input }) => {
+  await step(1);
+  const [player] = world.entities(Player);
+
+  input.action('moveX', -1);
+  input.action('dash', 1);
+  await step(1);
+
+  expect(world.get(player!, PlayerDashState)).toEqual({
+    active: true,
+    direction: 'Left',
+    activeStepsRemaining: 7,
+    cooldownStepsRemaining: 47,
+    controlLockStepsRemaining: 13,
+  });
+  expect(world.get(player!, PlayerMotion).horizontalVelocity).toBe(-12);
+
+  await step(48);
+  input.action('dash', 0);
+  input.action('moveX', 0);
+  await step(1);
+  input.action('dash', 1);
+  await step(1);
+
+  expect(world.get(player!, PlayerDashState).direction).toBe('Left');
+});
+
+worldTest('dash movement lasts exactly eight steps then clamps to run speed through control lock', async ({ world, step, input }) => {
+  await step(1);
+  const [player] = world.entities(Player);
+  const startX = world.get(player!, LocalTransform).position[0]!;
+
+  input.action('dash', 1);
+  await step(1);
+  await step(6);
+  expect(world.get(player!, PlayerDashState).active).toBe(true);
+  expect(world.get(player!, PlayerDashState).activeStepsRemaining).toBe(1);
+
+  await step(1);
+  const ended = world.get(player!, PlayerDashState);
+  expect(ended.active).toBe(false);
+  expect(ended.activeStepsRemaining).toBe(0);
+  expect(ended.controlLockStepsRemaining).toBe(6);
+  expect(world.get(player!, LocalTransform).position[0]!).toBeCloseTo(startX + (8 * 12) / 60);
+  expect(world.get(player!, PlayerMotion).horizontalVelocity).toBe(8.5);
+
+  input.action('moveX', -1);
+  await step(5);
+  expect(world.get(player!, PlayerDashState).controlLockStepsRemaining).toBe(1);
+  expect(world.get(player!, PlayerMotion).horizontalVelocity).toBe(8.5);
+
+  await step(1);
+  expect(world.get(player!, PlayerDashState).controlLockStepsRemaining).toBe(0);
+  expect(world.get(player!, PlayerMotion).horizontalVelocity).toBe(8.5);
+  await step(1);
+  expect(world.get(player!, PlayerMotion).horizontalVelocity).toBeLessThan(8.5);
+});
+
+worldTest('dash cooldown rejects its final blocked step and recovers on the next edge', async ({ world, step, input }) => {
+  await step(1);
+  const [player] = world.entities(Player);
+
+  input.emit(PlayerIntent, { moveX: 1, jump: false, jumpHeld: false, dash: true, fire: false, crouch: false });
+  await step(1);
+  await step(46);
+  expect(world.get(player!, PlayerDashState).cooldownStepsRemaining).toBe(1);
+
+  input.emit(PlayerIntent, { moveX: -1, jump: false, jumpHeld: false, dash: true, fire: false, crouch: false });
+  await step(1);
+  expect(world.get(player!, PlayerDashState).active).toBe(false);
+  expect(world.get(player!, PlayerDashState).cooldownStepsRemaining).toBe(0);
+
+  input.emit(PlayerIntent, { moveX: -1, jump: false, jumpHeld: false, dash: true, fire: false, crouch: false });
+  await step(1);
+  expect(world.get(player!, PlayerDashState).active).toBe(true);
+  expect(world.get(player!, PlayerDashState).direction).toBe('Left');
+});
+
+worldTest('ground and air dashes share eligibility while air dash suppresses rise and reduces gravity', async ({ world, step, input }) => {
+  await step(1);
+  const [grounded] = world.entities(Player);
+  const airborne = world.spawn({
+    LocalTransform: {},
+    Player: {},
+    PlayerControl: {},
+    PlayerDashState: {},
+    PlayerGroundContact: { grounded: false },
+    PlayerMotion: { grounded: false, verticalVelocity: 9 },
+  });
+
+  input.action('dash', 1);
+  await step(1);
+
+  expect(world.get(grounded!, PlayerDashState).active).toBe(true);
+  expect(world.get(grounded!, PlayerMotion).verticalVelocity).toBe(0);
+  expect(world.get(airborne, PlayerDashState).active).toBe(true);
+  expect(world.get(airborne, PlayerMotion).verticalVelocity).toBeCloseTo(-(24 * 0.2) / 60);
+});
+
+worldTest('dash locks jump and horizontal steering without leaving a held dash edge sticky', async ({ world, step, input }) => {
+  await step(1);
+  const [player] = world.entities(Player);
+
+  input.action('dash', 1);
+  await step(1);
+  input.action('moveX', -1);
+  input.action('jump', 1);
+  await step(8);
+
+  expect(world.get(player!, PlayerDashState).active).toBe(false);
+  expect(world.get(player!, PlayerMotion).grounded).toBe(true);
+  expect(world.get(player!, PlayerMotion).verticalVelocity).toBe(0);
+  expect(world.get(player!, PlayerMotion).horizontalVelocity).toBe(8.5);
+
+  await step(6);
+  expect(world.get(player!, PlayerDashState).active).toBe(false);
+  expect(world.get(player!, PlayerDashState).cooldownStepsRemaining).toBeGreaterThan(0);
+  expect(world.get(player!, PlayerMotion).verticalVelocity).toBe(0);
+});
+
+worldTest('dash mechanics produce a stable deterministic state hash', async ({ world, step, input }) => {
+  await step(1);
+  input.action('moveX', -0.75);
+  input.action('dash', 1);
+  await step(5);
+  input.action('dash', 0);
+  input.action('jump', 1);
+  await step(11);
+  input.action('jump', 0);
+  await step(34);
+  input.action('moveX', 0);
+  input.action('dash', 1);
+  await step(9);
+
+  expect(world.hash()).toBe('af4b5883812d40f6');
+});
+
 worldTest('jump mechanics produce a stable deterministic state hash', async ({ world, step, input }) => {
   await step(1);
   input.action('jump', 1);
@@ -353,7 +502,7 @@ worldTest('jump mechanics produce a stable deterministic state hash', async ({ w
   input.action('moveX', -0.75);
   await step(17);
 
-  expect(world.hash()).toBe('202e7c0977b18f8e');
+  expect(world.hash()).toBe('a3ed80193b07288c');
 });
 
 worldTest('horizontal movement produces a stable deterministic state hash', async ({ world, step, input }) => {
@@ -368,7 +517,7 @@ worldTest('horizontal movement produces a stable deterministic state hash', asyn
   }
   await step(5);
 
-  expect(world.hash()).toBe('f9ae30e76c8ffed1');
+  expect(world.hash()).toBe('7544c9cbb29ef409');
 });
 
 renderTest('the vertical slice stays within its 2D draw-call budget', async ({ step, render }) => {

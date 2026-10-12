@@ -15,6 +15,11 @@ export const Player = component(
     coyoteSteps: u32({ default: 6, doc: 'Fixed simulation steps after leaving ground in which the ground jump remains available.' }),
     jumpBufferSteps: u32({ default: 6, doc: 'Fixed simulation steps for which a jump edge remains queued.' }),
     airJumps: u32({ default: 1, doc: 'Air jumps restored on grounded contact.' }),
+    dashSpeed: f32({ default: 12, min: 0, doc: 'Locked horizontal speed while dashing in world units per second.' }),
+    dashDurationSteps: u32({ default: 8, doc: 'Fixed simulation steps for which a dash moves at dash speed.' }),
+    dashCooldownSteps: u32({ default: 48, doc: 'Fixed simulation steps from activation until another dash may start.' }),
+    dashControlLockSteps: u32({ default: 6, doc: 'Fixed simulation steps after a dash before movement and jump control return.' }),
+    dashGravityMultiplier: f32({ default: 0.2, min: 0, max: 1, doc: 'Gravity multiplier while an airborne dash is active.' }),
   },
   { sim: true, doc: 'Player-owned deterministic movement configuration.' },
 );
@@ -45,6 +50,18 @@ export const PlayerControl = component(
   { sim: true, doc: 'Latest recorded held player control. Action systems consume step-scoped intent events directly.' },
 );
 
+export const PlayerDashState = component(
+  'PlayerDashState',
+  {
+    active: bool({ default: false, doc: 'Whether the player is currently in the fixed-step dash movement phase.' }),
+    direction: enumOf('DashDirection', ['Left', 'Right'], { default: 'Right' }),
+    activeStepsRemaining: u32({ default: 0, doc: 'Dash movement steps remaining, including the current step.' }),
+    cooldownStepsRemaining: u32({ default: 0, doc: 'Steps before another dash activation is accepted.' }),
+    controlLockStepsRemaining: u32({ default: 0, doc: 'Steps before horizontal and jump control are accepted again.' }),
+  },
+  { sim: true, doc: 'Authoritative deterministic dash state. Presentation may observe but never write it.' },
+);
+
 export const PlayerGroundContact = component(
   'PlayerGroundContact',
   {
@@ -57,6 +74,7 @@ export const PlayerStepInput = resource(
   'PlayerStepInput',
   {
     jumpRequested: bool({ default: false, doc: 'Jump press for the current fixed step only.' }),
+    dashRequested: bool({ default: false, doc: 'Dash press for the current fixed step only.' }),
   },
   { sim: true, doc: 'Unconditionally overwritten input sample consumed in the same fixed step.' },
 );

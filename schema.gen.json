@@ -33,11 +33,27 @@
       "package": "SewerAction"
     },
     {
+      "name": "PresentationDashDirection",
+      "values": [
+        "Left",
+        "Right"
+      ],
+      "package": "SewerAction"
+    },
+    {
       "name": "HazardKind",
       "values": [
         "Water",
         "Explosive",
         "Contact"
+      ],
+      "package": "SewerAction"
+    },
+    {
+      "name": "DashDirection",
+      "values": [
+        "Left",
+        "Right"
       ],
       "package": "SewerAction"
     },
@@ -232,6 +248,31 @@
           "lanes": 1,
           "enumName": "MoveDirection",
           "default": "Neutral"
+        },
+        {
+          "name": "dashing",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Presentation-readable active dash flag derived from simulation state."
+        },
+        {
+          "name": "dashDirection",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "PresentationDashDirection",
+          "default": "Right",
+          "doc": "Presentation-readable dash direction for animation and effects."
+        },
+        {
+          "name": "dashReady",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true,
+          "doc": "Whether the deterministic dash cooldown has completed."
         }
       ],
       "package": "SewerAction",
@@ -429,6 +470,49 @@
           "lanes": 1,
           "default": 1,
           "doc": "Air jumps restored on grounded contact."
+        },
+        {
+          "name": "dashSpeed",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 12,
+          "min": 0,
+          "doc": "Locked horizontal speed while dashing in world units per second."
+        },
+        {
+          "name": "dashDurationSteps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 8,
+          "doc": "Fixed simulation steps for which a dash moves at dash speed."
+        },
+        {
+          "name": "dashCooldownSteps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 48,
+          "doc": "Fixed simulation steps from activation until another dash may start."
+        },
+        {
+          "name": "dashControlLockSteps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 6,
+          "doc": "Fixed simulation steps after a dash before movement and jump control return."
+        },
+        {
+          "name": "dashGravityMultiplier",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0.2,
+          "min": 0,
+          "max": 1,
+          "doc": "Gravity multiplier while an airborne dash is active."
         }
       ],
       "package": "SewerAction",
@@ -521,6 +605,55 @@
       ],
       "package": "SewerAction",
       "doc": "Latest recorded held player control. Action systems consume step-scoped intent events directly."
+    },
+    {
+      "name": "PlayerDashState",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "active",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Whether the player is currently in the fixed-step dash movement phase."
+        },
+        {
+          "name": "direction",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "DashDirection",
+          "default": "Right"
+        },
+        {
+          "name": "activeStepsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Dash movement steps remaining, including the current step."
+        },
+        {
+          "name": "cooldownStepsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Steps before another dash activation is accepted."
+        },
+        {
+          "name": "controlLockStepsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Steps before horizontal and jump control are accepted again."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Authoritative deterministic dash state. Presentation may observe but never write it."
     },
     {
       "name": "PlayerGroundContact",
@@ -685,6 +818,14 @@
           "lanes": 1,
           "default": false,
           "doc": "Jump press for the current fixed step only."
+        },
+        {
+          "name": "dashRequested",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Dash press for the current fixed step only."
         }
       ],
       "package": "SewerAction",

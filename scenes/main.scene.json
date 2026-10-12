@@ -21,6 +21,7 @@
       "LocalTransform": { "position": [-5, -2.5, 0] },
       "Player": {},
       "PlayerControl": {},
+      "PlayerDashState": {},
       "PlayerGroundContact": {},
       "PlayerMotion": {},
       "Sprite": {
