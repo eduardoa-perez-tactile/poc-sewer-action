@@ -1,4 +1,4 @@
-import { expect, worldTest } from '@gameengine/test';
+import { expect, renderTest, worldTest } from '@gameengine/test';
 import { ActionState, WorldView } from '@gameengine/runtime';
 import {
   GameState,
@@ -85,4 +85,12 @@ worldTest('released actions clear held controls without becoming stuck', async (
 
   const [player] = world.entities(Player);
   expect(world.get(player!, PlayerControl)).toEqual({ moveX: 0, crouch: false });
+});
+
+renderTest('the vertical slice stays within its 2D draw-call budget', async ({ step, render }) => {
+  await step(2);
+
+  const stats = render.stats({ width: 1920, height: 1080 });
+  expect(stats.atlasPages).toBeLessThanOrEqual(5);
+  render.expectDrawCalls('<=', 4, { width: 1920, height: 1080 });
 });

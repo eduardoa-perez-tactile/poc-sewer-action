@@ -15,6 +15,20 @@
   "atlas": { "auto": true, "maxPageSize": { "desktop": 4096, "mobile": 2048 }, "pot": false },
   "audio": { "maxVoices": 24, "overrides": { "phone-low": { "maxVoices": 12 } } },
   "ui": { "referenceResolution": [1920, 1080], "orientation": "landscape" },
+  "assets": {
+    "groups": {
+      "boot": { "include": ["assets/art/start-screen.png"] },
+      "gameplay": {
+        "include": [
+          "assets/art/environment/**",
+          "assets/art/player/**",
+          "assets/art/soldier/**",
+          "assets/art/effects/**",
+          "scenes/main.scene.json"
+        ]
+      }
+    }
+  },
   "bundles": [{ "name": "base", "include": ["**"], "delivery": "in-app" }],
   "targets": ["ios", "android"],
   "platforms": ["web"],
