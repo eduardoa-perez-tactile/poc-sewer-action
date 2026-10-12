@@ -1,0 +1,12 @@
+{
+  "$schemaVersion": 1,
+  "loop": "loop",
+  "frames": [
+    { "sprite": "art/player/idle/idle1", "duration": 0.222 },
+    { "sprite": "art/player/idle/idle2", "duration": 0.222 },
+    { "sprite": "art/player/idle/idle3", "duration": 0.222 },
+    { "sprite": "art/player/idle/idle4", "duration": 0.222 },
+    { "sprite": "art/player/idle/idle5", "duration": 0.222 },
+    { "sprite": "art/player/idle/idle6", "duration": 0.222 }
+  ]
+}

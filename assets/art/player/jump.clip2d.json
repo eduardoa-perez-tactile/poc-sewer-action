@@ -1,0 +1,9 @@
+{
+  "$schemaVersion": 1,
+  "loop": "once",
+  "frames": [
+    { "sprite": "art/player/jump/jump1", "duration": 0.1 },
+    { "sprite": "art/player/jump/jump2", "duration": 0.1 }
+  ],
+  "events": [{ "frame": 0, "name": "takeoff-feedback" }]
+}
