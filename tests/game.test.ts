@@ -1,10 +1,11 @@
-import { expect, renderTest, worldTest } from '@gameengine/test';
-import { ActionState, Camera, clip2DInfo, LocalTransform, NavGrid, Sprite, SpriteAnimation, Tilemap, VisualOffset, WorldView } from '@gameengine/runtime';
+import { expect, renderTest, type TestWorld, worldTest } from '@gameengine/test';
+import { ActionState, Bounds2D, Camera, clip2DInfo, Disabled, LoadingResumed, LocalTransform, NavGrid, pool, Sprite, SpriteAnimation, Tilemap, VisualOffset, WorldView } from '@gameengine/runtime';
 import {
   CameraFeedback,
   CameraFollowState,
   GameState,
   GameplayPresentation,
+  Health,
   MenuIntent,
   ParallaxLayer,
   PlatformCollisionCell,
@@ -17,12 +18,17 @@ import {
   PlayerGroundContact,
   PlayerIntent,
   PlayerMotion,
+  Projectile,
+  ProjectilePoolState,
   RoomCollisionState,
   RoomCameraBounds,
   RoomLandmark,
+  Weapon,
 } from '../src/schema.gen.ts';
 import { cameraCenterBounds } from '../src/presentation/follow-player-camera.ts';
 import { FIRST_SEWER_ROOM_TILEMAP, isStaticCollisionTile } from '../src/room/build-room-collision.ts';
+
+const activeProjectiles = (world: TestWorld) => world.entities(Projectile).filter((entity) => !world.has(entity, Disabled));
 
 worldTest('boots the sewer action vertical slice', async ({ world, step, input }) => {
   input.view(1920, 1080, 1);
@@ -419,6 +425,95 @@ worldTest('released actions clear held controls without becoming stuck', async (
   expect(world.get(player!, PlayerControl)).toEqual({ moveX: 0, crouch: false, jumpHeld: false });
 });
 
+worldTest('held fire obeys fixed-step cadence, applies recoil, and reuses the warmed projectile pool', async ({ world, step, input }) => {
+  input.emit(LoadingResumed, { name: 'boot' });
+  await step(3);
+  const [player] = world.entities(Player);
+  expect(world.resource(ProjectilePoolState).warmed).toBe(true);
+  const initialPool = pool.stats()[0]!;
+  expect([initialPool.size, initialPool.free, initialPool.misses]).toEqual([12, 12, 0]);
+
+  input.action('shoot', 1);
+  await step(1);
+  expect(activeProjectiles(world).length).toBe(1);
+  expect(world.get(player!, Weapon).cooldownStepsRemaining).toBe(9);
+  expect(world.get(player!, PlayerMotion).horizontalVelocity).toBeCloseTo(-1.5);
+
+  for (let i = 0; i < 8; i++) {
+    input.action('shoot', 1);
+    await step(1);
+  }
+  expect(activeProjectiles(world).length).toBe(1);
+  expect(world.get(player!, Weapon).cooldownStepsRemaining).toBe(1);
+
+  input.action('shoot', 1);
+  await step(1);
+  expect(activeProjectiles(world).length).toBe(2);
+  expect(world.get(player!, Weapon).cooldownStepsRemaining).toBe(9);
+  const firingPool = pool.stats()[0]!;
+  expect([firingPool.size, firingPool.free, firingPool.misses]).toEqual([12, 10, 0]);
+  expect(world.hash()).toBe('a8bc727b2ff252eb');
+});
+
+worldTest('projectiles hit deterministic wall cells and return cleanly to the pool', async ({ world, step, input }) => {
+  world.setResource(GameState, { initialized: true, phase: 'Playing' });
+  world.setResource(RoomCollisionState, { built: true, cellCount: 0 });
+  world.setResource(PlatformCollisionGrid, { originX: 0, originY: 0, cellSize: 1 });
+  input.emit(LoadingResumed, { name: 'boot' });
+  await step(2);
+  const [player] = world.entities(Player);
+  world.insert(player!, LocalTransform, { position: [20, 0, 0] });
+  world.insert(player!, Player, { gravity: 0 });
+  world.spawn({ PlatformCollisionCell: { x: 22, y: 0 } });
+
+  input.action('shoot', 1);
+  await step(1);
+  expect(activeProjectiles(world).length).toBe(1);
+  await step(5);
+  expect(activeProjectiles(world).length).toBe(0);
+  const wallPool = pool.stats()[0]!;
+  expect([wallPool.size, wallPool.free, wallPool.misses]).toEqual([12, 12, 0]);
+});
+
+worldTest('projectile range expires on a fixed step and repeated cleanup never grows the pool', async ({ world, step, input }) => {
+  world.setResource(GameState, { initialized: true, phase: 'Playing' });
+  world.setResource(RoomCollisionState, { built: true, cellCount: 0 });
+  input.emit(LoadingResumed, { name: 'boot' });
+  await step(2);
+  const [player] = world.entities(Player);
+  world.insert(player!, Weapon, { fireIntervalSteps: 1, projectileRange: 0.6, projectileSpeed: 12, recoilSpeed: 0 });
+
+  for (let shot = 0; shot < 20; shot++) {
+    input.action('shoot', 1);
+    await step(1);
+    input.action('shoot', 0);
+    await step(4);
+    expect(activeProjectiles(world).length).toBe(0);
+  }
+  const rangePool = pool.stats()[0]!;
+  expect([rangePool.size, rangePool.free, rangePool.misses, rangePool.grown]).toEqual([12, 12, 0, 0]);
+});
+
+worldTest('projectile damage is requested and applied inside the fixed-step simulation', async ({ world, step, input }) => {
+  world.setResource(GameState, { initialized: true, phase: 'Playing' });
+  world.setResource(RoomCollisionState, { built: true, cellCount: 0 });
+  input.emit(LoadingResumed, { name: 'boot' });
+  await step(2);
+  const [player] = world.entities(Player);
+  world.insert(player!, LocalTransform, { position: [30, 0, 0] });
+  world.insert(player!, Player, { gravity: 0 });
+  const target = world.spawn({
+    LocalTransform: { position: [31.5, 0.76, 0] },
+    Bounds2D: { shape: 'Aabb', size: [0.8, 1.2], layer: 4, mask: 2 },
+    Health: { current: 3, maximum: 3 },
+  });
+
+  input.action('shoot', 1);
+  await step(8);
+  expect(world.get(target, Health).current).toBe(2);
+  expect(activeProjectiles(world).length).toBe(0);
+});
+
 worldTest('neutral horizontal input keeps a stationary player still', async ({ world, step }) => {
   await step(2);
   const [player] = world.entities(Player);
@@ -743,7 +838,7 @@ worldTest('platform collision stops at walls and cannot tunnel at extreme dash s
 
   expect(world.get(player, LocalTransform).position[0]).toBeCloseTo(24.58);
   expect(world.get(player, PlayerMotion).horizontalVelocity).toBe(0);
-  expect(world.hash()).toBe('5b13481e1a063f72');
+  expect(world.hash()).toBe('a9fe2ab1863b515f');
 });
 
 worldTest('platform collision resolves a diagonal floor-wall corner without penetration', async ({ world, step }) => {
@@ -768,7 +863,7 @@ worldTest('platform collision resolves a diagonal floor-wall corner without pene
   expect(position[0]).toBeCloseTo(30.58);
   expect(position[1]).toBeCloseTo(0.5);
   expect(world.get(player, PlayerGroundContact).grounded).toBe(true);
-  expect(world.hash()).toBe('f952bbf6259b0cac');
+  expect(world.hash()).toBe('7be729a5911b32ce');
 });
 
 worldTest('small-step assistance climbs only ledges within its configured boundary', async ({ world, step, input }) => {
@@ -799,7 +894,7 @@ worldTest('small-step assistance climbs only ledges within its configured bounda
   }
   expect(world.get(player, LocalTransform).position[0]).toBeLessThanOrEqual(41.58);
   expect(world.get(player, LocalTransform).position[1]).toBeCloseTo(0.5);
-  expect(world.hash()).toBe('093ab475857bdfef');
+  expect(world.hash()).toBe('2d6861926f50ac7b');
 });
 
 worldTest('cliff edges end ground contact exactly after support and preserve coyote integration', async ({ world, step, input }) => {
@@ -966,7 +1061,7 @@ worldTest('dash mechanics produce a stable deterministic state hash', async ({ w
   input.action('dash', 1);
   await step(9);
 
-  expect(world.hash()).toBe('7ebb6838141b90fa');
+  expect(world.hash()).toBe('c60469e313110836');
 });
 
 worldTest('jump mechanics produce a stable deterministic state hash', async ({ world, step, input }) => {
@@ -980,7 +1075,7 @@ worldTest('jump mechanics produce a stable deterministic state hash', async ({ w
   input.action('moveX', -0.75);
   await step(17);
 
-  expect(world.hash()).toBe('7924c356b85153a5');
+  expect(world.hash()).toBe('50c5a4ff3f5550c5');
 });
 
 worldTest('horizontal movement produces a stable deterministic state hash', async ({ world, step, input }) => {
@@ -995,7 +1090,7 @@ worldTest('horizontal movement produces a stable deterministic state hash', asyn
   }
   await step(5);
 
-  expect(world.hash()).toBe('f2d501cf68686af9');
+  expect(world.hash()).toBe('31dd68aab935ed5e');
 });
 
 worldTest('camera look-ahead follows authoritative velocity and reverses direction', async ({ world, step, input }) => {

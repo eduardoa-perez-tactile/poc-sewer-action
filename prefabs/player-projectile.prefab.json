@@ -1,0 +1,14 @@
+{
+  "$schemaVersion": 2,
+  "id": "player-projectile",
+  "entities": [
+    {
+      "name": "PlayerProjectile",
+      "id": "root",
+      "Bounds2D": { "shape": "Aabb", "size": [0.28, 0.12], "layer": 2, "mask": 4 },
+      "LocalTransform": {},
+      "Projectile": {},
+      "Sprite": { "image": "art/effects/bullet/bullet", "size": [0.32, 0.16], "sortingLayer": "Effects" }
+    }
+  ]
+}

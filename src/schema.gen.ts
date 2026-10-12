@@ -166,25 +166,120 @@ export const schemaIr = {
       "doc": "Single source of truth for actor survivability."
     },
     {
-      "name": "Weapon",
+      "name": "Projectile",
       "kind": "component",
       "sim": true,
       "fields": [
         {
-          "name": "cooldownSeconds",
+          "name": "direction",
           "kind": "f32",
           "scalar": "f32",
           "lanes": 1,
-          "default": 0.15,
+          "default": 1,
+          "min": -1,
+          "max": 1,
+          "doc": "Horizontal travel direction, always -1 or 1 while active."
+        },
+        {
+          "name": "speed",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 18,
           "min": 0
         },
         {
-          "name": "cooldownRemaining",
+          "name": "distanceRemaining",
           "kind": "f32",
           "scalar": "f32",
           "lanes": 1,
           "default": 0,
           "min": 0
+        },
+        {
+          "name": "damage",
+          "kind": "u16",
+          "scalar": "u16",
+          "lanes": 1,
+          "default": 1,
+          "min": 1
+        },
+        {
+          "name": "owner",
+          "kind": "entity",
+          "scalar": "u32",
+          "lanes": 2,
+          "optional": true
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Pooled fixed-step projectile state."
+    },
+    {
+      "name": "ProjectilePoolState",
+      "kind": "resource",
+      "sim": true,
+      "fields": [
+        {
+          "name": "warmed",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Whether the deterministic projectile pool has been queued."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "One-shot projectile pool bootstrap state."
+    },
+    {
+      "name": "Weapon",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "fireIntervalSteps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 9,
+          "min": 1,
+          "doc": "Fixed simulation steps between accepted shots."
+        },
+        {
+          "name": "cooldownStepsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Fixed steps until another shot may be accepted."
+        },
+        {
+          "name": "projectileSpeed",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 18,
+          "min": 0,
+          "doc": "Projectile speed in world units per second."
+        },
+        {
+          "name": "projectileRange",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 12,
+          "min": 0,
+          "doc": "Maximum projectile travel distance in world units."
+        },
+        {
+          "name": "recoilSpeed",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 1.5,
+          "min": 0,
+          "doc": "Horizontal velocity impulse opposite the firing direction."
         },
         {
           "name": "damage",
@@ -1298,18 +1393,64 @@ export interface HealthValue {
 /** Single source of truth for actor survivability. (component, sim) */
 export const Health = typeToken<HealthViews, HealthValue>('Health', 'component', { sig: 'current:u16:1,maximum:u16:1', read: (v: HealthViews, i: number, o: Record<string, unknown>) => { o.current = v.current[i]; o.maximum = v.maximum[i]; return o; } });
 
+export interface ProjectileViews {
+  /** Horizontal travel direction, always -1 or 1 while active. */
+  direction: Float32Array;
+  speed: Float32Array;
+  distanceRemaining: Float32Array;
+  damage: Uint16Array;
+  owner: Uint32Array;
+}
+export interface ProjectileValue {
+  /** Horizontal travel direction, always -1 or 1 while active. */
+  direction: number;
+  speed: number;
+  distanceRemaining: number;
+  damage: number;
+  owner: EntityId;
+}
+/** Pooled fixed-step projectile state. (component, sim) */
+export const Projectile = typeToken<ProjectileViews, ProjectileValue>('Projectile', 'component', { sig: 'direction:f32:1,speed:f32:1,distanceRemaining:f32:1,damage:u16:1,owner:entity:2', read: (v: ProjectileViews, i: number, o: Record<string, unknown>) => { o.direction = v.direction[i]; o.speed = v.speed[i]; o.distanceRemaining = v.distanceRemaining[i]; o.damage = v.damage[i]; o.owner = $r.ent(v.owner, i); return o; } });
+
+export interface ProjectilePoolStateViews {
+  /** Whether the deterministic projectile pool has been queued. */
+  warmed: Uint8Array;
+}
+export interface ProjectilePoolStateValue {
+  /** Whether the deterministic projectile pool has been queued. */
+  warmed: boolean;
+}
+/** One-shot projectile pool bootstrap state. (resource, sim) */
+export const ProjectilePoolState = typeToken<ProjectilePoolStateViews, ProjectilePoolStateValue>('ProjectilePoolState', 'resource', { sig: 'warmed:bool:1', read: (v: ProjectilePoolStateViews, i: number, o: Record<string, unknown>) => { o.warmed = v.warmed[i] !== 0; return o; } });
+
 export interface WeaponViews {
-  cooldownSeconds: Float32Array;
-  cooldownRemaining: Float32Array;
+  /** Fixed simulation steps between accepted shots. */
+  fireIntervalSteps: Uint32Array;
+  /** Fixed steps until another shot may be accepted. */
+  cooldownStepsRemaining: Uint32Array;
+  /** Projectile speed in world units per second. */
+  projectileSpeed: Float32Array;
+  /** Maximum projectile travel distance in world units. */
+  projectileRange: Float32Array;
+  /** Horizontal velocity impulse opposite the firing direction. */
+  recoilSpeed: Float32Array;
   damage: Uint16Array;
 }
 export interface WeaponValue {
-  cooldownSeconds: number;
-  cooldownRemaining: number;
+  /** Fixed simulation steps between accepted shots. */
+  fireIntervalSteps: number;
+  /** Fixed steps until another shot may be accepted. */
+  cooldownStepsRemaining: number;
+  /** Projectile speed in world units per second. */
+  projectileSpeed: number;
+  /** Maximum projectile travel distance in world units. */
+  projectileRange: number;
+  /** Horizontal velocity impulse opposite the firing direction. */
+  recoilSpeed: number;
   damage: number;
 }
 /** Deterministic weapon cadence and damage configuration. (component, sim) */
-export const Weapon = typeToken<WeaponViews, WeaponValue>('Weapon', 'component', { sig: 'cooldownSeconds:f32:1,cooldownRemaining:f32:1,damage:u16:1', read: (v: WeaponViews, i: number, o: Record<string, unknown>) => { o.cooldownSeconds = v.cooldownSeconds[i]; o.cooldownRemaining = v.cooldownRemaining[i]; o.damage = v.damage[i]; return o; } });
+export const Weapon = typeToken<WeaponViews, WeaponValue>('Weapon', 'component', { sig: 'fireIntervalSteps:u32:1,cooldownStepsRemaining:u32:1,projectileSpeed:f32:1,projectileRange:f32:1,recoilSpeed:f32:1,damage:u16:1', read: (v: WeaponViews, i: number, o: Record<string, unknown>) => { o.fireIntervalSteps = v.fireIntervalSteps[i]; o.cooldownStepsRemaining = v.cooldownStepsRemaining[i]; o.projectileSpeed = v.projectileSpeed[i]; o.projectileRange = v.projectileRange[i]; o.recoilSpeed = v.recoilSpeed[i]; o.damage = v.damage[i]; return o; } });
 
 export interface EnemyBrainViews {
   state: Uint8Array;

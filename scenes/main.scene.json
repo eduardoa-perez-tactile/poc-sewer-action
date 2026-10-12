@@ -93,7 +93,8 @@
         "anchor": [0.5, 0],
         "sortingLayer": "Characters"
       },
-      "SpriteAnimation": { "frames": "art/player/idle/idle1", "fps": 1 }
+      "SpriteAnimation": { "frames": "art/player/idle/idle1", "fps": 1 },
+      "Weapon": {}
     },
     {
       "name": "DistantSewerLeft",

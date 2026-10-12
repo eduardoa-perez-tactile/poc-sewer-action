@@ -160,25 +160,120 @@
       "doc": "Single source of truth for actor survivability."
     },
     {
-      "name": "Weapon",
+      "name": "Projectile",
       "kind": "component",
       "sim": true,
       "fields": [
         {
-          "name": "cooldownSeconds",
+          "name": "direction",
           "kind": "f32",
           "scalar": "f32",
           "lanes": 1,
-          "default": 0.15,
+          "default": 1,
+          "min": -1,
+          "max": 1,
+          "doc": "Horizontal travel direction, always -1 or 1 while active."
+        },
+        {
+          "name": "speed",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 18,
           "min": 0
         },
         {
-          "name": "cooldownRemaining",
+          "name": "distanceRemaining",
           "kind": "f32",
           "scalar": "f32",
           "lanes": 1,
           "default": 0,
           "min": 0
+        },
+        {
+          "name": "damage",
+          "kind": "u16",
+          "scalar": "u16",
+          "lanes": 1,
+          "default": 1,
+          "min": 1
+        },
+        {
+          "name": "owner",
+          "kind": "entity",
+          "scalar": "u32",
+          "lanes": 2,
+          "optional": true
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Pooled fixed-step projectile state."
+    },
+    {
+      "name": "ProjectilePoolState",
+      "kind": "resource",
+      "sim": true,
+      "fields": [
+        {
+          "name": "warmed",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Whether the deterministic projectile pool has been queued."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "One-shot projectile pool bootstrap state."
+    },
+    {
+      "name": "Weapon",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "fireIntervalSteps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 9,
+          "min": 1,
+          "doc": "Fixed simulation steps between accepted shots."
+        },
+        {
+          "name": "cooldownStepsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Fixed steps until another shot may be accepted."
+        },
+        {
+          "name": "projectileSpeed",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 18,
+          "min": 0,
+          "doc": "Projectile speed in world units per second."
+        },
+        {
+          "name": "projectileRange",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 12,
+          "min": 0,
+          "doc": "Maximum projectile travel distance in world units."
+        },
+        {
+          "name": "recoilSpeed",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 1.5,
+          "min": 0,
+          "doc": "Horizontal velocity impulse opposite the firing direction."
         },
         {
           "name": "damage",

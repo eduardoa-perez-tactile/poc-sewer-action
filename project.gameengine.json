@@ -17,7 +17,7 @@
   "ui": { "referenceResolution": [1920, 1080], "orientation": "landscape" },
   "assets": {
     "groups": {
-      "boot": { "include": ["assets/art/start-screen.png"] },
+      "boot": { "include": ["assets/art/start-screen.png", "prefabs/player-projectile.prefab.json"] },
       "gameplay": {
         "include": [
           "assets/art/environment/**",
