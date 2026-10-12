@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  harness:
+    name: Harness (V8)
+    runs-on: macos-14
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Install pinned Game Engine
+        id: engine
+        shell: bash
+        run: |
+          engine_bin=$(./tools/ci/install-gameengine "$RUNNER_TEMP/tactile-game-engine")
+          echo "$engine_bin" >> "$GITHUB_PATH"
+
+      - name: Verify engine toolchain
+        shell: bash
+        run: ./tools/gameengine doctor --json
+
+      - name: Run pre-push harness
+        shell: bash
+        env:
+          HARNESS_JS: v8
+        run: |
+          mkdir -p artifacts/ci
+          ./tools/harness prepush 2>&1 | tee artifacts/ci/harness.log
+
+      - name: Upload harness log
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: harness-log-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/ci/harness.log
+          if-no-files-found: error
+          retention-days: 14
