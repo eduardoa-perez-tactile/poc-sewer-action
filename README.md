@@ -1,8 +1,8 @@
 # Sewer Action
 
 A deterministic 2D run-and-gun platformer built with Tactile Game Engine. The project turns the
-mechanics explored in `poc-game-feel` into a small, releasable sewer action game using the CC0
-Sewers asset pack.
+mechanics explored in `poc-game-feel` into a small, releasable sewer action game using its own
+pixel-art sewer world, characters and effects.
 
 ## Status
 

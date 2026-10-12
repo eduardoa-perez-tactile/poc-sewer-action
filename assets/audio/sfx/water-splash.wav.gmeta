@@ -1,0 +1,6 @@
+guid = "254adc2d-05da-436b-a2c8-bcd848ab563c"
+importer = "audio"
+
+[settings]
+mono = true
+cooldown = 0.1
