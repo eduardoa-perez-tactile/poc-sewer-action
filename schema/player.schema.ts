@@ -1,4 +1,4 @@
-import { bool, component, enumOf, event, f32, resource } from '@gameengine/schema';
+import { bool, component, enumOf, event, f32, resource, u32 } from '@gameengine/schema';
 
 export const Player = component(
   'Player',
@@ -9,6 +9,12 @@ export const Player = component(
     airAcceleration: f32({ default: 30, min: 0, doc: 'Airborne acceleration in world units per second squared.' }),
     airDeceleration: f32({ default: 12, min: 0, doc: 'Airborne braking and reversal rate in world units per second squared.' }),
     jumpSpeed: f32({ default: 9.2, min: 0, doc: 'Initial vertical jump speed in world units per second.' }),
+    gravity: f32({ default: 24, min: 0, doc: 'Downward acceleration in world units per second squared.' }),
+    maxFallSpeed: f32({ default: 18, min: 0, doc: 'Maximum downward speed in world units per second.' }),
+    jumpCutMultiplier: f32({ default: 0.5, min: 0, max: 1, doc: 'Upward velocity multiplier applied when jump is released early.' }),
+    coyoteSteps: u32({ default: 6, doc: 'Fixed simulation steps after leaving ground in which the ground jump remains available.' }),
+    jumpBufferSteps: u32({ default: 6, doc: 'Fixed simulation steps for which a jump edge remains queued.' }),
+    airJumps: u32({ default: 1, doc: 'Air jumps restored on grounded contact.' }),
   },
   { sim: true, doc: 'Player-owned deterministic movement configuration.' },
 );
@@ -17,8 +23,14 @@ export const PlayerMotion = component(
   'PlayerMotion',
   {
     horizontalVelocity: f32({ default: 0, doc: 'Authoritative horizontal velocity in world units per second.' }),
-    grounded: bool({ default: true, doc: 'Ground contact supplied by deterministic traversal/collision systems.' }),
+    verticalVelocity: f32({ default: 0, doc: 'Authoritative vertical velocity in world units per second.' }),
+    grounded: bool({ default: true, doc: 'Movement-owned grounded state derived from collision contact.' }),
     facing: enumOf('FacingDirection', ['Left', 'Right'], { default: 'Right' }),
+    coyoteStepsRemaining: u32({ default: 0, doc: 'Remaining fixed steps in the grounded grace window.' }),
+    jumpBufferStepsRemaining: u32({ default: 0, doc: 'Remaining fixed steps for a queued jump request.' }),
+    airJumpsRemaining: u32({ default: 1, doc: 'Air jumps available before the next grounded contact.' }),
+    jumpWasHeld: bool({ default: false, doc: 'Jump hold state from the previous fixed step for deterministic release detection.' }),
+    ignoreGroundContact: bool({ default: false, doc: 'Whether contact is ignored until the actor has separated after jumping.' }),
   },
   { sim: true, doc: 'Authoritative player movement state. Presentation may observe but never write it.' },
 );
@@ -28,8 +40,25 @@ export const PlayerControl = component(
   {
     moveX: f32({ default: 0, min: -1, max: 1, doc: 'Recorded horizontal intent normalized to [-1, 1].' }),
     crouch: bool({ default: false, doc: 'Whether the recorded crouch control is held.' }),
+    jumpHeld: bool({ default: false, doc: 'Whether jump is currently held for release-cut detection.' }),
   },
   { sim: true, doc: 'Latest recorded held player control. Action systems consume step-scoped intent events directly.' },
+);
+
+export const PlayerGroundContact = component(
+  'PlayerGroundContact',
+  {
+    grounded: bool({ default: true, doc: 'Collision-owned ground contact fact consumed by movement.' }),
+  },
+  { sim: true, doc: 'Deterministic traversal/collision output. Movement reads but never writes this component.' },
+);
+
+export const PlayerStepInput = resource(
+  'PlayerStepInput',
+  {
+    jumpRequested: bool({ default: false, doc: 'Jump press for the current fixed step only.' }),
+  },
+  { sim: true, doc: 'Unconditionally overwritten input sample consumed in the same fixed step.' },
 );
 
 export const PlayerIntent = event(
@@ -37,6 +66,7 @@ export const PlayerIntent = event(
   {
     moveX: f32({ default: 0, min: -1, max: 1 }),
     jump: bool({ default: false }),
+    jumpHeld: bool({ default: false }),
     dash: bool({ default: false }),
     fire: bool({ default: false }),
     crouch: bool({ default: false }),
@@ -49,6 +79,7 @@ export const PlayerActionState = resource(
   {
     moveX: f32({ default: 0, min: -1, max: 1 }),
     jump: bool({ default: false }),
+    jumpHeld: bool({ default: false }),
     dash: bool({ default: false }),
     fire: bool({ default: false }),
     crouch: bool({ default: false }),

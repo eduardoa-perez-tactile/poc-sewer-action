@@ -383,6 +383,58 @@ export const schemaIr = {
           "default": 9.2,
           "min": 0,
           "doc": "Initial vertical jump speed in world units per second."
+        },
+        {
+          "name": "gravity",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 24,
+          "min": 0,
+          "doc": "Downward acceleration in world units per second squared."
+        },
+        {
+          "name": "maxFallSpeed",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 18,
+          "min": 0,
+          "doc": "Maximum downward speed in world units per second."
+        },
+        {
+          "name": "jumpCutMultiplier",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0.5,
+          "min": 0,
+          "max": 1,
+          "doc": "Upward velocity multiplier applied when jump is released early."
+        },
+        {
+          "name": "coyoteSteps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 6,
+          "doc": "Fixed simulation steps after leaving ground in which the ground jump remains available."
+        },
+        {
+          "name": "jumpBufferSteps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 6,
+          "doc": "Fixed simulation steps for which a jump edge remains queued."
+        },
+        {
+          "name": "airJumps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 1,
+          "doc": "Air jumps restored on grounded contact."
         }
       ],
       "package": "SewerAction",
@@ -404,6 +456,13 @@ export const schemaIr = {
         },
         {
           "name": "jump",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "jumpHeld",
           "kind": "bool",
           "scalar": "u8",
           "lanes": 1,
@@ -456,10 +515,35 @@ export const schemaIr = {
           "lanes": 1,
           "default": false,
           "doc": "Whether the recorded crouch control is held."
+        },
+        {
+          "name": "jumpHeld",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Whether jump is currently held for release-cut detection."
         }
       ],
       "package": "SewerAction",
       "doc": "Latest recorded held player control. Action systems consume step-scoped intent events directly."
+    },
+    {
+      "name": "PlayerGroundContact",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "grounded",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true,
+          "doc": "Collision-owned ground contact fact consumed by movement."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Deterministic traversal/collision output. Movement reads but never writes this component."
     },
     {
       "name": "PlayerIntent",
@@ -477,6 +561,13 @@ export const schemaIr = {
         },
         {
           "name": "jump",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "jumpHeld",
           "kind": "bool",
           "scalar": "u8",
           "lanes": 1,
@@ -521,12 +612,20 @@ export const schemaIr = {
           "doc": "Authoritative horizontal velocity in world units per second."
         },
         {
+          "name": "verticalVelocity",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Authoritative vertical velocity in world units per second."
+        },
+        {
           "name": "grounded",
           "kind": "bool",
           "scalar": "u8",
           "lanes": 1,
           "default": true,
-          "doc": "Ground contact supplied by deterministic traversal/collision systems."
+          "doc": "Movement-owned grounded state derived from collision contact."
         },
         {
           "name": "facing",
@@ -535,10 +634,67 @@ export const schemaIr = {
           "lanes": 1,
           "enumName": "FacingDirection",
           "default": "Right"
+        },
+        {
+          "name": "coyoteStepsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Remaining fixed steps in the grounded grace window."
+        },
+        {
+          "name": "jumpBufferStepsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Remaining fixed steps for a queued jump request."
+        },
+        {
+          "name": "airJumpsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 1,
+          "doc": "Air jumps available before the next grounded contact."
+        },
+        {
+          "name": "jumpWasHeld",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Jump hold state from the previous fixed step for deterministic release detection."
+        },
+        {
+          "name": "ignoreGroundContact",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Whether contact is ignored until the actor has separated after jumping."
         }
       ],
       "package": "SewerAction",
       "doc": "Authoritative player movement state. Presentation may observe but never write it."
+    },
+    {
+      "name": "PlayerStepInput",
+      "kind": "resource",
+      "sim": true,
+      "fields": [
+        {
+          "name": "jumpRequested",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Jump press for the current fixed step only."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Unconditionally overwritten input sample consumed in the same fixed step."
     }
   ],
   "commands": [],
@@ -718,6 +874,18 @@ export interface PlayerViews {
   airDeceleration: Float32Array;
   /** Initial vertical jump speed in world units per second. */
   jumpSpeed: Float32Array;
+  /** Downward acceleration in world units per second squared. */
+  gravity: Float32Array;
+  /** Maximum downward speed in world units per second. */
+  maxFallSpeed: Float32Array;
+  /** Upward velocity multiplier applied when jump is released early. */
+  jumpCutMultiplier: Float32Array;
+  /** Fixed simulation steps after leaving ground in which the ground jump remains available. */
+  coyoteSteps: Uint32Array;
+  /** Fixed simulation steps for which a jump edge remains queued. */
+  jumpBufferSteps: Uint32Array;
+  /** Air jumps restored on grounded contact. */
+  airJumps: Uint32Array;
 }
 export interface PlayerValue {
   /** Maximum horizontal speed in world units per second. */
@@ -732,13 +900,26 @@ export interface PlayerValue {
   airDeceleration: number;
   /** Initial vertical jump speed in world units per second. */
   jumpSpeed: number;
+  /** Downward acceleration in world units per second squared. */
+  gravity: number;
+  /** Maximum downward speed in world units per second. */
+  maxFallSpeed: number;
+  /** Upward velocity multiplier applied when jump is released early. */
+  jumpCutMultiplier: number;
+  /** Fixed simulation steps after leaving ground in which the ground jump remains available. */
+  coyoteSteps: number;
+  /** Fixed simulation steps for which a jump edge remains queued. */
+  jumpBufferSteps: number;
+  /** Air jumps restored on grounded contact. */
+  airJumps: number;
 }
 /** Player-owned deterministic movement configuration. (component, sim) */
-export const Player = typeToken<PlayerViews, PlayerValue>('Player', 'component', { sig: 'maxHorizontalSpeed:f32:1,groundAcceleration:f32:1,groundDeceleration:f32:1,airAcceleration:f32:1,airDeceleration:f32:1,jumpSpeed:f32:1', read: (v: PlayerViews, i: number, o: Record<string, unknown>) => { o.maxHorizontalSpeed = v.maxHorizontalSpeed[i]; o.groundAcceleration = v.groundAcceleration[i]; o.groundDeceleration = v.groundDeceleration[i]; o.airAcceleration = v.airAcceleration[i]; o.airDeceleration = v.airDeceleration[i]; o.jumpSpeed = v.jumpSpeed[i]; return o; } });
+export const Player = typeToken<PlayerViews, PlayerValue>('Player', 'component', { sig: 'maxHorizontalSpeed:f32:1,groundAcceleration:f32:1,groundDeceleration:f32:1,airAcceleration:f32:1,airDeceleration:f32:1,jumpSpeed:f32:1,gravity:f32:1,maxFallSpeed:f32:1,jumpCutMultiplier:f32:1,coyoteSteps:u32:1,jumpBufferSteps:u32:1,airJumps:u32:1', read: (v: PlayerViews, i: number, o: Record<string, unknown>) => { o.maxHorizontalSpeed = v.maxHorizontalSpeed[i]; o.groundAcceleration = v.groundAcceleration[i]; o.groundDeceleration = v.groundDeceleration[i]; o.airAcceleration = v.airAcceleration[i]; o.airDeceleration = v.airDeceleration[i]; o.jumpSpeed = v.jumpSpeed[i]; o.gravity = v.gravity[i]; o.maxFallSpeed = v.maxFallSpeed[i]; o.jumpCutMultiplier = v.jumpCutMultiplier[i]; o.coyoteSteps = v.coyoteSteps[i]; o.jumpBufferSteps = v.jumpBufferSteps[i]; o.airJumps = v.airJumps[i]; return o; } });
 
 export interface PlayerActionStateViews {
   moveX: Float32Array;
   jump: Uint8Array;
+  jumpHeld: Uint8Array;
   dash: Uint8Array;
   fire: Uint8Array;
   crouch: Uint8Array;
@@ -746,31 +927,48 @@ export interface PlayerActionStateViews {
 export interface PlayerActionStateValue {
   moveX: number;
   jump: boolean;
+  jumpHeld: boolean;
   dash: boolean;
   fire: boolean;
   crouch: boolean;
 }
 /** Current normalized action-map sample. Written from recorded ActionState before gameplay systems run. (resource, sim) */
-export const PlayerActionState = typeToken<PlayerActionStateViews, PlayerActionStateValue>('PlayerActionState', 'resource', { sig: 'moveX:f32:1,jump:bool:1,dash:bool:1,fire:bool:1,crouch:bool:1', read: (v: PlayerActionStateViews, i: number, o: Record<string, unknown>) => { o.moveX = v.moveX[i]; o.jump = v.jump[i] !== 0; o.dash = v.dash[i] !== 0; o.fire = v.fire[i] !== 0; o.crouch = v.crouch[i] !== 0; return o; } });
+export const PlayerActionState = typeToken<PlayerActionStateViews, PlayerActionStateValue>('PlayerActionState', 'resource', { sig: 'moveX:f32:1,jump:bool:1,jumpHeld:bool:1,dash:bool:1,fire:bool:1,crouch:bool:1', read: (v: PlayerActionStateViews, i: number, o: Record<string, unknown>) => { o.moveX = v.moveX[i]; o.jump = v.jump[i] !== 0; o.jumpHeld = v.jumpHeld[i] !== 0; o.dash = v.dash[i] !== 0; o.fire = v.fire[i] !== 0; o.crouch = v.crouch[i] !== 0; return o; } });
 
 export interface PlayerControlViews {
   /** Recorded horizontal intent normalized to [-1, 1]. */
   moveX: Float32Array;
   /** Whether the recorded crouch control is held. */
   crouch: Uint8Array;
+  /** Whether jump is currently held for release-cut detection. */
+  jumpHeld: Uint8Array;
 }
 export interface PlayerControlValue {
   /** Recorded horizontal intent normalized to [-1, 1]. */
   moveX: number;
   /** Whether the recorded crouch control is held. */
   crouch: boolean;
+  /** Whether jump is currently held for release-cut detection. */
+  jumpHeld: boolean;
 }
 /** Latest recorded held player control. Action systems consume step-scoped intent events directly. (component, sim) */
-export const PlayerControl = typeToken<PlayerControlViews, PlayerControlValue>('PlayerControl', 'component', { sig: 'moveX:f32:1,crouch:bool:1', read: (v: PlayerControlViews, i: number, o: Record<string, unknown>) => { o.moveX = v.moveX[i]; o.crouch = v.crouch[i] !== 0; return o; } });
+export const PlayerControl = typeToken<PlayerControlViews, PlayerControlValue>('PlayerControl', 'component', { sig: 'moveX:f32:1,crouch:bool:1,jumpHeld:bool:1', read: (v: PlayerControlViews, i: number, o: Record<string, unknown>) => { o.moveX = v.moveX[i]; o.crouch = v.crouch[i] !== 0; o.jumpHeld = v.jumpHeld[i] !== 0; return o; } });
+
+export interface PlayerGroundContactViews {
+  /** Collision-owned ground contact fact consumed by movement. */
+  grounded: Uint8Array;
+}
+export interface PlayerGroundContactValue {
+  /** Collision-owned ground contact fact consumed by movement. */
+  grounded: boolean;
+}
+/** Deterministic traversal/collision output. Movement reads but never writes this component. (component, sim) */
+export const PlayerGroundContact = typeToken<PlayerGroundContactViews, PlayerGroundContactValue>('PlayerGroundContact', 'component', { sig: 'grounded:bool:1', read: (v: PlayerGroundContactViews, i: number, o: Record<string, unknown>) => { o.grounded = v.grounded[i] !== 0; return o; } });
 
 export interface PlayerIntentViews {
   moveX: Float32Array;
   jump: Uint8Array;
+  jumpHeld: Uint8Array;
   dash: Uint8Array;
   fire: Uint8Array;
   crouch: Uint8Array;
@@ -778,26 +976,62 @@ export interface PlayerIntentViews {
 export interface PlayerIntentValue {
   moveX: number;
   jump: boolean;
+  jumpHeld: boolean;
   dash: boolean;
   fire: boolean;
   crouch: boolean;
 }
 /** Recorded boundary event produced by keyboard, gamepad, touch, or UI adapters. (event, sim) */
-export const PlayerIntent = typeToken<PlayerIntentViews, PlayerIntentValue>('PlayerIntent', 'event', { sig: 'moveX:f32:1,jump:bool:1,dash:bool:1,fire:bool:1,crouch:bool:1', read: (v: PlayerIntentViews, i: number, o: Record<string, unknown>) => { o.moveX = v.moveX[i]; o.jump = v.jump[i] !== 0; o.dash = v.dash[i] !== 0; o.fire = v.fire[i] !== 0; o.crouch = v.crouch[i] !== 0; return o; } });
+export const PlayerIntent = typeToken<PlayerIntentViews, PlayerIntentValue>('PlayerIntent', 'event', { sig: 'moveX:f32:1,jump:bool:1,jumpHeld:bool:1,dash:bool:1,fire:bool:1,crouch:bool:1', read: (v: PlayerIntentViews, i: number, o: Record<string, unknown>) => { o.moveX = v.moveX[i]; o.jump = v.jump[i] !== 0; o.jumpHeld = v.jumpHeld[i] !== 0; o.dash = v.dash[i] !== 0; o.fire = v.fire[i] !== 0; o.crouch = v.crouch[i] !== 0; return o; } });
 
 export interface PlayerMotionViews {
   /** Authoritative horizontal velocity in world units per second. */
   horizontalVelocity: Float32Array;
-  /** Ground contact supplied by deterministic traversal/collision systems. */
+  /** Authoritative vertical velocity in world units per second. */
+  verticalVelocity: Float32Array;
+  /** Movement-owned grounded state derived from collision contact. */
   grounded: Uint8Array;
   facing: Uint8Array;
+  /** Remaining fixed steps in the grounded grace window. */
+  coyoteStepsRemaining: Uint32Array;
+  /** Remaining fixed steps for a queued jump request. */
+  jumpBufferStepsRemaining: Uint32Array;
+  /** Air jumps available before the next grounded contact. */
+  airJumpsRemaining: Uint32Array;
+  /** Jump hold state from the previous fixed step for deterministic release detection. */
+  jumpWasHeld: Uint8Array;
+  /** Whether contact is ignored until the actor has separated after jumping. */
+  ignoreGroundContact: Uint8Array;
 }
 export interface PlayerMotionValue {
   /** Authoritative horizontal velocity in world units per second. */
   horizontalVelocity: number;
-  /** Ground contact supplied by deterministic traversal/collision systems. */
+  /** Authoritative vertical velocity in world units per second. */
+  verticalVelocity: number;
+  /** Movement-owned grounded state derived from collision contact. */
   grounded: boolean;
   facing: FacingDirectionName | number;
+  /** Remaining fixed steps in the grounded grace window. */
+  coyoteStepsRemaining: number;
+  /** Remaining fixed steps for a queued jump request. */
+  jumpBufferStepsRemaining: number;
+  /** Air jumps available before the next grounded contact. */
+  airJumpsRemaining: number;
+  /** Jump hold state from the previous fixed step for deterministic release detection. */
+  jumpWasHeld: boolean;
+  /** Whether contact is ignored until the actor has separated after jumping. */
+  ignoreGroundContact: boolean;
 }
 /** Authoritative player movement state. Presentation may observe but never write it. (component, sim) */
-export const PlayerMotion = typeToken<PlayerMotionViews, PlayerMotionValue>('PlayerMotion', 'component', { sig: 'horizontalVelocity:f32:1,grounded:bool:1,facing:enum:1', read: (v: PlayerMotionViews, i: number, o: Record<string, unknown>) => { o.horizontalVelocity = v.horizontalVelocity[i]; o.grounded = v.grounded[i] !== 0; o.facing = $r.enm('FacingDirection', v.facing[i]!); return o; } });
+export const PlayerMotion = typeToken<PlayerMotionViews, PlayerMotionValue>('PlayerMotion', 'component', { sig: 'horizontalVelocity:f32:1,verticalVelocity:f32:1,grounded:bool:1,facing:enum:1,coyoteStepsRemaining:u32:1,jumpBufferStepsRemaining:u32:1,airJumpsRemaining:u32:1,jumpWasHeld:bool:1,ignoreGroundContact:bool:1', read: (v: PlayerMotionViews, i: number, o: Record<string, unknown>) => { o.horizontalVelocity = v.horizontalVelocity[i]; o.verticalVelocity = v.verticalVelocity[i]; o.grounded = v.grounded[i] !== 0; o.facing = $r.enm('FacingDirection', v.facing[i]!); o.coyoteStepsRemaining = v.coyoteStepsRemaining[i]; o.jumpBufferStepsRemaining = v.jumpBufferStepsRemaining[i]; o.airJumpsRemaining = v.airJumpsRemaining[i]; o.jumpWasHeld = v.jumpWasHeld[i] !== 0; o.ignoreGroundContact = v.ignoreGroundContact[i] !== 0; return o; } });
+
+export interface PlayerStepInputViews {
+  /** Jump press for the current fixed step only. */
+  jumpRequested: Uint8Array;
+}
+export interface PlayerStepInputValue {
+  /** Jump press for the current fixed step only. */
+  jumpRequested: boolean;
+}
+/** Unconditionally overwritten input sample consumed in the same fixed step. (resource, sim) */
+export const PlayerStepInput = typeToken<PlayerStepInputViews, PlayerStepInputValue>('PlayerStepInput', 'resource', { sig: 'jumpRequested:bool:1', read: (v: PlayerStepInputViews, i: number, o: Record<string, unknown>) => { o.jumpRequested = v.jumpRequested[i] !== 0; return o; } });

@@ -18,8 +18,8 @@ across runtimes.
 | Feature | Consequential state owner | Inputs | Outputs |
 | --- | --- | --- | --- |
 | Game flow | `GameState` resource | spawn/death/exit facts | authoritative phase observed by presentation |
-| Player | `Player` and `PlayerControl` components | recorded `PlayerIntent` | held movement state; action systems consume step-scoped events |
-| Movement | `PlayerMotion` plus actor transforms | `PlayerControl`, collision facts, `ctx.dt` | transforms, velocity and facing state |
+| Player | `Player`, `PlayerControl` and `PlayerStepInput` | recorded `PlayerIntent` | held movement/jump state and the current step's action sample |
+| Movement | `PlayerMotion` plus actor transforms | `PlayerControl`, `PlayerGroundContact`, `PlayerStepInput`, `ctx.dt` | transforms, velocity and facing state |
 | Combat | `Health` and `Weapon` components | fire intent, hit facts, `DamageRequested` | cooldown state and `ActorDied` facts |
 | Enemies | `EnemyBrain` component | sim transforms, collision facts and seeded `ctx.rng` | movement/fire requests |
 | Hazards | `Hazard` component plus per-contact sim state | deterministic contact facts | `DamageRequested` |
@@ -52,9 +52,12 @@ adapters may emit `PlayerIntent`. `CapturePlayerIntent` then writes `PlayerContr
 source, with direct intents taking precedence. The simulation never
 polls DOM, keyboard, gamepad, UI or service APIs directly.
 
-An adapter emits the normalized held movement value in `[-1, 1]`, held crouch/fire state and jump,
-dash, pause and menu action edges. `CapturePlayerIntent` stores only held movement and crouch. The
-owning action systems consume step-scoped values directly, so an edge cannot remain sticky across later fixed steps. If multiple
+An adapter emits the normalized held movement value in `[-1, 1]`, held crouch/fire/jump state and
+jump, dash, pause and menu action edges. `CapturePlayerIntent` stores held movement and crouch plus
+the jump edge and held state separately. The resolved edge is unconditionally overwritten in
+`PlayerStepInput` and consumed in the same fixed step, so vertical movement can buffer only the edge
+and apply a deterministic early-release cut from the held transition. An edge cannot remain sticky
+across later fixed steps. If multiple
 samples arrive in one step, their recorded order is authoritative and the last held movement sample
 wins. Menus and MVC views request a sim change by emitting an intent event; they do not mutate the
 world.
@@ -69,9 +72,12 @@ world.
 - Prefer facts over commands between features: combat emits `ActorDied`; game flow decides whether
   that means retry, completion or another phase.
 - Content values belong in components, prefabs, scenes or tunable data rather than per-level code.
-- `Player` owns horizontal speed, acceleration, braking and air-control configuration. `PlayerMotion`
-  owns authoritative velocity, grounded state and facing; future collision code may update grounded
-  state, while movement remains independent of collision and presentation.
+- `Player` owns horizontal speed, acceleration, braking, air-control, jump, gravity, grace-window and
+  air-jump configuration. `PlayerMotion` owns authoritative horizontal/vertical velocity, grounded
+  state, facing and the fixed-step coyote/buffer/air-jump counters. Collision code owns only
+  `PlayerGroundContact`; vertical movement reads that fact, owns the derived grounded state and
+  ignores stale contact until separation after a jump. It remains independent of collision and
+  presentation.
 - Sim systems never read `sim: false` types. Presentation systems may read sim state but can return
   requests only through recorded input events.
 

@@ -3,7 +3,8 @@ import { MenuIntent, PlayerActionState } from '../schema.gen.ts';
 
 interface ActionSnapshot {
   moveX: number;
-  jump: boolean;
+  jumpPressed: boolean;
+  jumpHeld: boolean;
   dash: boolean;
   shoot: boolean;
   crouch: boolean;
@@ -16,7 +17,8 @@ interface ActionSnapshot {
 
 const reset = (actions: ActionSnapshot): void => {
   actions.moveX = 0;
-  actions.jump = false;
+  actions.jumpPressed = false;
+  actions.jumpHeld = false;
   actions.dash = false;
   actions.shoot = false;
   actions.crouch = false;
@@ -35,7 +37,8 @@ export const MapInputActions = defineSystem({
   run(ctx, actionStates) {
     const actions: ActionSnapshot = {
       moveX: 0,
-      jump: false,
+      jumpPressed: false,
+      jumpHeld: false,
       dash: false,
       shoot: false,
       crouch: false,
@@ -51,7 +54,10 @@ export const MapInputActions = defineSystem({
       const state = chunk.col(ActionState);
       for (let row = 0; row < chunk.length; row++) {
         if (chunk.is(ActionState, row, 'name', 'moveX')) actions.moveX = state.value[row]!;
-        else if (chunk.is(ActionState, row, 'name', 'jump')) actions.jump = state.justPressed[row] !== 0;
+        else if (chunk.is(ActionState, row, 'name', 'jump')) {
+          actions.jumpPressed = state.justPressed[row] !== 0;
+          actions.jumpHeld = state.pressed[row] !== 0;
+        }
         else if (chunk.is(ActionState, row, 'name', 'dash')) actions.dash = state.justPressed[row] !== 0;
         else if (chunk.is(ActionState, row, 'name', 'shoot')) actions.shoot = state.pressed[row] !== 0;
         else if (chunk.is(ActionState, row, 'name', 'crouch')) actions.crouch = state.pressed[row] !== 0;
@@ -65,7 +71,8 @@ export const MapInputActions = defineSystem({
 
     ctx.set(PlayerActionState, {
       moveX: actions.moveX,
-      jump: actions.jump,
+      jump: actions.jumpPressed,
+      jumpHeld: actions.jumpHeld,
       dash: actions.dash,
       fire: actions.shoot,
       crouch: actions.crouch,
