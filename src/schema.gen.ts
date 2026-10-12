@@ -270,6 +270,54 @@ export const schemaIr = {
       "doc": "Data-driven environmental damage contract."
     },
     {
+      "name": "MenuIntent",
+      "kind": "event",
+      "sim": true,
+      "fields": [
+        {
+          "name": "moveX",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "min": -1,
+          "max": 1
+        },
+        {
+          "name": "moveY",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "min": -1,
+          "max": 1
+        },
+        {
+          "name": "confirm",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "back",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "pause",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Recorded, device-independent menu and pause intent produced by the action map."
+    },
+    {
       "name": "Player",
       "kind": "component",
       "sim": true,
@@ -297,6 +345,52 @@ export const schemaIr = {
       "doc": "Player-owned deterministic movement configuration."
     },
     {
+      "name": "PlayerActionState",
+      "kind": "resource",
+      "sim": true,
+      "fields": [
+        {
+          "name": "moveX",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "min": -1,
+          "max": 1
+        },
+        {
+          "name": "jump",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "dash",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "fire",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "crouch",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Current normalized action-map sample. Written from recorded ActionState before gameplay systems run."
+    },
+    {
       "name": "PlayerControl",
       "kind": "component",
       "sim": true,
@@ -310,6 +404,14 @@ export const schemaIr = {
           "min": -1,
           "max": 1,
           "doc": "Recorded horizontal intent normalized to [-1, 1]."
+        },
+        {
+          "name": "crouch",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Whether the recorded crouch control is held."
         }
       ],
       "package": "SewerAction",
@@ -345,6 +447,13 @@ export const schemaIr = {
         },
         {
           "name": "fire",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "crouch",
           "kind": "bool",
           "scalar": "u8",
           "lanes": 1,
@@ -496,6 +605,23 @@ export interface HazardValue {
 /** Data-driven environmental damage contract. (component, sim) */
 export const Hazard = typeToken<HazardViews, HazardValue>('Hazard', 'component', { sig: 'kind:enum:1,damage:u16:1,repeatSeconds:f32:1', read: (v: HazardViews, i: number, o: Record<string, unknown>) => { o.kind = $r.enm('HazardKind', v.kind[i]!); o.damage = v.damage[i]; o.repeatSeconds = v.repeatSeconds[i]; return o; } });
 
+export interface MenuIntentViews {
+  moveX: Float32Array;
+  moveY: Float32Array;
+  confirm: Uint8Array;
+  back: Uint8Array;
+  pause: Uint8Array;
+}
+export interface MenuIntentValue {
+  moveX: number;
+  moveY: number;
+  confirm: boolean;
+  back: boolean;
+  pause: boolean;
+}
+/** Recorded, device-independent menu and pause intent produced by the action map. (event, sim) */
+export const MenuIntent = typeToken<MenuIntentViews, MenuIntentValue>('MenuIntent', 'event', { sig: 'moveX:f32:1,moveY:f32:1,confirm:bool:1,back:bool:1,pause:bool:1', read: (v: MenuIntentViews, i: number, o: Record<string, unknown>) => { o.moveX = v.moveX[i]; o.moveY = v.moveY[i]; o.confirm = v.confirm[i] !== 0; o.back = v.back[i] !== 0; o.pause = v.pause[i] !== 0; return o; } });
+
 export interface PlayerViews {
   /** Maximum horizontal movement speed in world units per second. */
   moveSpeed: Float32Array;
@@ -511,28 +637,51 @@ export interface PlayerValue {
 /** Player-owned deterministic movement configuration. (component, sim) */
 export const Player = typeToken<PlayerViews, PlayerValue>('Player', 'component', { sig: 'moveSpeed:f32:1,jumpSpeed:f32:1', read: (v: PlayerViews, i: number, o: Record<string, unknown>) => { o.moveSpeed = v.moveSpeed[i]; o.jumpSpeed = v.jumpSpeed[i]; return o; } });
 
+export interface PlayerActionStateViews {
+  moveX: Float32Array;
+  jump: Uint8Array;
+  dash: Uint8Array;
+  fire: Uint8Array;
+  crouch: Uint8Array;
+}
+export interface PlayerActionStateValue {
+  moveX: number;
+  jump: boolean;
+  dash: boolean;
+  fire: boolean;
+  crouch: boolean;
+}
+/** Current normalized action-map sample. Written from recorded ActionState before gameplay systems run. (resource, sim) */
+export const PlayerActionState = typeToken<PlayerActionStateViews, PlayerActionStateValue>('PlayerActionState', 'resource', { sig: 'moveX:f32:1,jump:bool:1,dash:bool:1,fire:bool:1,crouch:bool:1', read: (v: PlayerActionStateViews, i: number, o: Record<string, unknown>) => { o.moveX = v.moveX[i]; o.jump = v.jump[i] !== 0; o.dash = v.dash[i] !== 0; o.fire = v.fire[i] !== 0; o.crouch = v.crouch[i] !== 0; return o; } });
+
 export interface PlayerControlViews {
   /** Recorded horizontal intent normalized to [-1, 1]. */
   moveX: Float32Array;
+  /** Whether the recorded crouch control is held. */
+  crouch: Uint8Array;
 }
 export interface PlayerControlValue {
   /** Recorded horizontal intent normalized to [-1, 1]. */
   moveX: number;
+  /** Whether the recorded crouch control is held. */
+  crouch: boolean;
 }
 /** Latest recorded held player control. Action systems consume step-scoped intent events directly. (component, sim) */
-export const PlayerControl = typeToken<PlayerControlViews, PlayerControlValue>('PlayerControl', 'component', { sig: 'moveX:f32:1', read: (v: PlayerControlViews, i: number, o: Record<string, unknown>) => { o.moveX = v.moveX[i]; return o; } });
+export const PlayerControl = typeToken<PlayerControlViews, PlayerControlValue>('PlayerControl', 'component', { sig: 'moveX:f32:1,crouch:bool:1', read: (v: PlayerControlViews, i: number, o: Record<string, unknown>) => { o.moveX = v.moveX[i]; o.crouch = v.crouch[i] !== 0; return o; } });
 
 export interface PlayerIntentViews {
   moveX: Float32Array;
   jump: Uint8Array;
   dash: Uint8Array;
   fire: Uint8Array;
+  crouch: Uint8Array;
 }
 export interface PlayerIntentValue {
   moveX: number;
   jump: boolean;
   dash: boolean;
   fire: boolean;
+  crouch: boolean;
 }
 /** Recorded boundary event produced by keyboard, gamepad, touch, or UI adapters. (event, sim) */
-export const PlayerIntent = typeToken<PlayerIntentViews, PlayerIntentValue>('PlayerIntent', 'event', { sig: 'moveX:f32:1,jump:bool:1,dash:bool:1,fire:bool:1', read: (v: PlayerIntentViews, i: number, o: Record<string, unknown>) => { o.moveX = v.moveX[i]; o.jump = v.jump[i] !== 0; o.dash = v.dash[i] !== 0; o.fire = v.fire[i] !== 0; return o; } });
+export const PlayerIntent = typeToken<PlayerIntentViews, PlayerIntentValue>('PlayerIntent', 'event', { sig: 'moveX:f32:1,jump:bool:1,dash:bool:1,fire:bool:1,crouch:bool:1', read: (v: PlayerIntentViews, i: number, o: Record<string, unknown>) => { o.moveX = v.moveX[i]; o.jump = v.jump[i] !== 0; o.dash = v.dash[i] !== 0; o.fire = v.fire[i] !== 0; o.crouch = v.crouch[i] !== 0; return o; } });

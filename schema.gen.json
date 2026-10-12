@@ -264,6 +264,54 @@
       "doc": "Data-driven environmental damage contract."
     },
     {
+      "name": "MenuIntent",
+      "kind": "event",
+      "sim": true,
+      "fields": [
+        {
+          "name": "moveX",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "min": -1,
+          "max": 1
+        },
+        {
+          "name": "moveY",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "min": -1,
+          "max": 1
+        },
+        {
+          "name": "confirm",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "back",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "pause",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Recorded, device-independent menu and pause intent produced by the action map."
+    },
+    {
       "name": "Player",
       "kind": "component",
       "sim": true,
@@ -291,6 +339,52 @@
       "doc": "Player-owned deterministic movement configuration."
     },
     {
+      "name": "PlayerActionState",
+      "kind": "resource",
+      "sim": true,
+      "fields": [
+        {
+          "name": "moveX",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "min": -1,
+          "max": 1
+        },
+        {
+          "name": "jump",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "dash",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "fire",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "crouch",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Current normalized action-map sample. Written from recorded ActionState before gameplay systems run."
+    },
+    {
       "name": "PlayerControl",
       "kind": "component",
       "sim": true,
@@ -304,6 +398,14 @@
           "min": -1,
           "max": 1,
           "doc": "Recorded horizontal intent normalized to [-1, 1]."
+        },
+        {
+          "name": "crouch",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Whether the recorded crouch control is held."
         }
       ],
       "package": "SewerAction",
@@ -339,6 +441,13 @@
         },
         {
           "name": "fire",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "crouch",
           "kind": "bool",
           "scalar": "u8",
           "lanes": 1,

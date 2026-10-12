@@ -1,0 +1,24 @@
+{
+  "$schemaVersion": 1,
+  "actions": {
+    "moveX": [
+      { "negative": "KeyA", "positive": "KeyD" },
+      { "axis": 0 }
+    ],
+    "jump": [{ "key": "KeyW" }, { "button": 0 }],
+    "dash": [{ "key": "ShiftLeft" }, { "button": 4 }],
+    "shoot": [{ "key": "KeyF" }, { "button": 7 }],
+    "crouch": [{ "key": "KeyS" }, { "button": 5 }],
+    "pause": [{ "key": "KeyP" }, { "button": 9 }],
+    "menuX": [
+      { "negative": "KeyA", "positive": "KeyD" },
+      { "axis": 0 }
+    ],
+    "menuY": [
+      { "negative": "KeyW", "positive": "KeyS" },
+      { "axis": 1 }
+    ],
+    "menuConfirm": [{ "key": "Enter" }, { "button": 0 }],
+    "menuBack": [{ "key": "KeyQ" }, { "button": 1 }]
+  }
+}
