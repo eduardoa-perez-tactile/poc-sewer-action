@@ -1,42 +1,75 @@
 {
   "$schemaVersion": 2,
   "id": "main",
+  "resources": { "PlatformCollisionGrid": { "originX": -8, "originY": -4.5, "cellSize": 0.5 } },
   "entities": [
     { "name": "Camera", "id": "camera", "Camera": { "clearColor": "#09131cff" }, "LocalTransform": {} },
     {
-      "name": "Backdrop",
-      "id": "backdrop",
+      "name": "SewerBackdrop",
+      "id": "sewer-backdrop",
       "LocalTransform": { "position": [0, 0, -2] },
-      "Sprite": { "image": "art/environment/middle", "size": [38.6667, 10], "sortingLayer": "Background" }
+      "Sprite": { "image": "art/environment/middle", "size": [46.4, 12], "sortingLayer": "Background" }
     },
     {
-      "name": "Ground",
-      "id": "ground",
-      "LocalTransform": { "position": [0, -3.75, 0] },
-      "Shape": { "size": [18, 2.5], "color": "#31464aff" }
+      "name": "FirstSewerRoom",
+      "id": "first-sewer-room",
+      "LocalTransform": { "position": [-8, -4.5, 0] },
+      "Tilemap": {
+        "tileset": "art/environment/tileset",
+        "tileSize": [0.5, 0.5],
+        "columns": 17,
+        "data": "rooms/first-sewer-room.tilemap.json",
+        "sortingLayer": "World"
+      }
     },
-    { "name": "GroundCellNeg9", "id": "ground-cell-neg-9", "PlatformCollisionCell": { "x": -9, "y": -3 } },
-    { "name": "GroundCellNeg8", "id": "ground-cell-neg-8", "PlatformCollisionCell": { "x": -8, "y": -3 } },
-    { "name": "GroundCellNeg7", "id": "ground-cell-neg-7", "PlatformCollisionCell": { "x": -7, "y": -3 } },
-    { "name": "GroundCell0", "id": "ground-cell-0", "PlatformCollisionCell": { "x": -6, "y": -3 } },
-    { "name": "GroundCell1", "id": "ground-cell-1", "PlatformCollisionCell": { "x": -5, "y": -3 } },
-    { "name": "GroundCell2", "id": "ground-cell-2", "PlatformCollisionCell": { "x": -4, "y": -3 } },
-    { "name": "GroundCell3", "id": "ground-cell-3", "PlatformCollisionCell": { "x": -3, "y": -3 } },
-    { "name": "GroundCell4", "id": "ground-cell-4", "PlatformCollisionCell": { "x": -2, "y": -3 } },
-    { "name": "GroundCell5", "id": "ground-cell-5", "PlatformCollisionCell": { "x": -1, "y": -3 } },
-    { "name": "GroundCell6", "id": "ground-cell-6", "PlatformCollisionCell": { "y": -3 } },
-    { "name": "GroundCell7", "id": "ground-cell-7", "PlatformCollisionCell": { "x": 1, "y": -3 } },
-    { "name": "GroundCell8", "id": "ground-cell-8", "PlatformCollisionCell": { "x": 2, "y": -3 } },
-    { "name": "GroundCell9", "id": "ground-cell-9", "PlatformCollisionCell": { "x": 3, "y": -3 } },
-    { "name": "GroundCell10", "id": "ground-cell-10", "PlatformCollisionCell": { "x": 4, "y": -3 } },
-    { "name": "GroundCell11", "id": "ground-cell-11", "PlatformCollisionCell": { "x": 5, "y": -3 } },
-    { "name": "GroundCellPos6", "id": "ground-cell-pos-6", "PlatformCollisionCell": { "x": 6, "y": -3 } },
-    { "name": "GroundCellPos7", "id": "ground-cell-pos-7", "PlatformCollisionCell": { "x": 7, "y": -3 } },
-    { "name": "GroundCellPos8", "id": "ground-cell-pos-8", "PlatformCollisionCell": { "x": 8, "y": -3 } },
+    {
+      "name": "EncounterSpace",
+      "id": "encounter-space",
+      "LocalTransform": { "position": [1.5, -2.5, 0] },
+      "RoomLandmark": {}
+    },
+    {
+      "name": "WaterEdge",
+      "id": "water-edge",
+      "LocalTransform": { "position": [5.5, -3, 0] },
+      "RoomLandmark": { "kind": "WaterEdge" }
+    },
+    {
+      "name": "Exit",
+      "id": "exit",
+      "LocalTransform": { "position": [7, -1.5, 0] },
+      "RoomLandmark": { "kind": "Exit" },
+      "Text2D": {
+        "text": "EXIT  >",
+        "size": 0.34,
+        "color": "#91d8a2ff",
+        "outlineColor": "#07140aff",
+        "outlineWidth": 2,
+        "sortingLayer": "Foreground"
+      }
+    },
+    {
+      "name": "ExitArrowShaft",
+      "id": "exit-arrow-shaft",
+      "LocalTransform": { "position": [6.65, -1.35, 0] },
+      "Shape": { "size": [0.9, 0.12], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "ExitArrowHeadUpper",
+      "id": "exit-arrow-head-upper",
+      "LocalTransform": { "position": [7.05, -1.18, 0], "rotation": [0, 0, -0.382683, 0.92388] },
+      "Shape": { "size": [0.48, 0.12], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "ExitArrowHeadLower",
+      "id": "exit-arrow-head-lower",
+      "LocalTransform": { "position": [7.05, -1.52, 0], "rotation": [0, 0, 0.382683, 0.92388] },
+      "Shape": { "size": [0.48, 0.12], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
     {
       "name": "Player",
       "id": "player",
-      "LocalTransform": { "position": [-5, -2.5, 0] },
+      "LocalTransform": { "position": [-5.25, -2.5, 0] },
       "Player": {},
       "PlayerControl": {},
       "PlayerDashState": {},

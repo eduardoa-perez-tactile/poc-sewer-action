@@ -24,6 +24,7 @@
           "assets/art/player/**",
           "assets/art/soldier/**",
           "assets/art/effects/**",
+          "assets/rooms/**",
           "scenes/main.scene.json"
         ]
       }
