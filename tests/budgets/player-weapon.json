@@ -1,0 +1,20 @@
+{
+  "replay": "tests/replays/held_fire_obeys_fixed_step_cadence__applies_recoil__and_reuses_the_warmed_projectile_pool.greplay",
+  "structural": {
+    "drawCallsMax": 4,
+    "pipelinesCreatedDuringPlay": 0,
+    "gcPausesOver4msMax": 0
+  },
+  "devices": {
+    "android-low-compat": {
+      "frameTimeP95Ms": 33.3,
+      "gpuTimeP95Ms": 23.3,
+      "scriptTimeP95Ms": 8,
+      "memoryMB": 350,
+      "jsHeapMB": 32,
+      "loadMs": 2500,
+      "hitchFrames": 0,
+      "gcMaxMs": 8
+    }
+  }
+}

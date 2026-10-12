@@ -1,3 +1,5 @@
+import './combat/load-combat-assets.ts';
+
 export { SetupGame } from './game-flow/setup-game.ts';
 export { BuildRoomCollision } from './room/build-room-collision.ts';
 export { MapInputActions } from './player/map-input-actions.ts';
@@ -7,6 +9,10 @@ export { MovePlayerHorizontally } from './player/move-player-horizontally.ts';
 export { MovePlayerVertically } from './player/move-player-vertically.ts';
 export { ResolvePlatformCollision } from './player/resolve-platform-collision.ts';
 export { AdvancePlayerDash } from './player/advance-player-dash.ts';
+export { WarmProjectilePool } from './combat/warm-projectile-pool.ts';
+export { FirePlayerWeapon } from './combat/fire-player-weapon.ts';
+export { AdvanceProjectiles } from './combat/advance-projectiles.ts';
+export { ApplyDamage } from './combat/apply-damage.ts';
 export { DrivePlayerAnimation } from './presentation/drive-player-animation.ts';
 export { BuildGameplayPresentation } from './presentation/build-gameplay-presentation.ts';
 export { FollowPlayerCamera } from './presentation/follow-player-camera.ts';
