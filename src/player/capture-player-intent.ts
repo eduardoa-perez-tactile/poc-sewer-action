@@ -1,24 +1,27 @@
 import { defineSystem, query, read, write } from '@gameengine/runtime';
-import { Player, PlayerControl, PlayerIntent } from '../schema.gen.ts';
+import { Player, PlayerActionState, PlayerControl, PlayerIntent } from '../schema.gen.ts';
 
 export const CapturePlayerIntent = defineSystem({
   name: 'CapturePlayerIntent',
   stage: 'PreUpdate',
+  after: ['MapInputActions'],
   query: query(read(Player), write(PlayerControl)),
-  runOn: [PlayerIntent],
+  resources: [read(PlayerActionState)],
+  events: [PlayerIntent],
   run(ctx, players) {
-    let moveX = 0;
-    let received = false;
+    const mapped = ctx.get(PlayerActionState);
+    let moveX = mapped.moveX;
+    let crouch = mapped.crouch;
     ctx.events.forEach(PlayerIntent, (intent) => {
       moveX = intent.moveX;
-      received = true;
+      crouch = intent.crouch;
     });
-    if (!received) return;
 
     for (const chunk of players.chunks()) {
       const control = chunk.col(PlayerControl);
       for (let row = 0; row < chunk.length; row++) {
         control.moveX[row] = moveX;
+        control.crouch[row] = crouch ? 1 : 0;
       }
     }
   },

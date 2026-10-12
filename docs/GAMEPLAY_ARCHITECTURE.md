@@ -45,13 +45,16 @@ changes go through the command buffer and become visible at the documented end-o
 
 ## Input boundary
 
-Keyboard, gamepad and eventual browser/touch adapters normalize their device-specific values into
-`PlayerIntent`. The event is recorded in the input frame before `CapturePlayerIntent` writes
-`PlayerControl`. The simulation never polls DOM, keyboard, gamepad, UI or service APIs directly.
+Keyboard and gamepad bindings live in `input.json`. The engine records their named action values in
+the fixed-step input frame and exposes deterministic `ActionState` components. `MapInputActions`
+normalizes those device-independent states into `PlayerActionState` and `MenuIntent`; direct UI
+adapters may emit `PlayerIntent`. `CapturePlayerIntent` then writes `PlayerControl` from either
+source, with direct intents taking precedence. The simulation never
+polls DOM, keyboard, gamepad, UI or service APIs directly.
 
-An adapter emits the normalized held movement value in `[-1, 1]` and jump, dash and fire action
-edges. `CapturePlayerIntent` stores only held movement. The owning action systems consume the
-step-scoped event directly, so an edge cannot remain sticky across later fixed steps. If multiple
+An adapter emits the normalized held movement value in `[-1, 1]`, held crouch/fire state and jump,
+dash, pause and menu action edges. `CapturePlayerIntent` stores only held movement and crouch. The
+owning action systems consume step-scoped values directly, so an edge cannot remain sticky across later fixed steps. If multiple
 samples arrive in one step, their recorded order is authoritative and the last held movement sample
 wins. Menus and MVC views request a sim change by emitting an intent event; they do not mutate the
 world.
