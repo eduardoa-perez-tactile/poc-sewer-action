@@ -4,6 +4,8 @@ import {
   GameState,
   GameplayPresentation,
   MenuIntent,
+  PlatformCollisionCell,
+  PlatformCollisionGrid,
   Player,
   PlayerActionState,
   PlayerControl,
@@ -106,7 +108,7 @@ worldTest('neutral horizontal input keeps a stationary player still', async ({ w
   expect(world.get(player!, PlayerMotion)).toEqual({
     horizontalVelocity: 0,
     verticalVelocity: 0,
-    grounded: true,
+    groundedForMovement: true,
     facing: 'Right',
     coyoteStepsRemaining: 6,
     jumpBufferStepsRemaining: 0,
@@ -179,7 +181,7 @@ worldTest('airborne movement uses reduced acceleration and braking', async ({ wo
     PlayerControl: {},
     PlayerDashState: {},
     PlayerGroundContact: { grounded: false },
-    PlayerMotion: { grounded: false },
+    PlayerMotion: { groundedForMovement: false },
   });
 
   for (let i = 0; i < 4; i++) {
@@ -199,7 +201,7 @@ worldTest('a grounded jump uses the configured speed and only its press edge', a
   input.action('jump', 1);
   await step(1);
   const first = world.get(player!, PlayerMotion);
-  expect(first.grounded).toBe(false);
+  expect(first.groundedForMovement).toBe(false);
   expect(first.verticalVelocity).toBeCloseTo(9.2 - 24 / 60);
   expect(first.airJumpsRemaining).toBe(1);
 
@@ -237,7 +239,7 @@ worldTest('coyote time accepts its final eligible step and then expires', async 
     PlayerControl: {},
     PlayerDashState: {},
     PlayerGroundContact: { grounded: false },
-    PlayerMotion: { grounded: false, coyoteStepsRemaining: 1, airJumpsRemaining: 0 },
+    PlayerMotion: { groundedForMovement: false, coyoteStepsRemaining: 1, airJumpsRemaining: 0 },
   });
   const expired = world.spawn({
     LocalTransform: {},
@@ -245,7 +247,7 @@ worldTest('coyote time accepts its final eligible step and then expires', async 
     PlayerControl: {},
     PlayerDashState: {},
     PlayerGroundContact: { grounded: false },
-    PlayerMotion: { grounded: false, coyoteStepsRemaining: 0, airJumpsRemaining: 0 },
+    PlayerMotion: { groundedForMovement: false, coyoteStepsRemaining: 0, airJumpsRemaining: 0 },
   });
 
   input.action('jump', 1);
@@ -263,7 +265,7 @@ worldTest('a buffered jump fires on grounded contact within the configured windo
     PlayerControl: {},
     PlayerDashState: {},
     PlayerGroundContact: { grounded: false },
-    PlayerMotion: { grounded: false, coyoteStepsRemaining: 0, airJumpsRemaining: 0 },
+    PlayerMotion: { groundedForMovement: false, coyoteStepsRemaining: 0, airJumpsRemaining: 0 },
   });
 
   input.action('jump', 1);
@@ -274,7 +276,7 @@ worldTest('a buffered jump fires on grounded contact within the configured windo
   await step(1);
 
   const landedJump = world.get(player, PlayerMotion);
-  expect(landedJump.grounded).toBe(false);
+  expect(landedJump.groundedForMovement).toBe(false);
   expect(landedJump.jumpBufferStepsRemaining).toBe(0);
   expect(landedJump.verticalVelocity).toBeGreaterThan(0);
 });
@@ -287,7 +289,7 @@ worldTest('an expired jump buffer does not fire on later grounded contact', asyn
     PlayerControl: {},
     PlayerDashState: {},
     PlayerGroundContact: { grounded: false },
-    PlayerMotion: { grounded: false, coyoteStepsRemaining: 0, airJumpsRemaining: 0 },
+    PlayerMotion: { groundedForMovement: false, coyoteStepsRemaining: 0, airJumpsRemaining: 0 },
   });
 
   input.action('jump', 1);
@@ -297,7 +299,7 @@ worldTest('an expired jump buffer does not fire on later grounded contact', asyn
   world.insert(player, PlayerGroundContact, { grounded: true });
   await step(1);
   const landed = world.get(player, PlayerMotion);
-  expect(landed.grounded).toBe(true);
+  expect(landed.groundedForMovement).toBe(true);
   expect(landed.verticalVelocity).toBe(0);
 });
 
@@ -333,7 +335,7 @@ worldTest('one air jump is available and grounded contact restores it', async ({
   expect(world.get(player!, PlayerMotion).verticalVelocity).toBe(0);
 });
 
-worldTest('gravity carries a jump through its apex and clamps falling speed', async ({ world, step, input }) => {
+worldTest('gravity carries a jump through its apex and lands on deterministic geometry', async ({ world, step, input }) => {
   await step(1);
   const [player] = world.entities(Player);
   const startY = world.get(player!, LocalTransform).position[1]!;
@@ -349,9 +351,147 @@ worldTest('gravity carries a jump through its apex and clamps falling speed', as
   expect(world.get(player!, PlayerMotion).verticalVelocity).toBeLessThan(0);
 
   await step(90);
-  const falling = world.get(player!, PlayerMotion);
-  expect(falling.verticalVelocity).toBe(-18);
-  expect(world.get(player!, LocalTransform).position[1]!).toBeLessThan(apexY);
+  const landed = world.get(player!, PlayerMotion);
+  expect(landed.verticalVelocity).toBe(0);
+  expect(landed.groundedForMovement).toBe(true);
+  expect(world.get(player!, LocalTransform).position[1]!).toBe(startY);
+});
+
+worldTest('platform collision lands on floors and owns grounded transitions', async ({ world, step }) => {
+  await step(1);
+  world.spawn({ PlatformCollisionCell: { x: 20, y: 0 } });
+  const player = world.spawn({
+    LocalTransform: { position: [20.5, 3, 0] },
+    Player: {},
+    PlayerControl: {},
+    PlayerDashState: {},
+    PlayerGroundContact: { grounded: false },
+    PlayerMotion: { groundedForMovement: false, verticalVelocity: -18 },
+  });
+
+  await step(12);
+
+  expect(world.get(player, LocalTransform).position[1]).toBeCloseTo(0.5);
+  expect(world.get(player, PlayerGroundContact).grounded).toBe(true);
+  expect(world.get(player, PlayerMotion).verticalVelocity).toBe(0);
+  await step(1);
+  expect(world.get(player, PlayerMotion).groundedForMovement).toBe(true);
+});
+
+worldTest('platform collision stops upward motion at ceilings', async ({ world, step }) => {
+  await step(1);
+  world.spawn({ PlatformCollisionCell: { x: 22, y: 3 } });
+  const player = world.spawn({
+    LocalTransform: { position: [22.5, 0.5, 0] },
+    Player: { gravity: 0 },
+    PlayerControl: {},
+    PlayerDashState: {},
+    PlayerGroundContact: { grounded: false },
+    PlayerMotion: { groundedForMovement: false, verticalVelocity: 120 },
+  });
+
+  await step(1);
+
+  expect(world.get(player, LocalTransform).position[1]).toBeCloseTo(1.3);
+  expect(world.get(player, PlayerMotion).verticalVelocity).toBe(0);
+  expect(world.get(player, PlayerGroundContact).grounded).toBe(false);
+});
+
+worldTest('platform collision stops at walls and cannot tunnel at extreme dash speed', async ({ world, step }) => {
+  await step(1);
+  world.spawn({ PlatformCollisionCell: { x: 25, y: 1 } });
+  const player = world.spawn({
+    LocalTransform: { position: [22.5, 1.1, 0] },
+    Player: { dashSpeed: 240, gravity: 0 },
+    PlayerControl: {},
+    PlayerDashState: { active: true },
+    PlayerGroundContact: { grounded: false },
+    PlayerMotion: { groundedForMovement: false },
+  });
+
+  await step(1);
+
+  expect(world.get(player, LocalTransform).position[0]).toBeCloseTo(24.58);
+  expect(world.get(player, PlayerMotion).horizontalVelocity).toBe(0);
+  expect(world.hash()).toBe('9a749dac40936c35');
+});
+
+worldTest('platform collision resolves a diagonal floor-wall corner without penetration', async ({ world, step }) => {
+  await step(1);
+  world.spawn({ PlatformCollisionCell: { x: 30, y: 0 } });
+  world.spawn({ PlatformCollisionCell: { x: 31, y: 1 } });
+  const player = world.spawn({
+    LocalTransform: { position: [29.5, 0.7, 0] },
+    Player: { gravity: 0 },
+    PlayerControl: {},
+    PlayerDashState: {},
+    PlayerGroundContact: { grounded: false },
+    PlayerMotion: { horizontalVelocity: 120, verticalVelocity: -60, groundedForMovement: false },
+  });
+
+  await step(1);
+
+  const position = world.get(player, LocalTransform).position;
+  expect(position[0]).toBeCloseTo(30.58);
+  expect(position[1]).toBeCloseTo(0.5);
+  expect(world.get(player, PlayerGroundContact).grounded).toBe(true);
+  expect(world.hash()).toBe('afdb5d71a9e6d213');
+});
+
+worldTest('small-step assistance climbs only ledges within its configured boundary', async ({ world, step, input }) => {
+  world.setResource(PlatformCollisionGrid, { originX: 0, originY: 0, cellSize: 0.25 });
+  await step(1);
+  for (let x = 160; x <= 168; x++) world.spawn({ PlatformCollisionCell: { x, y: 0 } });
+  world.spawn({ PlatformCollisionCell: { x: 164, y: 1 } });
+  world.spawn({ PlatformCollisionCell: { x: 168, y: 1 } });
+  world.spawn({ PlatformCollisionCell: { x: 168, y: 2 } });
+  world.spawn({ PlatformCollisionCell: { x: 168, y: 3 } });
+  const player = world.spawn({
+    LocalTransform: { position: [40.5, 0.25, 0] },
+    Player: { gravity: 0, maxHorizontalSpeed: 30, groundAcceleration: 1800, maxStepHeight: 0.35 },
+    PlayerControl: {},
+    PlayerDashState: {},
+    PlayerGroundContact: { grounded: true },
+    PlayerMotion: { groundedForMovement: true },
+  });
+
+  input.action('moveX', 1);
+  await step(1);
+  expect(world.get(player, LocalTransform).position[1]).toBeCloseTo(0.5);
+  for (let i = 0; i < 3; i++) {
+    input.action('moveX', 1);
+    await step(1);
+  }
+  expect(world.get(player, LocalTransform).position[0]).toBeLessThanOrEqual(41.58);
+  expect(world.get(player, LocalTransform).position[1]).toBeCloseTo(0.5);
+  expect(world.hash()).toBe('945ba67614220589');
+});
+
+worldTest('cliff edges end ground contact exactly after support and preserve coyote integration', async ({ world, step, input }) => {
+  await step(1);
+  world.spawn({ PlatformCollisionCell: { x: 44, y: 0 } });
+  const player = world.spawn({
+    LocalTransform: { position: [44.5, 0.5, 0] },
+    Player: { gravity: 0, maxHorizontalSpeed: 15, groundAcceleration: 900 },
+    PlayerControl: {},
+    PlayerDashState: {},
+    PlayerGroundContact: { grounded: true },
+    PlayerMotion: { groundedForMovement: true },
+  });
+
+  for (let i = 0; i < 3; i++) {
+    input.action('moveX', 1);
+    await step(1);
+    expect(world.get(player, PlayerGroundContact).grounded).toBe(true);
+  }
+  input.action('moveX', 1);
+  await step(1);
+  expect(world.get(player, PlayerGroundContact).grounded).toBe(false);
+  expect(world.get(player, PlayerMotion).coyoteStepsRemaining).toBeGreaterThan(0);
+
+  input.action('jump', 1);
+  await step(1);
+  expect(world.get(player, PlayerMotion).verticalVelocity).toBeGreaterThan(0);
 });
 
 worldTest('dash activates from a press edge and chooses input before facing fallback', async ({ world, step, input }) => {
@@ -441,7 +581,7 @@ worldTest('ground and air dashes share eligibility while air dash suppresses ris
     PlayerControl: {},
     PlayerDashState: {},
     PlayerGroundContact: { grounded: false },
-    PlayerMotion: { grounded: false, verticalVelocity: 9 },
+    PlayerMotion: { groundedForMovement: false, verticalVelocity: 9 },
   });
 
   input.action('dash', 1);
@@ -464,7 +604,7 @@ worldTest('dash locks jump and horizontal steering without leaving a held dash e
   await step(8);
 
   expect(world.get(player!, PlayerDashState).active).toBe(false);
-  expect(world.get(player!, PlayerMotion).grounded).toBe(true);
+  expect(world.get(player!, PlayerMotion).groundedForMovement).toBe(true);
   expect(world.get(player!, PlayerMotion).verticalVelocity).toBe(0);
   expect(world.get(player!, PlayerMotion).horizontalVelocity).toBe(8.5);
 
@@ -488,7 +628,7 @@ worldTest('dash mechanics produce a stable deterministic state hash', async ({ w
   input.action('dash', 1);
   await step(9);
 
-  expect(world.hash()).toBe('af4b5883812d40f6');
+  expect(world.hash()).toBe('44658e4b82341160');
 });
 
 worldTest('jump mechanics produce a stable deterministic state hash', async ({ world, step, input }) => {
@@ -502,7 +642,7 @@ worldTest('jump mechanics produce a stable deterministic state hash', async ({ w
   input.action('moveX', -0.75);
   await step(17);
 
-  expect(world.hash()).toBe('a3ed80193b07288c');
+  expect(world.hash()).toBe('43e5131cde570ca2');
 });
 
 worldTest('horizontal movement produces a stable deterministic state hash', async ({ world, step, input }) => {
@@ -517,7 +657,7 @@ worldTest('horizontal movement produces a stable deterministic state hash', asyn
   }
   await step(5);
 
-  expect(world.hash()).toBe('7544c9cbb29ef409');
+  expect(world.hash()).toBe('08d9828aecff9a46');
 });
 
 renderTest('the vertical slice stays within its 2D draw-call budget', async ({ step, render }) => {

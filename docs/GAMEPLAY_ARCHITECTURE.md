@@ -19,7 +19,8 @@ across runtimes.
 | --- | --- | --- | --- |
 | Game flow | `GameState` resource | spawn/death/exit facts | authoritative phase observed by presentation |
 | Player | `Player`, `PlayerControl` and `PlayerStepInput` | recorded `PlayerIntent` | held movement state and current-step jump/dash action samples |
-| Movement | `PlayerMotion`, `PlayerDashState` plus actor transforms | `PlayerControl`, `PlayerGroundContact`, `PlayerStepInput`, `ctx.dt` | transforms, velocity, facing and dash state |
+| Movement | `PlayerMotion`, `PlayerDashState` plus actor transforms | `PlayerControl`, `PlayerGroundContact`, `PlayerStepInput`, `ctx.dt` | requested velocity, facing and dash state |
+| Platform collision | `PlatformCollisionGrid`, `PlatformCollisionCell`, `PlayerGroundContact` plus actor transforms | requested `PlayerMotion` velocity and fixed `ctx.dt` | swept transforms, resolved velocity and grounded contact |
 | Combat | `Health` and `Weapon` components | fire intent, hit facts, `DamageRequested` | cooldown state and `ActorDied` facts |
 | Enemies | `EnemyBrain` component | sim transforms, collision facts and seeded `ctx.rng` | movement/fire requests |
 | Hazards | `Hazard` component plus per-contact sim state | deterministic contact facts | `DamageRequested` |
@@ -74,11 +75,11 @@ world.
 - Content values belong in components, prefabs, scenes or tunable data rather than per-level code.
 - `Player` owns horizontal speed, acceleration, braking, air-control, jump, gravity, grace-window and
   air-jump configuration, plus dash speed, duration, cooldown, post-dash control lock and gravity
-  multiplier. `PlayerMotion` owns authoritative horizontal/vertical velocity, grounded
-  state, facing and the fixed-step coyote/buffer/air-jump counters. Collision code owns only
-  `PlayerGroundContact`; vertical movement reads that fact, owns the derived grounded state and
-  ignores stale contact until separation after a jump. It remains independent of collision and
-  presentation.
+  multiplier. `PlayerMotion` owns authoritative horizontal/vertical velocity, the
+  `groundedForMovement` interpretation, facing and the fixed-step coyote/buffer/air-jump counters.
+  Collision code owns only `PlayerGroundContact`; vertical movement reads that raw support fact one
+  fixed step later, owns that distinct interpretation and ignores stale contact until separation
+  after a jump. It remains independent of collision and presentation.
 - `PlayerDashState` owns active direction and fixed-step duration, cooldown and control-lock
   counters. A dash is allowed on the ground or in the air, selects non-zero movement input before
   falling back to facing, locks horizontal velocity for eight steps, suppresses upward velocity and
@@ -101,6 +102,15 @@ animation or reads a camera transform; matching simulation timers own those deci
 Dash slow motion, trails, camera shake and animation are presentation-only consumers of
 `GameplayPresentation`/`PlayerDashState`. They may change render time but cannot alter `ctx.dt`, the
 fixed-step dash counters, velocity, transforms or cooldown outcomes.
+
+Platform collision is an explicit simulation layer, independent of rendered shapes and sprites.
+`PlatformCollisionCell` entities identify solid grid cells and `PlatformCollisionGrid` maps their
+integer coordinates into world space. Movement systems author velocity; `ResolvePlatformCollision`
+integrates it once, sweeps the player's authored collision box against cell boundaries, resolves
+walls/floors/ceilings and owns `PlayerGroundContact`. Grounded actors can climb only ledges at or
+below `maxStepHeight`; a bounded downward snap stabilizes shallow edges, while leaving support clears
+contact for the existing coyote-time contract. Slopes, one-way/drop-through surfaces and room
+tilemap authoring remain outside this ticket's established scope.
 
 ## Test contract
 

@@ -361,6 +361,65 @@
       "doc": "Recorded, device-independent menu and pause intent produced by the action map."
     },
     {
+      "name": "PlatformCollisionCell",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "x",
+          "kind": "i32",
+          "scalar": "i32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Grid-space x coordinate."
+        },
+        {
+          "name": "y",
+          "kind": "i32",
+          "scalar": "i32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Grid-space y coordinate."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "A solid cell in the deterministic platform collision grid. Rendering is independent."
+    },
+    {
+      "name": "PlatformCollisionGrid",
+      "kind": "resource",
+      "sim": true,
+      "fields": [
+        {
+          "name": "originX",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "World x coordinate of cell (0, 0) lower-left corner."
+        },
+        {
+          "name": "originY",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": -0.5,
+          "doc": "World y coordinate of cell (0, 0) lower-left corner."
+        },
+        {
+          "name": "cellSize",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 1,
+          "min": 0.01,
+          "doc": "Square cell size in world units."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "World mapping for deterministic platform collision cells."
+    },
+    {
       "name": "Player",
       "kind": "component",
       "sim": true,
@@ -513,6 +572,42 @@
           "min": 0,
           "max": 1,
           "doc": "Gravity multiplier while an airborne dash is active."
+        },
+        {
+          "name": "collisionHalfWidth",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0.42,
+          "min": 0.01,
+          "doc": "Half-width of the deterministic player collision box."
+        },
+        {
+          "name": "collisionHeight",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 1.2,
+          "min": 0.01,
+          "doc": "Height of the deterministic player collision box measured upward from the actor origin."
+        },
+        {
+          "name": "maxStepHeight",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0.35,
+          "min": 0,
+          "doc": "Maximum ledge height climbed automatically while grounded."
+        },
+        {
+          "name": "groundSnapDistance",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0.12,
+          "min": 0,
+          "doc": "Maximum downward floor snap used to stay stable over shallow cliff edges."
         }
       ],
       "package": "SewerAction",
@@ -747,12 +842,12 @@
           "doc": "Authoritative vertical velocity in world units per second."
         },
         {
-          "name": "grounded",
+          "name": "groundedForMovement",
           "kind": "bool",
           "scalar": "u8",
           "lanes": 1,
           "default": true,
-          "doc": "Movement-owned grounded state derived from collision contact."
+          "doc": "Movement-interpreted grounded state, one fixed step behind raw collision support."
         },
         {
           "name": "facing",

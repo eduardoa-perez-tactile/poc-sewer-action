@@ -367,6 +367,65 @@ export const schemaIr = {
       "doc": "Recorded, device-independent menu and pause intent produced by the action map."
     },
     {
+      "name": "PlatformCollisionCell",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "x",
+          "kind": "i32",
+          "scalar": "i32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Grid-space x coordinate."
+        },
+        {
+          "name": "y",
+          "kind": "i32",
+          "scalar": "i32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Grid-space y coordinate."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "A solid cell in the deterministic platform collision grid. Rendering is independent."
+    },
+    {
+      "name": "PlatformCollisionGrid",
+      "kind": "resource",
+      "sim": true,
+      "fields": [
+        {
+          "name": "originX",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "World x coordinate of cell (0, 0) lower-left corner."
+        },
+        {
+          "name": "originY",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": -0.5,
+          "doc": "World y coordinate of cell (0, 0) lower-left corner."
+        },
+        {
+          "name": "cellSize",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 1,
+          "min": 0.01,
+          "doc": "Square cell size in world units."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "World mapping for deterministic platform collision cells."
+    },
+    {
       "name": "Player",
       "kind": "component",
       "sim": true,
@@ -519,6 +578,42 @@ export const schemaIr = {
           "min": 0,
           "max": 1,
           "doc": "Gravity multiplier while an airborne dash is active."
+        },
+        {
+          "name": "collisionHalfWidth",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0.42,
+          "min": 0.01,
+          "doc": "Half-width of the deterministic player collision box."
+        },
+        {
+          "name": "collisionHeight",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 1.2,
+          "min": 0.01,
+          "doc": "Height of the deterministic player collision box measured upward from the actor origin."
+        },
+        {
+          "name": "maxStepHeight",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0.35,
+          "min": 0,
+          "doc": "Maximum ledge height climbed automatically while grounded."
+        },
+        {
+          "name": "groundSnapDistance",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0.12,
+          "min": 0,
+          "doc": "Maximum downward floor snap used to stay stable over shallow cliff edges."
         }
       ],
       "package": "SewerAction",
@@ -753,12 +848,12 @@ export const schemaIr = {
           "doc": "Authoritative vertical velocity in world units per second."
         },
         {
-          "name": "grounded",
+          "name": "groundedForMovement",
           "kind": "bool",
           "scalar": "u8",
           "lanes": 1,
           "default": true,
-          "doc": "Movement-owned grounded state derived from collision contact."
+          "doc": "Movement-interpreted grounded state, one fixed step behind raw collision support."
         },
         {
           "name": "facing",
@@ -1026,6 +1121,40 @@ export interface MenuIntentValue {
 /** Recorded, device-independent menu and pause intent produced by the action map. (event, sim) */
 export const MenuIntent = typeToken<MenuIntentViews, MenuIntentValue>('MenuIntent', 'event', { sig: 'moveX:f32:1,moveY:f32:1,confirm:bool:1,back:bool:1,pause:bool:1', read: (v: MenuIntentViews, i: number, o: Record<string, unknown>) => { o.moveX = v.moveX[i]; o.moveY = v.moveY[i]; o.confirm = v.confirm[i] !== 0; o.back = v.back[i] !== 0; o.pause = v.pause[i] !== 0; return o; } });
 
+export interface PlatformCollisionCellViews {
+  /** Grid-space x coordinate. */
+  x: Int32Array;
+  /** Grid-space y coordinate. */
+  y: Int32Array;
+}
+export interface PlatformCollisionCellValue {
+  /** Grid-space x coordinate. */
+  x: number;
+  /** Grid-space y coordinate. */
+  y: number;
+}
+/** A solid cell in the deterministic platform collision grid. Rendering is independent. (component, sim) */
+export const PlatformCollisionCell = typeToken<PlatformCollisionCellViews, PlatformCollisionCellValue>('PlatformCollisionCell', 'component', { sig: 'x:i32:1,y:i32:1', read: (v: PlatformCollisionCellViews, i: number, o: Record<string, unknown>) => { o.x = v.x[i]; o.y = v.y[i]; return o; } });
+
+export interface PlatformCollisionGridViews {
+  /** World x coordinate of cell (0, 0) lower-left corner. */
+  originX: Float32Array;
+  /** World y coordinate of cell (0, 0) lower-left corner. */
+  originY: Float32Array;
+  /** Square cell size in world units. */
+  cellSize: Float32Array;
+}
+export interface PlatformCollisionGridValue {
+  /** World x coordinate of cell (0, 0) lower-left corner. */
+  originX: number;
+  /** World y coordinate of cell (0, 0) lower-left corner. */
+  originY: number;
+  /** Square cell size in world units. */
+  cellSize: number;
+}
+/** World mapping for deterministic platform collision cells. (resource, sim) */
+export const PlatformCollisionGrid = typeToken<PlatformCollisionGridViews, PlatformCollisionGridValue>('PlatformCollisionGrid', 'resource', { sig: 'originX:f32:1,originY:f32:1,cellSize:f32:1', read: (v: PlatformCollisionGridViews, i: number, o: Record<string, unknown>) => { o.originX = v.originX[i]; o.originY = v.originY[i]; o.cellSize = v.cellSize[i]; return o; } });
+
 export interface PlayerViews {
   /** Maximum horizontal speed in world units per second. */
   maxHorizontalSpeed: Float32Array;
@@ -1061,6 +1190,14 @@ export interface PlayerViews {
   dashControlLockSteps: Uint32Array;
   /** Gravity multiplier while an airborne dash is active. */
   dashGravityMultiplier: Float32Array;
+  /** Half-width of the deterministic player collision box. */
+  collisionHalfWidth: Float32Array;
+  /** Height of the deterministic player collision box measured upward from the actor origin. */
+  collisionHeight: Float32Array;
+  /** Maximum ledge height climbed automatically while grounded. */
+  maxStepHeight: Float32Array;
+  /** Maximum downward floor snap used to stay stable over shallow cliff edges. */
+  groundSnapDistance: Float32Array;
 }
 export interface PlayerValue {
   /** Maximum horizontal speed in world units per second. */
@@ -1097,9 +1234,17 @@ export interface PlayerValue {
   dashControlLockSteps: number;
   /** Gravity multiplier while an airborne dash is active. */
   dashGravityMultiplier: number;
+  /** Half-width of the deterministic player collision box. */
+  collisionHalfWidth: number;
+  /** Height of the deterministic player collision box measured upward from the actor origin. */
+  collisionHeight: number;
+  /** Maximum ledge height climbed automatically while grounded. */
+  maxStepHeight: number;
+  /** Maximum downward floor snap used to stay stable over shallow cliff edges. */
+  groundSnapDistance: number;
 }
 /** Player-owned deterministic movement configuration. (component, sim) */
-export const Player = typeToken<PlayerViews, PlayerValue>('Player', 'component', { sig: 'maxHorizontalSpeed:f32:1,groundAcceleration:f32:1,groundDeceleration:f32:1,airAcceleration:f32:1,airDeceleration:f32:1,jumpSpeed:f32:1,gravity:f32:1,maxFallSpeed:f32:1,jumpCutMultiplier:f32:1,coyoteSteps:u32:1,jumpBufferSteps:u32:1,airJumps:u32:1,dashSpeed:f32:1,dashDurationSteps:u32:1,dashCooldownSteps:u32:1,dashControlLockSteps:u32:1,dashGravityMultiplier:f32:1', read: (v: PlayerViews, i: number, o: Record<string, unknown>) => { o.maxHorizontalSpeed = v.maxHorizontalSpeed[i]; o.groundAcceleration = v.groundAcceleration[i]; o.groundDeceleration = v.groundDeceleration[i]; o.airAcceleration = v.airAcceleration[i]; o.airDeceleration = v.airDeceleration[i]; o.jumpSpeed = v.jumpSpeed[i]; o.gravity = v.gravity[i]; o.maxFallSpeed = v.maxFallSpeed[i]; o.jumpCutMultiplier = v.jumpCutMultiplier[i]; o.coyoteSteps = v.coyoteSteps[i]; o.jumpBufferSteps = v.jumpBufferSteps[i]; o.airJumps = v.airJumps[i]; o.dashSpeed = v.dashSpeed[i]; o.dashDurationSteps = v.dashDurationSteps[i]; o.dashCooldownSteps = v.dashCooldownSteps[i]; o.dashControlLockSteps = v.dashControlLockSteps[i]; o.dashGravityMultiplier = v.dashGravityMultiplier[i]; return o; } });
+export const Player = typeToken<PlayerViews, PlayerValue>('Player', 'component', { sig: 'maxHorizontalSpeed:f32:1,groundAcceleration:f32:1,groundDeceleration:f32:1,airAcceleration:f32:1,airDeceleration:f32:1,jumpSpeed:f32:1,gravity:f32:1,maxFallSpeed:f32:1,jumpCutMultiplier:f32:1,coyoteSteps:u32:1,jumpBufferSteps:u32:1,airJumps:u32:1,dashSpeed:f32:1,dashDurationSteps:u32:1,dashCooldownSteps:u32:1,dashControlLockSteps:u32:1,dashGravityMultiplier:f32:1,collisionHalfWidth:f32:1,collisionHeight:f32:1,maxStepHeight:f32:1,groundSnapDistance:f32:1', read: (v: PlayerViews, i: number, o: Record<string, unknown>) => { o.maxHorizontalSpeed = v.maxHorizontalSpeed[i]; o.groundAcceleration = v.groundAcceleration[i]; o.groundDeceleration = v.groundDeceleration[i]; o.airAcceleration = v.airAcceleration[i]; o.airDeceleration = v.airDeceleration[i]; o.jumpSpeed = v.jumpSpeed[i]; o.gravity = v.gravity[i]; o.maxFallSpeed = v.maxFallSpeed[i]; o.jumpCutMultiplier = v.jumpCutMultiplier[i]; o.coyoteSteps = v.coyoteSteps[i]; o.jumpBufferSteps = v.jumpBufferSteps[i]; o.airJumps = v.airJumps[i]; o.dashSpeed = v.dashSpeed[i]; o.dashDurationSteps = v.dashDurationSteps[i]; o.dashCooldownSteps = v.dashCooldownSteps[i]; o.dashControlLockSteps = v.dashControlLockSteps[i]; o.dashGravityMultiplier = v.dashGravityMultiplier[i]; o.collisionHalfWidth = v.collisionHalfWidth[i]; o.collisionHeight = v.collisionHeight[i]; o.maxStepHeight = v.maxStepHeight[i]; o.groundSnapDistance = v.groundSnapDistance[i]; return o; } });
 
 export interface PlayerActionStateViews {
   moveX: Float32Array;
@@ -1199,8 +1344,8 @@ export interface PlayerMotionViews {
   horizontalVelocity: Float32Array;
   /** Authoritative vertical velocity in world units per second. */
   verticalVelocity: Float32Array;
-  /** Movement-owned grounded state derived from collision contact. */
-  grounded: Uint8Array;
+  /** Movement-interpreted grounded state, one fixed step behind raw collision support. */
+  groundedForMovement: Uint8Array;
   facing: Uint8Array;
   /** Remaining fixed steps in the grounded grace window. */
   coyoteStepsRemaining: Uint32Array;
@@ -1218,8 +1363,8 @@ export interface PlayerMotionValue {
   horizontalVelocity: number;
   /** Authoritative vertical velocity in world units per second. */
   verticalVelocity: number;
-  /** Movement-owned grounded state derived from collision contact. */
-  grounded: boolean;
+  /** Movement-interpreted grounded state, one fixed step behind raw collision support. */
+  groundedForMovement: boolean;
   facing: FacingDirectionName | number;
   /** Remaining fixed steps in the grounded grace window. */
   coyoteStepsRemaining: number;
@@ -1233,7 +1378,7 @@ export interface PlayerMotionValue {
   ignoreGroundContact: boolean;
 }
 /** Authoritative player movement state. Presentation may observe but never write it. (component, sim) */
-export const PlayerMotion = typeToken<PlayerMotionViews, PlayerMotionValue>('PlayerMotion', 'component', { sig: 'horizontalVelocity:f32:1,verticalVelocity:f32:1,grounded:bool:1,facing:enum:1,coyoteStepsRemaining:u32:1,jumpBufferStepsRemaining:u32:1,airJumpsRemaining:u32:1,jumpWasHeld:bool:1,ignoreGroundContact:bool:1', read: (v: PlayerMotionViews, i: number, o: Record<string, unknown>) => { o.horizontalVelocity = v.horizontalVelocity[i]; o.verticalVelocity = v.verticalVelocity[i]; o.grounded = v.grounded[i] !== 0; o.facing = $r.enm('FacingDirection', v.facing[i]!); o.coyoteStepsRemaining = v.coyoteStepsRemaining[i]; o.jumpBufferStepsRemaining = v.jumpBufferStepsRemaining[i]; o.airJumpsRemaining = v.airJumpsRemaining[i]; o.jumpWasHeld = v.jumpWasHeld[i] !== 0; o.ignoreGroundContact = v.ignoreGroundContact[i] !== 0; return o; } });
+export const PlayerMotion = typeToken<PlayerMotionViews, PlayerMotionValue>('PlayerMotion', 'component', { sig: 'horizontalVelocity:f32:1,verticalVelocity:f32:1,groundedForMovement:bool:1,facing:enum:1,coyoteStepsRemaining:u32:1,jumpBufferStepsRemaining:u32:1,airJumpsRemaining:u32:1,jumpWasHeld:bool:1,ignoreGroundContact:bool:1', read: (v: PlayerMotionViews, i: number, o: Record<string, unknown>) => { o.horizontalVelocity = v.horizontalVelocity[i]; o.verticalVelocity = v.verticalVelocity[i]; o.groundedForMovement = v.groundedForMovement[i] !== 0; o.facing = $r.enm('FacingDirection', v.facing[i]!); o.coyoteStepsRemaining = v.coyoteStepsRemaining[i]; o.jumpBufferStepsRemaining = v.jumpBufferStepsRemaining[i]; o.airJumpsRemaining = v.airJumpsRemaining[i]; o.jumpWasHeld = v.jumpWasHeld[i] !== 0; o.ignoreGroundContact = v.ignoreGroundContact[i] !== 0; return o; } });
 
 export interface PlayerStepInputViews {
   /** Jump press for the current fixed step only. */
