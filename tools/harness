@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+root_dir=$(cd "$(dirname "$0")/.." && pwd)
+ge="$root_dir/tools/gameengine"
+mode=${1:-fast}
+local_js=${HARNESS_JS:-v8}
+
+cd "$root_dir"
+
+case "$mode" in
+  fast)
+    "$ge" gen --check
+    "$ge" fmt --check
+    "$ge" test --changed --js "$local_js"
+    ;;
+  visual)
+    "$ge" gen --check
+    "$ge" fmt --check
+    "$ge" test --tier t0,t1 --js "$local_js"
+    ;;
+  inspect)
+    exec "$ge" run --headless
+    ;;
+  prepush)
+    "$ge" gen --check
+    "$ge" fmt --check
+    "$ge" test --tier t0,t1 --js "$local_js"
+    "$ge" check
+    ;;
+  release)
+    "$ge" gen --check
+    "$ge" fmt --check
+    "$ge" test --tier t0,t1 --js both --memory-class phone-low
+    "$ge" check --tests
+    ;;
+  *)
+    printf 'usage: %s {fast|visual|inspect|prepush|release}\n' "$0" >&2
+    exit 2
+    ;;
+esac

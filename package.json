@@ -2,5 +2,11 @@
   "name": "seweraction",
   "version": "0.1.0",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "test": "./tools/harness fast",
+    "test:visual": "./tools/harness visual",
+    "verify": "./tools/harness prepush",
+    "verify:release": "./tools/harness release"
+  }
 }

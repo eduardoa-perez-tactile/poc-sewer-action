@@ -13,10 +13,11 @@ for development until that engine capability lands.
 ## Local workflow
 
 ```sh
-gameengine gen
-gameengine test --js both
-gameengine run --headless
-gameengine check --tests
+./tools/harness fast
+./tools/harness inspect
+./tools/harness prepush
 ```
 
-Project decisions and conventions live in `PROJECT.md`.
+The complete verification contract is in `docs/DEVELOPMENT_HARNESS.md`. Branching, pull requests
+and releases are defined in `docs/GITFLOW.md`. Project decisions and conventions live in
+`PROJECT.md`.

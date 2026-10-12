@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if command -v gameengine >/dev/null 2>&1; then
+  exec gameengine "$@"
+fi
+
+mac_cli='/Applications/Tactile Game Engine.app/Contents/Resources/engine/tools/cli/bin/gameengine.mjs'
+if [[ -f "$mac_cli" ]]; then
+  exec node "$mac_cli" "$@"
+fi
+
+printf '%s\n' 'Tactile Game Engine CLI not found.' >&2
+printf '%s\n' 'Install the editor, then run its gameengine setup --path command.' >&2
+exit 127
