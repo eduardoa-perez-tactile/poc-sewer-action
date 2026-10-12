@@ -1,12 +1,26 @@
-import { bool, component, event, f32, resource } from '@gameengine/schema';
+import { bool, component, enumOf, event, f32, resource } from '@gameengine/schema';
 
 export const Player = component(
   'Player',
   {
-    moveSpeed: f32({ default: 8.5, min: 0, doc: 'Maximum horizontal movement speed in world units per second.' }),
+    maxHorizontalSpeed: f32({ default: 8.5, min: 0, doc: 'Maximum horizontal speed in world units per second.' }),
+    groundAcceleration: f32({ default: 60, min: 0, doc: 'Grounded acceleration in world units per second squared.' }),
+    groundDeceleration: f32({ default: 80, min: 0, doc: 'Grounded braking and reversal rate in world units per second squared.' }),
+    airAcceleration: f32({ default: 30, min: 0, doc: 'Airborne acceleration in world units per second squared.' }),
+    airDeceleration: f32({ default: 12, min: 0, doc: 'Airborne braking and reversal rate in world units per second squared.' }),
     jumpSpeed: f32({ default: 9.2, min: 0, doc: 'Initial vertical jump speed in world units per second.' }),
   },
   { sim: true, doc: 'Player-owned deterministic movement configuration.' },
+);
+
+export const PlayerMotion = component(
+  'PlayerMotion',
+  {
+    horizontalVelocity: f32({ default: 0, doc: 'Authoritative horizontal velocity in world units per second.' }),
+    grounded: bool({ default: true, doc: 'Ground contact supplied by deterministic traversal/collision systems.' }),
+    facing: enumOf('FacingDirection', ['Left', 'Right'], { default: 'Right' }),
+  },
+  { sim: true, doc: 'Authoritative player movement state. Presentation may observe but never write it.' },
 );
 
 export const PlayerControl = component(

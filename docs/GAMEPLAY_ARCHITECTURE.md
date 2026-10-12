@@ -19,7 +19,7 @@ across runtimes.
 | --- | --- | --- | --- |
 | Game flow | `GameState` resource | spawn/death/exit facts | authoritative phase observed by presentation |
 | Player | `Player` and `PlayerControl` components | recorded `PlayerIntent` | held movement state; action systems consume step-scoped events |
-| Movement | future kinematic components on actors | `PlayerControl`, collision facts, `ctx.dt` | transforms, velocity and grounded state |
+| Movement | `PlayerMotion` plus actor transforms | `PlayerControl`, collision facts, `ctx.dt` | transforms, velocity and facing state |
 | Combat | `Health` and `Weapon` components | fire intent, hit facts, `DamageRequested` | cooldown state and `ActorDied` facts |
 | Enemies | `EnemyBrain` component | sim transforms, collision facts and seeded `ctx.rng` | movement/fire requests |
 | Hazards | `Hazard` component plus per-contact sim state | deterministic contact facts | `DamageRequested` |
@@ -69,6 +69,9 @@ world.
 - Prefer facts over commands between features: combat emits `ActorDied`; game flow decides whether
   that means retry, completion or another phase.
 - Content values belong in components, prefabs, scenes or tunable data rather than per-level code.
+- `Player` owns horizontal speed, acceleration, braking and air-control configuration. `PlayerMotion`
+  owns authoritative velocity, grounded state and facing; future collision code may update grounded
+  state, while movement remains independent of collision and presentation.
 - Sim systems never read `sim: false` types. Presentation systems may read sim state but can return
   requests only through recorded input events.
 
