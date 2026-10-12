@@ -420,6 +420,26 @@
       "doc": "Read-only presentation snapshot derived from consequential simulation state."
     },
     {
+      "name": "ParallaxLayer",
+      "kind": "component",
+      "sim": false,
+      "fields": [
+        {
+          "name": "factor",
+          "kind": "vec2",
+          "scalar": "f32",
+          "lanes": 2,
+          "default": [
+            1,
+            1
+          ],
+          "doc": "Fraction of camera motion retained by this presentation layer."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Authored presentation-only parallax configuration."
+    },
+    {
       "name": "RoomCameraBounds",
       "kind": "resource",
       "sim": false,
