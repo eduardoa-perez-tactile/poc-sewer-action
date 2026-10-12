@@ -1,8 +1,20 @@
 {
-  "replay": "tests/replays/camera_preserves_the_gameplay_frame_at_standard_landscape.greplay",
+  "replay": "tests/replays/the_vertical_slice_replay_traverses_the_first_room_with_the_complete_movement_kit.greplay",
   "structural": {
     "drawCallsMax": 4,
     "pipelinesCreatedDuringPlay": 0,
     "gcPausesOver4msMax": 0
+  },
+  "devices": {
+    "android-low-compat": {
+      "frameTimeP95Ms": 33.3,
+      "gpuTimeP95Ms": 23.3,
+      "scriptTimeP95Ms": 8,
+      "memoryMB": 350,
+      "jsHeapMB": 32,
+      "loadMs": 2500,
+      "hitchFrames": 0,
+      "gcMaxMs": 8
+    }
   }
 }
