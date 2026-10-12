@@ -41,6 +41,14 @@
       "package": "SewerAction"
     },
     {
+      "name": "PresentationFacingDirection",
+      "values": [
+        "Left",
+        "Right"
+      ],
+      "package": "SewerAction"
+    },
+    {
       "name": "RoomLandmarkKind",
       "values": [
         "Encounter",
@@ -211,6 +219,99 @@
       "doc": "Deterministic soldier decision state; visuals derive animation from it."
     },
     {
+      "name": "CameraFeedback",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "active",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Whether transient feedback still needs presentation frames."
+        },
+        {
+          "name": "bump",
+          "kind": "vec2",
+          "scalar": "f32",
+          "lanes": 2,
+          "default": [
+            0,
+            0
+          ],
+          "doc": "Short presentation-only camera impulse requested by a feedback adapter."
+        },
+        {
+          "name": "shake",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "min": 0,
+          "doc": "Presentation-only shake strength; never visible to gameplay."
+        },
+        {
+          "name": "shakeTime",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "min": 0,
+          "doc": "Remaining presentation seconds for the current shake."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Transient camera feedback hooks consumed only by LateUpdate."
+    },
+    {
+      "name": "CameraFollowState",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "center",
+          "kind": "vec2",
+          "scalar": "f32",
+          "lanes": 2,
+          "default": [
+            0,
+            0
+          ],
+          "doc": "Settled presentation camera center applied as a visual offset."
+        },
+        {
+          "name": "target",
+          "kind": "vec2",
+          "scalar": "f32",
+          "lanes": 2,
+          "default": [
+            0,
+            0
+          ],
+          "doc": "Bounded target after dead-zone and directional look-ahead."
+        },
+        {
+          "name": "lookAhead",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Current horizontal look-ahead in world units."
+        },
+        {
+          "name": "settled",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "True once the follow rig can stop rewriting camera state."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Presentation-owned camera state excluded from gameplay hashes and queries."
+    },
+    {
       "name": "GameState",
       "kind": "resource",
       "sim": true,
@@ -282,10 +383,82 @@
           "lanes": 1,
           "default": true,
           "doc": "Whether the deterministic dash cooldown has completed."
+        },
+        {
+          "name": "playerPosition",
+          "kind": "vec2",
+          "scalar": "f32",
+          "lanes": 2,
+          "default": [
+            0,
+            0
+          ],
+          "doc": "Latest authoritative player position copied for presentation systems."
+        },
+        {
+          "name": "playerVelocity",
+          "kind": "vec2",
+          "scalar": "f32",
+          "lanes": 2,
+          "default": [
+            0,
+            0
+          ],
+          "doc": "Latest authoritative player velocity copied for presentation systems."
+        },
+        {
+          "name": "playerFacing",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "PresentationFacingDirection",
+          "default": "Right",
+          "doc": "Authoritative facing direction copied for presentation look-ahead and feedback."
         }
       ],
       "package": "SewerAction",
       "doc": "Read-only presentation snapshot derived from consequential simulation state."
+    },
+    {
+      "name": "RoomCameraBounds",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "left",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": -8,
+          "doc": "Authored left edge of the room camera envelope."
+        },
+        {
+          "name": "right",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 8,
+          "doc": "Authored right edge of the room camera envelope."
+        },
+        {
+          "name": "bottom",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": -4.5,
+          "doc": "Authored bottom edge of the room camera envelope."
+        },
+        {
+          "name": "top",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 4.5,
+          "doc": "Authored top edge of the room camera envelope."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Scene-authored presentation bounds for the active room camera."
     },
     {
       "name": "RoomCollisionState",

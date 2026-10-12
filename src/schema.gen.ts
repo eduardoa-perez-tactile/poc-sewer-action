@@ -47,6 +47,14 @@ export const schemaIr = {
       "package": "SewerAction"
     },
     {
+      "name": "PresentationFacingDirection",
+      "values": [
+        "Left",
+        "Right"
+      ],
+      "package": "SewerAction"
+    },
+    {
       "name": "RoomLandmarkKind",
       "values": [
         "Encounter",
@@ -217,6 +225,99 @@ export const schemaIr = {
       "doc": "Deterministic soldier decision state; visuals derive animation from it."
     },
     {
+      "name": "CameraFeedback",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "active",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Whether transient feedback still needs presentation frames."
+        },
+        {
+          "name": "bump",
+          "kind": "vec2",
+          "scalar": "f32",
+          "lanes": 2,
+          "default": [
+            0,
+            0
+          ],
+          "doc": "Short presentation-only camera impulse requested by a feedback adapter."
+        },
+        {
+          "name": "shake",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "min": 0,
+          "doc": "Presentation-only shake strength; never visible to gameplay."
+        },
+        {
+          "name": "shakeTime",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "min": 0,
+          "doc": "Remaining presentation seconds for the current shake."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Transient camera feedback hooks consumed only by LateUpdate."
+    },
+    {
+      "name": "CameraFollowState",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "center",
+          "kind": "vec2",
+          "scalar": "f32",
+          "lanes": 2,
+          "default": [
+            0,
+            0
+          ],
+          "doc": "Settled presentation camera center applied as a visual offset."
+        },
+        {
+          "name": "target",
+          "kind": "vec2",
+          "scalar": "f32",
+          "lanes": 2,
+          "default": [
+            0,
+            0
+          ],
+          "doc": "Bounded target after dead-zone and directional look-ahead."
+        },
+        {
+          "name": "lookAhead",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Current horizontal look-ahead in world units."
+        },
+        {
+          "name": "settled",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "True once the follow rig can stop rewriting camera state."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Presentation-owned camera state excluded from gameplay hashes and queries."
+    },
+    {
       "name": "GameState",
       "kind": "resource",
       "sim": true,
@@ -288,10 +389,82 @@ export const schemaIr = {
           "lanes": 1,
           "default": true,
           "doc": "Whether the deterministic dash cooldown has completed."
+        },
+        {
+          "name": "playerPosition",
+          "kind": "vec2",
+          "scalar": "f32",
+          "lanes": 2,
+          "default": [
+            0,
+            0
+          ],
+          "doc": "Latest authoritative player position copied for presentation systems."
+        },
+        {
+          "name": "playerVelocity",
+          "kind": "vec2",
+          "scalar": "f32",
+          "lanes": 2,
+          "default": [
+            0,
+            0
+          ],
+          "doc": "Latest authoritative player velocity copied for presentation systems."
+        },
+        {
+          "name": "playerFacing",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "PresentationFacingDirection",
+          "default": "Right",
+          "doc": "Authoritative facing direction copied for presentation look-ahead and feedback."
         }
       ],
       "package": "SewerAction",
       "doc": "Read-only presentation snapshot derived from consequential simulation state."
+    },
+    {
+      "name": "RoomCameraBounds",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "left",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": -8,
+          "doc": "Authored left edge of the room camera envelope."
+        },
+        {
+          "name": "right",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 8,
+          "doc": "Authored right edge of the room camera envelope."
+        },
+        {
+          "name": "bottom",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": -4.5,
+          "doc": "Authored bottom edge of the room camera envelope."
+        },
+        {
+          "name": "top",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 4.5,
+          "doc": "Authored top edge of the room camera envelope."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Scene-authored presentation bounds for the active room camera."
     },
     {
       "name": "RoomCollisionState",
@@ -1038,6 +1211,12 @@ export const PresentationDashDirection = {
 } as const;
 export type PresentationDashDirectionName = 'Left' | 'Right';
 
+export const PresentationFacingDirection = {
+  Left: 0,
+  Right: 1,
+} as const;
+export type PresentationFacingDirectionName = 'Left' | 'Right';
+
 export const RoomLandmarkKind = {
   Encounter: 0,
   WaterEdge: 1,
@@ -1125,6 +1304,52 @@ export interface EnemyBrainValue {
 /** Deterministic soldier decision state; visuals derive animation from it. (component, sim) */
 export const EnemyBrain = typeToken<EnemyBrainViews, EnemyBrainValue>('EnemyBrain', 'component', { sig: 'state:enum:1,decisionRemaining:f32:1', read: (v: EnemyBrainViews, i: number, o: Record<string, unknown>) => { o.state = $r.enm('EnemyState', v.state[i]!); o.decisionRemaining = v.decisionRemaining[i]; return o; } });
 
+export interface CameraFeedbackViews {
+  /** Whether transient feedback still needs presentation frames. */
+  active: Uint8Array;
+  /** Short presentation-only camera impulse requested by a feedback adapter. */
+  bump: Float32Array;
+  /** Presentation-only shake strength; never visible to gameplay. */
+  shake: Float32Array;
+  /** Remaining presentation seconds for the current shake. */
+  shakeTime: Float32Array;
+}
+export interface CameraFeedbackValue {
+  /** Whether transient feedback still needs presentation frames. */
+  active: boolean;
+  /** Short presentation-only camera impulse requested by a feedback adapter. */
+  bump: [number, number];
+  /** Presentation-only shake strength; never visible to gameplay. */
+  shake: number;
+  /** Remaining presentation seconds for the current shake. */
+  shakeTime: number;
+}
+/** Transient camera feedback hooks consumed only by LateUpdate. (resource, presentation-only) */
+export const CameraFeedback = typeToken<CameraFeedbackViews, CameraFeedbackValue>('CameraFeedback', 'resource', { sig: 'active:bool:1,bump:vec2:2,shake:f32:1,shakeTime:f32:1', read: (v: CameraFeedbackViews, i: number, o: Record<string, unknown>) => { o.active = v.active[i] !== 0; o.bump = $r.lanes(v.bump, i, 2, o.bump); o.shake = v.shake[i]; o.shakeTime = v.shakeTime[i]; return o; } });
+
+export interface CameraFollowStateViews {
+  /** Settled presentation camera center applied as a visual offset. */
+  center: Float32Array;
+  /** Bounded target after dead-zone and directional look-ahead. */
+  target: Float32Array;
+  /** Current horizontal look-ahead in world units. */
+  lookAhead: Float32Array;
+  /** True once the follow rig can stop rewriting camera state. */
+  settled: Uint8Array;
+}
+export interface CameraFollowStateValue {
+  /** Settled presentation camera center applied as a visual offset. */
+  center: [number, number];
+  /** Bounded target after dead-zone and directional look-ahead. */
+  target: [number, number];
+  /** Current horizontal look-ahead in world units. */
+  lookAhead: number;
+  /** True once the follow rig can stop rewriting camera state. */
+  settled: boolean;
+}
+/** Presentation-owned camera state excluded from gameplay hashes and queries. (resource, presentation-only) */
+export const CameraFollowState = typeToken<CameraFollowStateViews, CameraFollowStateValue>('CameraFollowState', 'resource', { sig: 'center:vec2:2,target:vec2:2,lookAhead:f32:1,settled:bool:1', read: (v: CameraFollowStateViews, i: number, o: Record<string, unknown>) => { o.center = $r.lanes(v.center, i, 2, o.center); o.target = $r.lanes(v.target, i, 2, o.target); o.lookAhead = v.lookAhead[i]; o.settled = v.settled[i] !== 0; return o; } });
+
 export interface GameStateViews {
   /** The deterministic game bootstrap has run. */
   initialized: Uint8Array;
@@ -1150,6 +1375,12 @@ export interface GameplayPresentationViews {
   dashDirection: Uint8Array;
   /** Whether the deterministic dash cooldown has completed. */
   dashReady: Uint8Array;
+  /** Latest authoritative player position copied for presentation systems. */
+  playerPosition: Float32Array;
+  /** Latest authoritative player velocity copied for presentation systems. */
+  playerVelocity: Float32Array;
+  /** Authoritative facing direction copied for presentation look-ahead and feedback. */
+  playerFacing: Uint8Array;
 }
 export interface GameplayPresentationValue {
   /** Authoritative vertical-slice phase. */
@@ -1161,9 +1392,38 @@ export interface GameplayPresentationValue {
   dashDirection: PresentationDashDirectionName | number;
   /** Whether the deterministic dash cooldown has completed. */
   dashReady: boolean;
+  /** Latest authoritative player position copied for presentation systems. */
+  playerPosition: [number, number];
+  /** Latest authoritative player velocity copied for presentation systems. */
+  playerVelocity: [number, number];
+  /** Authoritative facing direction copied for presentation look-ahead and feedback. */
+  playerFacing: PresentationFacingDirectionName | number;
 }
 /** Read-only presentation snapshot derived from consequential simulation state. (resource, presentation-only) */
-export const GameplayPresentation = typeToken<GameplayPresentationViews, GameplayPresentationValue>('GameplayPresentation', 'resource', { sig: 'phase:enum:1,moveX:enum:1,dashing:bool:1,dashDirection:enum:1,dashReady:bool:1', read: (v: GameplayPresentationViews, i: number, o: Record<string, unknown>) => { o.phase = $r.enm('GamePhase', v.phase[i]!); o.moveX = $r.enm('MoveDirection', v.moveX[i]!); o.dashing = v.dashing[i] !== 0; o.dashDirection = $r.enm('PresentationDashDirection', v.dashDirection[i]!); o.dashReady = v.dashReady[i] !== 0; return o; } });
+export const GameplayPresentation = typeToken<GameplayPresentationViews, GameplayPresentationValue>('GameplayPresentation', 'resource', { sig: 'phase:enum:1,moveX:enum:1,dashing:bool:1,dashDirection:enum:1,dashReady:bool:1,playerPosition:vec2:2,playerVelocity:vec2:2,playerFacing:enum:1', read: (v: GameplayPresentationViews, i: number, o: Record<string, unknown>) => { o.phase = $r.enm('GamePhase', v.phase[i]!); o.moveX = $r.enm('MoveDirection', v.moveX[i]!); o.dashing = v.dashing[i] !== 0; o.dashDirection = $r.enm('PresentationDashDirection', v.dashDirection[i]!); o.dashReady = v.dashReady[i] !== 0; o.playerPosition = $r.lanes(v.playerPosition, i, 2, o.playerPosition); o.playerVelocity = $r.lanes(v.playerVelocity, i, 2, o.playerVelocity); o.playerFacing = $r.enm('PresentationFacingDirection', v.playerFacing[i]!); return o; } });
+
+export interface RoomCameraBoundsViews {
+  /** Authored left edge of the room camera envelope. */
+  left: Float32Array;
+  /** Authored right edge of the room camera envelope. */
+  right: Float32Array;
+  /** Authored bottom edge of the room camera envelope. */
+  bottom: Float32Array;
+  /** Authored top edge of the room camera envelope. */
+  top: Float32Array;
+}
+export interface RoomCameraBoundsValue {
+  /** Authored left edge of the room camera envelope. */
+  left: number;
+  /** Authored right edge of the room camera envelope. */
+  right: number;
+  /** Authored bottom edge of the room camera envelope. */
+  bottom: number;
+  /** Authored top edge of the room camera envelope. */
+  top: number;
+}
+/** Scene-authored presentation bounds for the active room camera. (resource, presentation-only) */
+export const RoomCameraBounds = typeToken<RoomCameraBoundsViews, RoomCameraBoundsValue>('RoomCameraBounds', 'resource', { sig: 'left:f32:1,right:f32:1,bottom:f32:1,top:f32:1', read: (v: RoomCameraBoundsViews, i: number, o: Record<string, unknown>) => { o.left = v.left[i]; o.right = v.right[i]; o.bottom = v.bottom[i]; o.top = v.top[i]; return o; } });
 
 export interface RoomCollisionStateViews {
   /** Whether the current room tilemap has queued its static collision cells. */

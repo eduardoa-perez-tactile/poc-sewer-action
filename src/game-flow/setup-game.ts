@@ -1,7 +1,7 @@
 import { defineSystem, query, read, write, WorldView } from '@gameengine/runtime';
 import { GameState, PlatformCollisionCell, RoomCollisionState } from '../schema.gen.ts';
 
-const VIEW_HEIGHT = 9;
+const VIEW_HEIGHT = 6.75;
 
 export const SetupGame = defineSystem({
   name: 'SetupGame',
