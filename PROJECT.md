@@ -20,8 +20,8 @@ blocker while development and verification use the desktop host.
 
 - Landscape presentation with a 16:9 must-see gameplay frame and backgrounds that bleed wider.
 - Gameplay is deterministic ECS TypeScript. Presentation feedback never writes gameplay state.
-- Source art from the CC0 sewer pack lives in `source-assets/sewers-pack/`; only normalized,
-  runtime-ready files belong in `assets/`.
+- Shipping visual art lives in `assets/art/`; editable Aseprite masters live in `art/aseprite/`.
+  The sewer artwork is first-party project art and should be used directly in scenes, clips and UI.
 - Preserve the original `poc-game-feel` behaviour as a reference, but do not port Unity
   singletons, `Time`, `Rigidbody2D` behaviour or presentation-driven state.
 - Build one verified vertical slice before expanding content.
@@ -35,7 +35,7 @@ blocker while development and verification use the desktop host.
 - Engine template: `2d-casual`.
 - Initial platform declaration: `web`, per product direction.
 - Development host: desktop until the engine ships a browser target.
-- Art license: the supplied pack states CC0 and permits redistribution without attribution.
+- Art ownership: the supplied sewer artwork is treated as first-party project art.
 - Initial release scope: one polished level, one player, one soldier enemy family, one final
   encounter, keyboard/gamepad controls, responsive web input, audio, settings and credits.
 

@@ -12,6 +12,8 @@
     "sortingLayers": ["Background", "World", "Characters", "Effects", "Foreground"],
     "pixelsPerUnit": 100
   },
+  "atlas": { "auto": true, "maxPageSize": { "desktop": 4096, "mobile": 2048 }, "pot": false },
+  "audio": { "maxVoices": 24, "overrides": { "phone-low": { "maxVoices": 12 } } },
   "ui": { "referenceResolution": [1920, 1080], "orientation": "landscape" },
   "bundles": [{ "name": "base", "include": ["**"], "delivery": "in-app" }],
   "targets": ["ios", "android"],

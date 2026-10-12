@@ -7,7 +7,7 @@
       "name": "Backdrop",
       "id": "backdrop",
       "LocalTransform": { "position": [0, 0, -2] },
-      "Shape": { "size": [18, 10], "color": "#102631ff" }
+      "Sprite": { "image": "art/environment/middle", "size": [38.6667, 10], "sortingLayer": "Background" }
     },
     {
       "name": "Ground",
@@ -18,9 +18,14 @@
     {
       "name": "Player",
       "id": "player",
-      "LocalTransform": { "position": [-5, -2, 0] },
+      "LocalTransform": { "position": [-5, -2.5, 0] },
       "Player": {},
-      "Shape": { "size": [0.8, 1.6], "color": "#ff3b97ff" }
+      "Sprite": {
+        "image": "art/player/idle/idle1",
+        "size": [1.28, 1.54],
+        "anchor": [0.5, 0],
+        "sortingLayer": "Characters"
+      }
     }
   ]
 }
