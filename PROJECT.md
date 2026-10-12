@@ -29,6 +29,10 @@ blocker while development and verification use the desktop host.
   updating a pull request. Release candidates must pass `./tools/harness release`.
 - Use short-lived `issue/<number>-<slug>` branches and squash them into protected `main` through
   pull requests. Do not maintain a permanent `develop` branch.
+- Use one fresh Codex chat per development ticket. Finish, verify and merge the current ticket
+  before creating the next ticket's chat. Give the new chat a concise handoff containing the
+  product brief, ticket scope, dependencies, branch name and verification requirements; use the
+  supervisory chat for direction and corrections rather than accumulating implementation context.
 
 ## Decisions
 
