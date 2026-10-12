@@ -1,4 +1,4 @@
-import { bool, component, enumOf, event, f32, i32, resource, u32 } from '@gameengine/schema';
+import { asset, bool, component, enumOf, event, f32, i32, resource, u32 } from '@gameengine/schema';
 
 export const Player = component(
   'Player',
@@ -91,6 +91,14 @@ export const PlayerGroundContact = component(
     grounded: bool({ default: true, doc: 'Collision-owned ground contact fact consumed by movement.' }),
   },
   { sim: true, doc: 'Deterministic traversal/collision output. Movement reads but never writes this component.' },
+);
+
+export const PlayerAnimationPresentation = component(
+  'PlayerAnimationPresentation',
+  {
+    clip: asset('clip2d', { doc: 'Current authored flipbook selected by presentation.' }),
+  },
+  { sim: false, doc: 'Presentation-only animation controller state; never read by gameplay.' },
 );
 
 export const PlayerStepInput = resource(

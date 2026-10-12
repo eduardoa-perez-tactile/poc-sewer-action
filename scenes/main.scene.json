@@ -71,6 +71,7 @@
       "id": "player",
       "LocalTransform": { "position": [-5.25, -2.5, 0] },
       "Player": {},
+      "PlayerAnimationPresentation": {},
       "PlayerControl": {},
       "PlayerDashState": {},
       "PlayerGroundContact": {},
@@ -80,7 +81,8 @@
         "size": [1.28, 1.54],
         "anchor": [0.5, 0],
         "sortingLayer": "Characters"
-      }
+      },
+      "SpriteAnimation": { "frames": "art/player/idle/idle1", "fps": 1 }
     }
   ]
 }

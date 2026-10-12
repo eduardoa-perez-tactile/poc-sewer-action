@@ -1,0 +1,16 @@
+{
+  "$schemaVersion": 1,
+  "loop": "loop",
+  "frames": [
+    { "sprite": "art/player/run/run1", "duration": 0.1 },
+    { "sprite": "art/player/run/run2", "duration": 0.1 },
+    { "sprite": "art/player/run/run3", "duration": 0.1 },
+    { "sprite": "art/player/run/run4", "duration": 0.1 },
+    { "sprite": "art/player/run/run5", "duration": 0.1 },
+    { "sprite": "art/player/run/run6", "duration": 0.1 }
+  ],
+  "events": [
+    { "frame": 1, "name": "footstep" },
+    { "frame": 4, "name": "footstep" }
+  ]
+}

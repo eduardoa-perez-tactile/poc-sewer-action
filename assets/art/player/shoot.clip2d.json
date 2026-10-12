@@ -1,0 +1,6 @@
+{
+  "$schemaVersion": 1,
+  "loop": "once",
+  "frames": [{ "sprite": "art/player/shoot", "duration": 0.222 }],
+  "events": [{ "frame": 0, "name": "muzzle-feedback" }]
+}

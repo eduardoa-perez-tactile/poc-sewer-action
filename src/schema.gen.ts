@@ -725,6 +725,23 @@ export const schemaIr = {
       "doc": "Current normalized action-map sample. Written from recorded ActionState before gameplay systems run."
     },
     {
+      "name": "PlayerAnimationPresentation",
+      "kind": "component",
+      "sim": false,
+      "fields": [
+        {
+          "name": "clip",
+          "kind": "asset",
+          "scalar": "u32",
+          "lanes": 1,
+          "assetType": "clip2d",
+          "doc": "Current authored flipbook selected by presentation."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Presentation-only animation controller state; never read by gameplay."
+    },
+    {
       "name": "PlayerControl",
       "kind": "component",
       "sim": true,
@@ -1349,6 +1366,17 @@ export interface PlayerActionStateValue {
 }
 /** Current normalized action-map sample. Written from recorded ActionState before gameplay systems run. (resource, sim) */
 export const PlayerActionState = typeToken<PlayerActionStateViews, PlayerActionStateValue>('PlayerActionState', 'resource', { sig: 'moveX:f32:1,jump:bool:1,jumpHeld:bool:1,dash:bool:1,fire:bool:1,crouch:bool:1', read: (v: PlayerActionStateViews, i: number, o: Record<string, unknown>) => { o.moveX = v.moveX[i]; o.jump = v.jump[i] !== 0; o.jumpHeld = v.jumpHeld[i] !== 0; o.dash = v.dash[i] !== 0; o.fire = v.fire[i] !== 0; o.crouch = v.crouch[i] !== 0; return o; } });
+
+export interface PlayerAnimationPresentationViews {
+  /** Current authored flipbook selected by presentation. */
+  clip: Uint32Array;
+}
+export interface PlayerAnimationPresentationValue {
+  /** Current authored flipbook selected by presentation. */
+  clip: string | null;
+}
+/** Presentation-only animation controller state; never read by gameplay. (component, presentation-only) */
+export const PlayerAnimationPresentation = typeToken<PlayerAnimationPresentationViews, PlayerAnimationPresentationValue>('PlayerAnimationPresentation', 'component', { sig: 'clip:asset:1', read: (v: PlayerAnimationPresentationViews, i: number, o: Record<string, unknown>) => { o.clip = $r.asset(v.clip[i]!); return o; } });
 
 export interface PlayerControlViews {
   /** Recorded horizontal intent normalized to [-1, 1]. */

@@ -1,5 +1,5 @@
 import { expect, renderTest, worldTest } from '@gameengine/test';
-import { ActionState, LocalTransform, NavGrid, Tilemap, WorldView } from '@gameengine/runtime';
+import { ActionState, clip2DInfo, LocalTransform, NavGrid, Sprite, SpriteAnimation, Tilemap, WorldView } from '@gameengine/runtime';
 import {
   GameState,
   GameplayPresentation,
@@ -8,6 +8,7 @@ import {
   PlatformCollisionGrid,
   Player,
   PlayerActionState,
+  PlayerAnimationPresentation,
   PlayerControl,
   PlayerDashState,
   PlayerGroundContact,
@@ -110,6 +111,64 @@ worldTest('recorded player intent becomes simulation state and a presentation sn
 
   await step(1);
   expect(world.get(player!, PlayerControl)).toEqual({ moveX: 0, crouch: false, jumpHeld: false });
+});
+
+worldTest('player animation follows deterministic locomotion and ignores raw combat intent', async ({ world, step, input }) => {
+  await step(2);
+  const [player] = world.entities(Player);
+  expect(world.get(player!, PlayerAnimationPresentation).clip).toBe('art/player/idle.clip2d.json');
+  expect(world.get(player!, Sprite).anchor).toEqual([0.5, 0]);
+  const idleAnimation = world.get(player!, SpriteAnimation);
+  expect(idleAnimation.frames).toBe('art/player/idle/idle1,art/player/idle/idle2,art/player/idle/idle3,art/player/idle/idle4,art/player/idle/idle5,art/player/idle/idle6');
+  expect(idleAnimation.fps).toBeCloseTo(1 / 0.222);
+  expect(idleAnimation.loop).toBe(true);
+  expect(idleAnimation.events).toBe('');
+
+  input.emit(PlayerIntent, { moveX: 0, jump: false, jumpHeld: false, dash: false, fire: false, crouch: true });
+  await step(1);
+  expect(world.get(player!, PlayerAnimationPresentation).clip).toBe('art/player/crouch.clip2d.json');
+
+  input.emit(PlayerIntent, { moveX: 1, jump: false, jumpHeld: false, dash: false, fire: true, crouch: false });
+  await step(1);
+  expect(world.get(player!, PlayerAnimationPresentation).clip).toBe('art/player/run.clip2d.json');
+  expect(world.get(player!, Sprite).flipX).toBe(false);
+
+  input.emit(PlayerIntent, { moveX: -1, jump: false, jumpHeld: false, dash: false, fire: false, crouch: false });
+  await step(1);
+  expect(world.get(player!, Sprite).flipX).toBe(true);
+
+  input.emit(PlayerIntent, { moveX: 0, jump: true, jumpHeld: true, dash: false, fire: false, crouch: false });
+  await step(1);
+  expect(world.get(player!, PlayerAnimationPresentation).clip).toBe('art/player/jump.clip2d.json');
+
+  while (world.get(player!, PlayerMotion).verticalVelocity > 0.05) await step(1);
+  expect(world.get(player!, PlayerAnimationPresentation).clip).toBe('art/player/fall.clip2d.json');
+});
+
+worldTest('authored player clips preserve reviewed timing, looping and feedback events', async () => {
+  const idle = clip2DInfo('art/player/idle.clip2d.json');
+  const run = clip2DInfo('art/player/run.clip2d.json');
+  const jump = clip2DInfo('art/player/jump.clip2d.json');
+  const fall = clip2DInfo('art/player/fall.clip2d.json');
+  const crouch = clip2DInfo('art/player/crouch.clip2d.json');
+  const shoot = clip2DInfo('art/player/shoot.clip2d.json');
+  const hurt = clip2DInfo('art/player/hurt.clip2d.json');
+
+  expect([idle.frames.length, run.frames.length, jump.frames.length, fall.frames.length, crouch.frames.length, shoot.frames.length, hurt.frames.length]).toEqual([
+    6, 6, 2, 3, 1, 1, 1,
+  ]);
+  expect([idle.loop, run.loop, jump.loop, fall.loop, crouch.loop, shoot.loop, hurt.loop]).toEqual([
+    'loop', 'loop', 'once', 'once', 'loop', 'once', 'once',
+  ]);
+  expect(idle.frames.every((frame) => Math.abs(frame.duration - 0.222) < 0.0001)).toBe(true);
+  expect(run.frames.every((frame) => Math.abs(frame.duration - 0.1) < 0.0001)).toBe(true);
+  expect(run.events.map((event) => [event.frame, event.name])).toEqual([
+    [1, 'footstep'],
+    [4, 'footstep'],
+  ]);
+  expect(jump.events.map((event) => event.name)).toEqual(['takeoff-feedback']);
+  expect(shoot.events.map((event) => event.name)).toEqual(['muzzle-feedback']);
+  expect(hurt.events.map((event) => event.name)).toEqual(['hurt-feedback']);
 });
 
 worldTest('the latest recorded intent wins deterministically within a step', async ({ world, step, input }) => {
@@ -751,6 +810,24 @@ renderTest('the complete first sewer room matches its golden frame', async ({ st
   input.view(1920, 1080, 1);
   await step(2);
   render.expectScreenshot('first-sewer-room', { width: 960, height: 540 });
+});
+
+renderTest('player locomotion transitions preserve the authored feet anchor', async ({ world, step, render, input }) => {
+  input.view(1920, 1080, 1);
+  await step(2);
+  const [player] = world.entities(Player);
+  expect(world.get(player!, Sprite).anchor).toEqual([0.5, 0]);
+  render.expectScreenshot('player-idle', { width: 960, height: 540 });
+
+  input.emit(PlayerIntent, { moveX: 1, jump: false, jumpHeld: false, dash: false, fire: false, crouch: false });
+  await step(1);
+  expect(world.get(player!, PlayerAnimationPresentation).clip).toBe('art/player/run.clip2d.json');
+  render.expectScreenshot('player-run', { width: 960, height: 540 });
+
+  input.emit(PlayerIntent, { moveX: 0, jump: true, jumpHeld: true, dash: false, fire: false, crouch: false });
+  await step(1);
+  expect(world.get(player!, PlayerAnimationPresentation).clip).toBe('art/player/jump.clip2d.json');
+  render.expectScreenshot('player-jump', { width: 960, height: 540 });
 });
 
 for (const viewport of [

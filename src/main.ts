@@ -7,4 +7,5 @@ export { MovePlayerHorizontally } from './player/move-player-horizontally.ts';
 export { MovePlayerVertically } from './player/move-player-vertically.ts';
 export { ResolvePlatformCollision } from './player/resolve-platform-collision.ts';
 export { AdvancePlayerDash } from './player/advance-player-dash.ts';
+export { DrivePlayerAnimation } from './presentation/drive-player-animation.ts';
 export { BuildGameplayPresentation } from './presentation/build-gameplay-presentation.ts';

@@ -719,6 +719,23 @@
       "doc": "Current normalized action-map sample. Written from recorded ActionState before gameplay systems run."
     },
     {
+      "name": "PlayerAnimationPresentation",
+      "kind": "component",
+      "sim": false,
+      "fields": [
+        {
+          "name": "clip",
+          "kind": "asset",
+          "scalar": "u32",
+          "lanes": 1,
+          "assetType": "clip2d",
+          "doc": "Current authored flipbook selected by presentation."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Presentation-only animation controller state; never read by gameplay."
+    },
+    {
       "name": "PlayerControl",
       "kind": "component",
       "sim": true,
