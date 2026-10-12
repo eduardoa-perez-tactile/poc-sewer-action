@@ -39,11 +39,27 @@ export const schemaIr = {
       "package": "SewerAction"
     },
     {
+      "name": "PresentationDashDirection",
+      "values": [
+        "Left",
+        "Right"
+      ],
+      "package": "SewerAction"
+    },
+    {
       "name": "HazardKind",
       "values": [
         "Water",
         "Explosive",
         "Contact"
+      ],
+      "package": "SewerAction"
+    },
+    {
+      "name": "DashDirection",
+      "values": [
+        "Left",
+        "Right"
       ],
       "package": "SewerAction"
     },
@@ -238,6 +254,31 @@ export const schemaIr = {
           "lanes": 1,
           "enumName": "MoveDirection",
           "default": "Neutral"
+        },
+        {
+          "name": "dashing",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Presentation-readable active dash flag derived from simulation state."
+        },
+        {
+          "name": "dashDirection",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "PresentationDashDirection",
+          "default": "Right",
+          "doc": "Presentation-readable dash direction for animation and effects."
+        },
+        {
+          "name": "dashReady",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true,
+          "doc": "Whether the deterministic dash cooldown has completed."
         }
       ],
       "package": "SewerAction",
@@ -435,6 +476,49 @@ export const schemaIr = {
           "lanes": 1,
           "default": 1,
           "doc": "Air jumps restored on grounded contact."
+        },
+        {
+          "name": "dashSpeed",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 12,
+          "min": 0,
+          "doc": "Locked horizontal speed while dashing in world units per second."
+        },
+        {
+          "name": "dashDurationSteps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 8,
+          "doc": "Fixed simulation steps for which a dash moves at dash speed."
+        },
+        {
+          "name": "dashCooldownSteps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 48,
+          "doc": "Fixed simulation steps from activation until another dash may start."
+        },
+        {
+          "name": "dashControlLockSteps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 6,
+          "doc": "Fixed simulation steps after a dash before movement and jump control return."
+        },
+        {
+          "name": "dashGravityMultiplier",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0.2,
+          "min": 0,
+          "max": 1,
+          "doc": "Gravity multiplier while an airborne dash is active."
         }
       ],
       "package": "SewerAction",
@@ -527,6 +611,55 @@ export const schemaIr = {
       ],
       "package": "SewerAction",
       "doc": "Latest recorded held player control. Action systems consume step-scoped intent events directly."
+    },
+    {
+      "name": "PlayerDashState",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "active",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Whether the player is currently in the fixed-step dash movement phase."
+        },
+        {
+          "name": "direction",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "DashDirection",
+          "default": "Right"
+        },
+        {
+          "name": "activeStepsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Dash movement steps remaining, including the current step."
+        },
+        {
+          "name": "cooldownStepsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Steps before another dash activation is accepted."
+        },
+        {
+          "name": "controlLockStepsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Steps before horizontal and jump control are accepted again."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Authoritative deterministic dash state. Presentation may observe but never write it."
     },
     {
       "name": "PlayerGroundContact",
@@ -691,6 +824,14 @@ export const schemaIr = {
           "lanes": 1,
           "default": false,
           "doc": "Jump press for the current fixed step only."
+        },
+        {
+          "name": "dashRequested",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Dash press for the current fixed step only."
         }
       ],
       "package": "SewerAction",
@@ -727,12 +868,24 @@ export const MoveDirection = {
 } as const;
 export type MoveDirectionName = 'Left' | 'Neutral' | 'Right';
 
+export const PresentationDashDirection = {
+  Left: 0,
+  Right: 1,
+} as const;
+export type PresentationDashDirectionName = 'Left' | 'Right';
+
 export const HazardKind = {
   Water: 0,
   Explosive: 1,
   Contact: 2,
 } as const;
 export type HazardKindName = 'Water' | 'Explosive' | 'Contact';
+
+export const DashDirection = {
+  Left: 0,
+  Right: 1,
+} as const;
+export type DashDirectionName = 'Left' | 'Right';
 
 export const FacingDirection = {
   Left: 0,
@@ -820,14 +973,26 @@ export interface GameplayPresentationViews {
   /** Authoritative vertical-slice phase. */
   phase: Uint8Array;
   moveX: Uint8Array;
+  /** Presentation-readable active dash flag derived from simulation state. */
+  dashing: Uint8Array;
+  /** Presentation-readable dash direction for animation and effects. */
+  dashDirection: Uint8Array;
+  /** Whether the deterministic dash cooldown has completed. */
+  dashReady: Uint8Array;
 }
 export interface GameplayPresentationValue {
   /** Authoritative vertical-slice phase. */
   phase: GamePhaseName | number;
   moveX: MoveDirectionName | number;
+  /** Presentation-readable active dash flag derived from simulation state. */
+  dashing: boolean;
+  /** Presentation-readable dash direction for animation and effects. */
+  dashDirection: PresentationDashDirectionName | number;
+  /** Whether the deterministic dash cooldown has completed. */
+  dashReady: boolean;
 }
 /** Read-only presentation snapshot derived from consequential simulation state. (resource, presentation-only) */
-export const GameplayPresentation = typeToken<GameplayPresentationViews, GameplayPresentationValue>('GameplayPresentation', 'resource', { sig: 'phase:enum:1,moveX:enum:1', read: (v: GameplayPresentationViews, i: number, o: Record<string, unknown>) => { o.phase = $r.enm('GamePhase', v.phase[i]!); o.moveX = $r.enm('MoveDirection', v.moveX[i]!); return o; } });
+export const GameplayPresentation = typeToken<GameplayPresentationViews, GameplayPresentationValue>('GameplayPresentation', 'resource', { sig: 'phase:enum:1,moveX:enum:1,dashing:bool:1,dashDirection:enum:1,dashReady:bool:1', read: (v: GameplayPresentationViews, i: number, o: Record<string, unknown>) => { o.phase = $r.enm('GamePhase', v.phase[i]!); o.moveX = $r.enm('MoveDirection', v.moveX[i]!); o.dashing = v.dashing[i] !== 0; o.dashDirection = $r.enm('PresentationDashDirection', v.dashDirection[i]!); o.dashReady = v.dashReady[i] !== 0; return o; } });
 
 export interface HazardViews {
   kind: Uint8Array;
@@ -886,6 +1051,16 @@ export interface PlayerViews {
   jumpBufferSteps: Uint32Array;
   /** Air jumps restored on grounded contact. */
   airJumps: Uint32Array;
+  /** Locked horizontal speed while dashing in world units per second. */
+  dashSpeed: Float32Array;
+  /** Fixed simulation steps for which a dash moves at dash speed. */
+  dashDurationSteps: Uint32Array;
+  /** Fixed simulation steps from activation until another dash may start. */
+  dashCooldownSteps: Uint32Array;
+  /** Fixed simulation steps after a dash before movement and jump control return. */
+  dashControlLockSteps: Uint32Array;
+  /** Gravity multiplier while an airborne dash is active. */
+  dashGravityMultiplier: Float32Array;
 }
 export interface PlayerValue {
   /** Maximum horizontal speed in world units per second. */
@@ -912,9 +1087,19 @@ export interface PlayerValue {
   jumpBufferSteps: number;
   /** Air jumps restored on grounded contact. */
   airJumps: number;
+  /** Locked horizontal speed while dashing in world units per second. */
+  dashSpeed: number;
+  /** Fixed simulation steps for which a dash moves at dash speed. */
+  dashDurationSteps: number;
+  /** Fixed simulation steps from activation until another dash may start. */
+  dashCooldownSteps: number;
+  /** Fixed simulation steps after a dash before movement and jump control return. */
+  dashControlLockSteps: number;
+  /** Gravity multiplier while an airborne dash is active. */
+  dashGravityMultiplier: number;
 }
 /** Player-owned deterministic movement configuration. (component, sim) */
-export const Player = typeToken<PlayerViews, PlayerValue>('Player', 'component', { sig: 'maxHorizontalSpeed:f32:1,groundAcceleration:f32:1,groundDeceleration:f32:1,airAcceleration:f32:1,airDeceleration:f32:1,jumpSpeed:f32:1,gravity:f32:1,maxFallSpeed:f32:1,jumpCutMultiplier:f32:1,coyoteSteps:u32:1,jumpBufferSteps:u32:1,airJumps:u32:1', read: (v: PlayerViews, i: number, o: Record<string, unknown>) => { o.maxHorizontalSpeed = v.maxHorizontalSpeed[i]; o.groundAcceleration = v.groundAcceleration[i]; o.groundDeceleration = v.groundDeceleration[i]; o.airAcceleration = v.airAcceleration[i]; o.airDeceleration = v.airDeceleration[i]; o.jumpSpeed = v.jumpSpeed[i]; o.gravity = v.gravity[i]; o.maxFallSpeed = v.maxFallSpeed[i]; o.jumpCutMultiplier = v.jumpCutMultiplier[i]; o.coyoteSteps = v.coyoteSteps[i]; o.jumpBufferSteps = v.jumpBufferSteps[i]; o.airJumps = v.airJumps[i]; return o; } });
+export const Player = typeToken<PlayerViews, PlayerValue>('Player', 'component', { sig: 'maxHorizontalSpeed:f32:1,groundAcceleration:f32:1,groundDeceleration:f32:1,airAcceleration:f32:1,airDeceleration:f32:1,jumpSpeed:f32:1,gravity:f32:1,maxFallSpeed:f32:1,jumpCutMultiplier:f32:1,coyoteSteps:u32:1,jumpBufferSteps:u32:1,airJumps:u32:1,dashSpeed:f32:1,dashDurationSteps:u32:1,dashCooldownSteps:u32:1,dashControlLockSteps:u32:1,dashGravityMultiplier:f32:1', read: (v: PlayerViews, i: number, o: Record<string, unknown>) => { o.maxHorizontalSpeed = v.maxHorizontalSpeed[i]; o.groundAcceleration = v.groundAcceleration[i]; o.groundDeceleration = v.groundDeceleration[i]; o.airAcceleration = v.airAcceleration[i]; o.airDeceleration = v.airDeceleration[i]; o.jumpSpeed = v.jumpSpeed[i]; o.gravity = v.gravity[i]; o.maxFallSpeed = v.maxFallSpeed[i]; o.jumpCutMultiplier = v.jumpCutMultiplier[i]; o.coyoteSteps = v.coyoteSteps[i]; o.jumpBufferSteps = v.jumpBufferSteps[i]; o.airJumps = v.airJumps[i]; o.dashSpeed = v.dashSpeed[i]; o.dashDurationSteps = v.dashDurationSteps[i]; o.dashCooldownSteps = v.dashCooldownSteps[i]; o.dashControlLockSteps = v.dashControlLockSteps[i]; o.dashGravityMultiplier = v.dashGravityMultiplier[i]; return o; } });
 
 export interface PlayerActionStateViews {
   moveX: Float32Array;
@@ -953,6 +1138,31 @@ export interface PlayerControlValue {
 }
 /** Latest recorded held player control. Action systems consume step-scoped intent events directly. (component, sim) */
 export const PlayerControl = typeToken<PlayerControlViews, PlayerControlValue>('PlayerControl', 'component', { sig: 'moveX:f32:1,crouch:bool:1,jumpHeld:bool:1', read: (v: PlayerControlViews, i: number, o: Record<string, unknown>) => { o.moveX = v.moveX[i]; o.crouch = v.crouch[i] !== 0; o.jumpHeld = v.jumpHeld[i] !== 0; return o; } });
+
+export interface PlayerDashStateViews {
+  /** Whether the player is currently in the fixed-step dash movement phase. */
+  active: Uint8Array;
+  direction: Uint8Array;
+  /** Dash movement steps remaining, including the current step. */
+  activeStepsRemaining: Uint32Array;
+  /** Steps before another dash activation is accepted. */
+  cooldownStepsRemaining: Uint32Array;
+  /** Steps before horizontal and jump control are accepted again. */
+  controlLockStepsRemaining: Uint32Array;
+}
+export interface PlayerDashStateValue {
+  /** Whether the player is currently in the fixed-step dash movement phase. */
+  active: boolean;
+  direction: DashDirectionName | number;
+  /** Dash movement steps remaining, including the current step. */
+  activeStepsRemaining: number;
+  /** Steps before another dash activation is accepted. */
+  cooldownStepsRemaining: number;
+  /** Steps before horizontal and jump control are accepted again. */
+  controlLockStepsRemaining: number;
+}
+/** Authoritative deterministic dash state. Presentation may observe but never write it. (component, sim) */
+export const PlayerDashState = typeToken<PlayerDashStateViews, PlayerDashStateValue>('PlayerDashState', 'component', { sig: 'active:bool:1,direction:enum:1,activeStepsRemaining:u32:1,cooldownStepsRemaining:u32:1,controlLockStepsRemaining:u32:1', read: (v: PlayerDashStateViews, i: number, o: Record<string, unknown>) => { o.active = v.active[i] !== 0; o.direction = $r.enm('DashDirection', v.direction[i]!); o.activeStepsRemaining = v.activeStepsRemaining[i]; o.cooldownStepsRemaining = v.cooldownStepsRemaining[i]; o.controlLockStepsRemaining = v.controlLockStepsRemaining[i]; return o; } });
 
 export interface PlayerGroundContactViews {
   /** Collision-owned ground contact fact consumed by movement. */
@@ -1028,10 +1238,14 @@ export const PlayerMotion = typeToken<PlayerMotionViews, PlayerMotionValue>('Pla
 export interface PlayerStepInputViews {
   /** Jump press for the current fixed step only. */
   jumpRequested: Uint8Array;
+  /** Dash press for the current fixed step only. */
+  dashRequested: Uint8Array;
 }
 export interface PlayerStepInputValue {
   /** Jump press for the current fixed step only. */
   jumpRequested: boolean;
+  /** Dash press for the current fixed step only. */
+  dashRequested: boolean;
 }
 /** Unconditionally overwritten input sample consumed in the same fixed step. (resource, sim) */
-export const PlayerStepInput = typeToken<PlayerStepInputViews, PlayerStepInputValue>('PlayerStepInput', 'resource', { sig: 'jumpRequested:bool:1', read: (v: PlayerStepInputViews, i: number, o: Record<string, unknown>) => { o.jumpRequested = v.jumpRequested[i] !== 0; return o; } });
+export const PlayerStepInput = typeToken<PlayerStepInputViews, PlayerStepInputValue>('PlayerStepInput', 'resource', { sig: 'jumpRequested:bool:1,dashRequested:bool:1', read: (v: PlayerStepInputViews, i: number, o: Record<string, unknown>) => { o.jumpRequested = v.jumpRequested[i] !== 0; o.dashRequested = v.dashRequested[i] !== 0; return o; } });

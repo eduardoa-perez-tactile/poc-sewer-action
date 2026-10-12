@@ -1,10 +1,10 @@
 import { defineSystem, LocalTransform, query, read, write } from '@gameengine/runtime';
-import { GameState, Player, PlayerControl, PlayerGroundContact, PlayerMotion, PlayerStepInput } from '../schema.gen.ts';
+import { GameState, Player, PlayerControl, PlayerDashState, PlayerGroundContact, PlayerMotion, PlayerStepInput } from '../schema.gen.ts';
 
 export const MovePlayerVertically = defineSystem({
   name: 'MovePlayerVertically',
   after: ['CapturePlayerIntent'],
-  query: query(read(Player), read(PlayerControl), read(PlayerGroundContact), write(PlayerMotion), write(LocalTransform)),
+  query: query(read(Player), read(PlayerControl), read(PlayerDashState), read(PlayerGroundContact), write(PlayerMotion), write(LocalTransform)),
   resources: [read(GameState), read(PlayerStepInput)],
   runIf: { resource: GameState, field: 'phase', value: 'Playing' },
   run(ctx, players) {
@@ -12,6 +12,7 @@ export const MovePlayerVertically = defineSystem({
     for (const chunk of players.chunks()) {
       const config = chunk.col(Player);
       const control = chunk.col(PlayerControl);
+      const dash = chunk.col(PlayerDashState);
       const contact = chunk.col(PlayerGroundContact);
       const motion = chunk.col(PlayerMotion);
       const position = chunk.col(LocalTransform).position;
@@ -38,9 +39,26 @@ export const MovePlayerVertically = defineSystem({
           if (velocity < 0) velocity = 0;
         }
 
-        if (jumpRequested) buffered = config.jumpBufferSteps[row]! + 1;
+        if (dash.active[row] !== 0) {
+          if (!grounded) {
+            velocity = velocity < 0 ? velocity * 0.12 : 0;
+            velocity -= config.gravity[row]! * config.dashGravityMultiplier[row]! * ctx.dt;
+            position[row * 3 + 1] = position[row * 3 + 1]! + velocity * ctx.dt;
+          } else {
+            velocity = 0;
+          }
+          motion.verticalVelocity[row] = velocity;
+          motion.grounded[row] = grounded ? 1 : 0;
+          motion.coyoteStepsRemaining[row] = coyote;
+          motion.airJumpsRemaining[row] = airJumps;
+          motion.jumpWasHeld[row] = control.jumpHeld[row]!;
+          motion.ignoreGroundContact[row] = ignoreGroundContact ? 1 : 0;
+          continue;
+        }
 
-        if (buffered > 0) {
+        if (jumpRequested && dash.controlLockStepsRemaining[row]! === 0) buffered = config.jumpBufferSteps[row]! + 1;
+
+        if (buffered > 0 && dash.controlLockStepsRemaining[row]! === 0) {
           if (grounded || coyote > 0) {
             velocity = config.jumpSpeed[row]!;
             buffered = 0;

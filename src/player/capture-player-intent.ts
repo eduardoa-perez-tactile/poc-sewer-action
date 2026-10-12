@@ -14,13 +14,16 @@ export const CapturePlayerIntent = defineSystem({
     let crouch = mapped.crouch;
     let jumpPressed = mapped.jump;
     let jumpHeld = mapped.jumpHeld;
+    let dashPressed = mapped.dash;
     ctx.events.forEach(PlayerIntent, (intent) => {
       moveX = intent.moveX;
       crouch = intent.crouch;
       jumpPressed = intent.jump;
       jumpHeld = intent.jumpHeld;
+      dashPressed = intent.dash;
     });
     ctx.setField(PlayerStepInput, 'jumpRequested', jumpPressed);
+    ctx.setField(PlayerStepInput, 'dashRequested', dashPressed);
 
     for (const chunk of players.chunks()) {
       const control = chunk.col(PlayerControl);
