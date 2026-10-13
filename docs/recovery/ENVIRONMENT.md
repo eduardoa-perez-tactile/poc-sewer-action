@@ -45,7 +45,7 @@ terrain work is added. Real phone GPU/thermal measurements remain outstanding.
 Use `.gameengine/baseline-landscape.png` for comparison: the earlier baseline-gameplay.png
 had portrait ViewInfo at landscape screenshot resolution. Corrected landscape review showed
 actors already readable, so actor enlargement was reverted. Debug route arrows are hidden,
-large prose signs cleared, and outlet guidance reduced to a small muted label. Feedback #67
+large prose signs cleared, and the unsupported outlet label placeholder removed. Feedback #67
 requested three transparent trail hosts and one stopped dust host per gameplay scene; these
 are authored here and activated by its presentation adapter. The reviewed recovery-intake.png
 shows detailed textured surfaces, unwarped water, full backdrop coverage and readable actors.
@@ -58,3 +58,7 @@ After the gutter fix, both Android and desktop cooks pass without warnings. Each
 four total atlas pages / 3,649,728 bytes, including one 1088x724 environment page / 3,151,056
 bytes. The compressed base bundle is 362,452 bytes Android / 362,450 bytes desktop. These
 are artifact/cooked residency figures; they do not claim phone frame timing or thermal results.
+
+Final native smoke revealed the outlet Text2D placeholder had no font and never rendered.
+Its content is now blank in all four gameplay scenes; the entity, id, transform, collision
+and presentation component remain unchanged. HUD sector and final phase cues own guidance.
