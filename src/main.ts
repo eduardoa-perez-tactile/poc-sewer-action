@@ -13,6 +13,10 @@ export { WarmProjectilePool } from './combat/warm-projectile-pool.ts';
 export { FirePlayerWeapon } from './combat/fire-player-weapon.ts';
 export { AdvanceProjectiles } from './combat/advance-projectiles.ts';
 export { ApplyDamage } from './combat/apply-damage.ts';
+export { AdvanceHitReactions } from './combat/advance-hit-reactions.ts';
+export { ResolveDeaths } from './combat/resolve-deaths.ts';
+export { AdvanceCadavers } from './combat/advance-cadavers.ts';
+export { RestartGame } from './game-flow/restart-game.ts';
 export { AdvanceSoldierAI } from './enemy/advance-soldier-ai.ts';
 export { WarmEnemyAttackPools } from './enemy/warm-enemy-attack-pools.ts';
 export { StartSoldierAttacks } from './enemy/start-soldier-attacks.ts';
@@ -23,4 +27,5 @@ export { BuildGameplayPresentation } from './presentation/build-gameplay-present
 export { FollowPlayerCamera } from './presentation/follow-player-camera.ts';
 export { DriveParallaxLayers } from './presentation/drive-parallax-layers.ts';
 export { DriveSoldierFacing } from './presentation/drive-soldier-facing.ts';
+export { DriveEnemyDamagePresentation } from './presentation/drive-enemy-damage-presentation.ts';
 export { bumpCamera, DriveCameraFeedback, shakeCamera } from './presentation/drive-camera-feedback.ts';

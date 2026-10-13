@@ -28,6 +28,16 @@ export const Player = component(
   { sim: true, doc: 'Player-owned deterministic movement configuration.' },
 );
 
+export const PlayerRestartState = component(
+  'PlayerRestartState',
+  {
+    facing: enumOf('PlayerRestartFacing', ['Left', 'Right'], { default: 'Right' }),
+    grounded: bool({ default: true }),
+    airJumps: u32({ default: 1 }),
+  },
+  { sim: true, doc: 'Authored player state restored by a deterministic encounter restart.' },
+);
+
 export const PlatformCollisionCell = component(
   'PlatformCollisionCell',
   {

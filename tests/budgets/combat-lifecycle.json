@@ -1,0 +1,20 @@
+{
+  "replay": "tests/replays/combat_lifecycle_replay_reaches_enemy_death_and_restart_through_recorded_input.greplay",
+  "structural": {
+    "drawCallsMax": 6,
+    "pipelinesCreatedDuringPlay": 0,
+    "gcPausesOver4msMax": 0
+  },
+  "devices": {
+    "android-low-compat": {
+      "frameTimeP95Ms": 33.3,
+      "gpuTimeP95Ms": 23.3,
+      "scriptTimeP95Ms": 8,
+      "memoryMB": 350,
+      "jsHeapMB": 32,
+      "loadMs": 2500,
+      "hitchFrames": 0,
+      "gcMaxMs": 8
+    }
+  }
+}

@@ -47,6 +47,23 @@ export const schemaIr = {
       "package": "SewerAction"
     },
     {
+      "name": "EnemyRestartBrainState",
+      "values": [
+        "Idle",
+        "Patrol",
+        "Chase"
+      ],
+      "package": "SewerAction"
+    },
+    {
+      "name": "EnemyRestartFacing",
+      "values": [
+        "Left",
+        "Right"
+      ],
+      "package": "SewerAction"
+    },
+    {
       "name": "GamePhase",
       "values": [
         "Booting",
@@ -114,6 +131,14 @@ export const schemaIr = {
         "Right"
       ],
       "package": "SewerAction"
+    },
+    {
+      "name": "PlayerRestartFacing",
+      "values": [
+        "Left",
+        "Right"
+      ],
+      "package": "SewerAction"
     }
   ],
   "types": [
@@ -140,6 +165,75 @@ export const schemaIr = {
       "doc": "Fact emitted after health reaches zero; game flow and presentation may react."
     },
     {
+      "name": "ActorSpawn",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "position",
+          "kind": "vec2",
+          "scalar": "f32",
+          "lanes": 2,
+          "default": [
+            0,
+            0
+          ],
+          "doc": "Authored restart position for this actor."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Stable authored state used by deterministic full restart."
+    },
+    {
+      "name": "Alive",
+      "kind": "tag",
+      "sim": true,
+      "fields": [],
+      "package": "SewerAction",
+      "doc": "Present only while an actor can receive hits and participate in combat."
+    },
+    {
+      "name": "Cadaver",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "ageSteps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        },
+        {
+          "name": "settleStepsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 10
+        },
+        {
+          "name": "velocity",
+          "kind": "vec2",
+          "scalar": "f32",
+          "lanes": 2,
+          "default": [
+            0,
+            0
+          ]
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Non-combat enemy corpse that settles deterministically and then remains still."
+    },
+    {
+      "name": "CadaverSettling",
+      "kind": "tag",
+      "sim": true,
+      "fields": [],
+      "package": "SewerAction",
+      "doc": "Present only during the bounded cadaver settling burst."
+    },
+    {
       "name": "DamageRequested",
       "kind": "event",
       "sim": true,
@@ -162,6 +256,16 @@ export const schemaIr = {
           "scalar": "u16",
           "lanes": 1,
           "min": 1
+        },
+        {
+          "name": "knockback",
+          "kind": "vec2",
+          "scalar": "f32",
+          "lanes": 2,
+          "default": [
+            0,
+            0
+          ]
         }
       ],
       "package": "SewerAction",
@@ -272,10 +376,69 @@ export const schemaIr = {
           "lanes": 1,
           "default": 1,
           "min": 1
+        },
+        {
+          "name": "invulnerabilitySteps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 6,
+          "doc": "Fixed steps between accepted hits."
+        },
+        {
+          "name": "invulnerableUntilStep",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "First fixed step on which another hit is valid."
         }
       ],
       "package": "SewerAction",
       "doc": "Single source of truth for actor survivability."
+    },
+    {
+      "name": "HitReacting",
+      "kind": "tag",
+      "sim": true,
+      "fields": [],
+      "package": "SewerAction",
+      "doc": "Present only while fixed-step knockback remains active."
+    },
+    {
+      "name": "HitReaction",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "steps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 8,
+          "min": 1
+        },
+        {
+          "name": "stepsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        },
+        {
+          "name": "knockback",
+          "kind": "vec2",
+          "scalar": "f32",
+          "lanes": 2,
+          "default": [
+            0,
+            0
+          ],
+          "doc": "Current deterministic world-space knockback velocity."
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Fixed-step hit stun and knockback owned by gameplay."
     },
     {
       "name": "Projectile",
@@ -343,6 +506,14 @@ export const schemaIr = {
       ],
       "package": "SewerAction",
       "doc": "One-shot projectile pool bootstrap state."
+    },
+    {
+      "name": "RestartRequested",
+      "kind": "event",
+      "sim": true,
+      "fields": [],
+      "package": "SewerAction",
+      "doc": "Recorded intent to rebuild the current encounter from authored state."
     },
     {
       "name": "Weapon",
@@ -590,6 +761,38 @@ export const schemaIr = {
       ],
       "package": "SewerAction",
       "doc": "Deterministic soldier configuration, decisions, chase memory and ranged attack cadence."
+    },
+    {
+      "name": "EnemyRestartState",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "state",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "EnemyRestartBrainState",
+          "default": "Patrol"
+        },
+        {
+          "name": "facing",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "EnemyRestartFacing",
+          "default": "Left"
+        },
+        {
+          "name": "attackSequence",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Authored enemy state restored by a deterministic encounter restart."
     },
     {
       "name": "CameraFeedback",
@@ -1562,6 +1765,37 @@ export const schemaIr = {
       "doc": "Authoritative player movement state. Presentation may observe but never write it."
     },
     {
+      "name": "PlayerRestartState",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "facing",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "PlayerRestartFacing",
+          "default": "Right"
+        },
+        {
+          "name": "grounded",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true
+        },
+        {
+          "name": "airJumps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Authored player state restored by a deterministic encounter restart."
+    },
+    {
       "name": "PlayerStepInput",
       "kind": "resource",
       "sim": true,
@@ -1623,6 +1857,19 @@ export const EnemyAttackKind = {
 } as const;
 export type EnemyAttackKindName = 'None' | 'Shoot' | 'CrouchShoot' | 'Bomb';
 
+export const EnemyRestartBrainState = {
+  Idle: 0,
+  Patrol: 1,
+  Chase: 2,
+} as const;
+export type EnemyRestartBrainStateName = 'Idle' | 'Patrol' | 'Chase';
+
+export const EnemyRestartFacing = {
+  Left: 0,
+  Right: 1,
+} as const;
+export type EnemyRestartFacingName = 'Left' | 'Right';
+
 export const GamePhase = {
   Booting: 0,
   Playing: 1,
@@ -1676,6 +1923,12 @@ export const FacingDirection = {
 } as const;
 export type FacingDirectionName = 'Left' | 'Right';
 
+export const PlayerRestartFacing = {
+  Left: 0,
+  Right: 1,
+} as const;
+export type PlayerRestartFacingName = 'Left' | 'Right';
+
 export interface ActorDiedViews {
   actor: Uint32Array;
   killer: Uint32Array;
@@ -1687,18 +1940,54 @@ export interface ActorDiedValue {
 /** Fact emitted after health reaches zero; game flow and presentation may react. (event, sim) */
 export const ActorDied = typeToken<ActorDiedViews, ActorDiedValue>('ActorDied', 'event', { sig: 'actor:entity:2,killer:entity:2', read: (v: ActorDiedViews, i: number, o: Record<string, unknown>) => { o.actor = $r.ent(v.actor, i); o.killer = $r.ent(v.killer, i); return o; } });
 
+export interface ActorSpawnViews {
+  /** Authored restart position for this actor. */
+  position: Float32Array;
+}
+export interface ActorSpawnValue {
+  /** Authored restart position for this actor. */
+  position: [number, number];
+}
+/** Stable authored state used by deterministic full restart. (component, sim) */
+export const ActorSpawn = typeToken<ActorSpawnViews, ActorSpawnValue>('ActorSpawn', 'component', { sig: 'position:vec2:2', read: (v: ActorSpawnViews, i: number, o: Record<string, unknown>) => { o.position = $r.lanes(v.position, i, 2, o.position); return o; } });
+
+export type AliveViews = Record<string, never>;
+export type AliveValue = Record<string, never>;
+/** Present only while an actor can receive hits and participate in combat. (tag, sim) */
+export const Alive = typeToken<AliveViews, AliveValue>('Alive', 'tag');
+
+export interface CadaverViews {
+  ageSteps: Uint32Array;
+  settleStepsRemaining: Uint32Array;
+  velocity: Float32Array;
+}
+export interface CadaverValue {
+  ageSteps: number;
+  settleStepsRemaining: number;
+  velocity: [number, number];
+}
+/** Non-combat enemy corpse that settles deterministically and then remains still. (component, sim) */
+export const Cadaver = typeToken<CadaverViews, CadaverValue>('Cadaver', 'component', { sig: 'ageSteps:u32:1,settleStepsRemaining:u32:1,velocity:vec2:2', read: (v: CadaverViews, i: number, o: Record<string, unknown>) => { o.ageSteps = v.ageSteps[i]; o.settleStepsRemaining = v.settleStepsRemaining[i]; o.velocity = $r.lanes(v.velocity, i, 2, o.velocity); return o; } });
+
+export type CadaverSettlingViews = Record<string, never>;
+export type CadaverSettlingValue = Record<string, never>;
+/** Present only during the bounded cadaver settling burst. (tag, sim) */
+export const CadaverSettling = typeToken<CadaverSettlingViews, CadaverSettlingValue>('CadaverSettling', 'tag');
+
 export interface DamageRequestedViews {
   source: Uint32Array;
   target: Uint32Array;
   amount: Uint16Array;
+  knockback: Float32Array;
 }
 export interface DamageRequestedValue {
   source: EntityId;
   target: EntityId;
   amount: number;
+  knockback: [number, number];
 }
 /** Combat and hazards request damage; the health system validates and applies it. (event, sim) */
-export const DamageRequested = typeToken<DamageRequestedViews, DamageRequestedValue>('DamageRequested', 'event', { sig: 'source:entity:2,target:entity:2,amount:u16:1', read: (v: DamageRequestedViews, i: number, o: Record<string, unknown>) => { o.source = $r.ent(v.source, i); o.target = $r.ent(v.target, i); o.amount = v.amount[i]; return o; } });
+export const DamageRequested = typeToken<DamageRequestedViews, DamageRequestedValue>('DamageRequested', 'event', { sig: 'source:entity:2,target:entity:2,amount:u16:1,knockback:vec2:2', read: (v: DamageRequestedViews, i: number, o: Record<string, unknown>) => { o.source = $r.ent(v.source, i); o.target = $r.ent(v.target, i); o.amount = v.amount[i]; o.knockback = $r.lanes(v.knockback, i, 2, o.knockback); return o; } });
 
 export interface EnemyAttackPoolStateViews {
   warmed: Uint8Array;
@@ -1735,13 +2024,41 @@ export const EnemyProjectile = typeToken<EnemyProjectileViews, EnemyProjectileVa
 export interface HealthViews {
   current: Uint16Array;
   maximum: Uint16Array;
+  /** Fixed steps between accepted hits. */
+  invulnerabilitySteps: Uint32Array;
+  /** First fixed step on which another hit is valid. */
+  invulnerableUntilStep: Uint32Array;
 }
 export interface HealthValue {
   current: number;
   maximum: number;
+  /** Fixed steps between accepted hits. */
+  invulnerabilitySteps: number;
+  /** First fixed step on which another hit is valid. */
+  invulnerableUntilStep: number;
 }
 /** Single source of truth for actor survivability. (component, sim) */
-export const Health = typeToken<HealthViews, HealthValue>('Health', 'component', { sig: 'current:u16:1,maximum:u16:1', read: (v: HealthViews, i: number, o: Record<string, unknown>) => { o.current = v.current[i]; o.maximum = v.maximum[i]; return o; } });
+export const Health = typeToken<HealthViews, HealthValue>('Health', 'component', { sig: 'current:u16:1,maximum:u16:1,invulnerabilitySteps:u32:1,invulnerableUntilStep:u32:1', read: (v: HealthViews, i: number, o: Record<string, unknown>) => { o.current = v.current[i]; o.maximum = v.maximum[i]; o.invulnerabilitySteps = v.invulnerabilitySteps[i]; o.invulnerableUntilStep = v.invulnerableUntilStep[i]; return o; } });
+
+export type HitReactingViews = Record<string, never>;
+export type HitReactingValue = Record<string, never>;
+/** Present only while fixed-step knockback remains active. (tag, sim) */
+export const HitReacting = typeToken<HitReactingViews, HitReactingValue>('HitReacting', 'tag');
+
+export interface HitReactionViews {
+  steps: Uint32Array;
+  stepsRemaining: Uint32Array;
+  /** Current deterministic world-space knockback velocity. */
+  knockback: Float32Array;
+}
+export interface HitReactionValue {
+  steps: number;
+  stepsRemaining: number;
+  /** Current deterministic world-space knockback velocity. */
+  knockback: [number, number];
+}
+/** Fixed-step hit stun and knockback owned by gameplay. (component, sim) */
+export const HitReaction = typeToken<HitReactionViews, HitReactionValue>('HitReaction', 'component', { sig: 'steps:u32:1,stepsRemaining:u32:1,knockback:vec2:2', read: (v: HitReactionViews, i: number, o: Record<string, unknown>) => { o.steps = v.steps[i]; o.stepsRemaining = v.stepsRemaining[i]; o.knockback = $r.lanes(v.knockback, i, 2, o.knockback); return o; } });
 
 export interface ProjectileViews {
   /** Horizontal travel direction, always -1 or 1 while active. */
@@ -1772,6 +2089,11 @@ export interface ProjectilePoolStateValue {
 }
 /** One-shot projectile pool bootstrap state. (resource, sim) */
 export const ProjectilePoolState = typeToken<ProjectilePoolStateViews, ProjectilePoolStateValue>('ProjectilePoolState', 'resource', { sig: 'warmed:bool:1', read: (v: ProjectilePoolStateViews, i: number, o: Record<string, unknown>) => { o.warmed = v.warmed[i] !== 0; return o; } });
+
+export type RestartRequestedViews = Record<string, never>;
+export type RestartRequestedValue = Record<string, never>;
+/** Recorded intent to rebuild the current encounter from authored state. (event, sim) */
+export const RestartRequested = typeToken<RestartRequestedViews, RestartRequestedValue>('RestartRequested', 'event');
 
 export interface WeaponViews {
   /** Fixed simulation steps between accepted shots. */
@@ -1862,6 +2184,19 @@ export interface EnemyBrainValue {
 }
 /** Deterministic soldier configuration, decisions, chase memory and ranged attack cadence. (component, sim) */
 export const EnemyBrain = typeToken<EnemyBrainViews, EnemyBrainValue>('EnemyBrain', 'component', { sig: 'state:enum:1,facing:enum:1,patrolMinX:f32:1,patrolMaxX:f32:1,patrolSpeed:f32:1,chaseSpeed:f32:1,detectionRangeX:f32:1,detectionRangeY:f32:1,stopDistance:f32:1,collisionHalfWidth:f32:1,edgeProbeDistance:f32:1,turnPauseSteps:u32:1,turnPauseStepsRemaining:u32:1,targetMemorySteps:u32:1,targetMemoryStepsRemaining:u32:1,targetDetected:bool:1,lastKnownTargetX:f32:1,attackKind:enum:1,attackSequence:u32:1,attackRange:f32:1,attackCooldownSteps:u32:1,attackCooldownStepsRemaining:u32:1,attackTelegraphed:bool:1', read: (v: EnemyBrainViews, i: number, o: Record<string, unknown>) => { o.state = $r.enm('EnemyState', v.state[i]!); o.facing = $r.enm('EnemyFacing', v.facing[i]!); o.patrolMinX = v.patrolMinX[i]; o.patrolMaxX = v.patrolMaxX[i]; o.patrolSpeed = v.patrolSpeed[i]; o.chaseSpeed = v.chaseSpeed[i]; o.detectionRangeX = v.detectionRangeX[i]; o.detectionRangeY = v.detectionRangeY[i]; o.stopDistance = v.stopDistance[i]; o.collisionHalfWidth = v.collisionHalfWidth[i]; o.edgeProbeDistance = v.edgeProbeDistance[i]; o.turnPauseSteps = v.turnPauseSteps[i]; o.turnPauseStepsRemaining = v.turnPauseStepsRemaining[i]; o.targetMemorySteps = v.targetMemorySteps[i]; o.targetMemoryStepsRemaining = v.targetMemoryStepsRemaining[i]; o.targetDetected = v.targetDetected[i] !== 0; o.lastKnownTargetX = v.lastKnownTargetX[i]; o.attackKind = $r.enm('EnemyAttackKind', v.attackKind[i]!); o.attackSequence = v.attackSequence[i]; o.attackRange = v.attackRange[i]; o.attackCooldownSteps = v.attackCooldownSteps[i]; o.attackCooldownStepsRemaining = v.attackCooldownStepsRemaining[i]; o.attackTelegraphed = v.attackTelegraphed[i] !== 0; return o; } });
+
+export interface EnemyRestartStateViews {
+  state: Uint8Array;
+  facing: Uint8Array;
+  attackSequence: Uint32Array;
+}
+export interface EnemyRestartStateValue {
+  state: EnemyRestartBrainStateName | number;
+  facing: EnemyRestartFacingName | number;
+  attackSequence: number;
+}
+/** Authored enemy state restored by a deterministic encounter restart. (component, sim) */
+export const EnemyRestartState = typeToken<EnemyRestartStateViews, EnemyRestartStateValue>('EnemyRestartState', 'component', { sig: 'state:enum:1,facing:enum:1,attackSequence:u32:1', read: (v: EnemyRestartStateViews, i: number, o: Record<string, unknown>) => { o.state = $r.enm('EnemyRestartBrainState', v.state[i]!); o.facing = $r.enm('EnemyRestartFacing', v.facing[i]!); o.attackSequence = v.attackSequence[i]; return o; } });
 
 export interface CameraFeedbackViews {
   /** Whether transient feedback still needs presentation frames. */
@@ -2334,6 +2669,19 @@ export interface PlayerMotionValue {
 }
 /** Authoritative player movement state. Presentation may observe but never write it. (component, sim) */
 export const PlayerMotion = typeToken<PlayerMotionViews, PlayerMotionValue>('PlayerMotion', 'component', { sig: 'horizontalVelocity:f32:1,verticalVelocity:f32:1,groundedForMovement:bool:1,facing:enum:1,coyoteStepsRemaining:u32:1,jumpBufferStepsRemaining:u32:1,airJumpsRemaining:u32:1,jumpWasHeld:bool:1,ignoreGroundContact:bool:1', read: (v: PlayerMotionViews, i: number, o: Record<string, unknown>) => { o.horizontalVelocity = v.horizontalVelocity[i]; o.verticalVelocity = v.verticalVelocity[i]; o.groundedForMovement = v.groundedForMovement[i] !== 0; o.facing = $r.enm('FacingDirection', v.facing[i]!); o.coyoteStepsRemaining = v.coyoteStepsRemaining[i]; o.jumpBufferStepsRemaining = v.jumpBufferStepsRemaining[i]; o.airJumpsRemaining = v.airJumpsRemaining[i]; o.jumpWasHeld = v.jumpWasHeld[i] !== 0; o.ignoreGroundContact = v.ignoreGroundContact[i] !== 0; return o; } });
+
+export interface PlayerRestartStateViews {
+  facing: Uint8Array;
+  grounded: Uint8Array;
+  airJumps: Uint32Array;
+}
+export interface PlayerRestartStateValue {
+  facing: PlayerRestartFacingName | number;
+  grounded: boolean;
+  airJumps: number;
+}
+/** Authored player state restored by a deterministic encounter restart. (component, sim) */
+export const PlayerRestartState = typeToken<PlayerRestartStateViews, PlayerRestartStateValue>('PlayerRestartState', 'component', { sig: 'facing:enum:1,grounded:bool:1,airJumps:u32:1', read: (v: PlayerRestartStateViews, i: number, o: Record<string, unknown>) => { o.facing = $r.enm('PlayerRestartFacing', v.facing[i]!); o.grounded = v.grounded[i] !== 0; o.airJumps = v.airJumps[i]; return o; } });
 
 export interface PlayerStepInputViews {
   /** Jump press for the current fixed step only. */

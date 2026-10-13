@@ -63,7 +63,9 @@ export const AdvanceEnemyProjectiles = defineSystem({
           for (const targetChunk of targets.chunks()) {
             const targetBounds = targetChunk.col(Bounds2D);
             const targetPosition = targetChunk.col(LocalTransform).position;
+            const targetHealth = targetChunk.col(Health);
             for (let targetRow = 0; targetRow < targetChunk.length; targetRow++) {
+              if (targetHealth.current[targetRow] === 0) continue;
               const target = targetChunk.entity(targetRow);
               if (target === owner) continue;
               if ((bounds.mask[row]! & targetBounds.layer[targetRow]!) === 0 || (targetBounds.mask[targetRow]! & bounds.layer[row]!) === 0) continue;
@@ -77,7 +79,8 @@ export const AdvanceEnemyProjectiles = defineSystem({
               const maxY = fromY > toY ? fromY : toY;
               if (maxX + radius < targetX - targetHalfWidth || minX - radius > targetX + targetHalfWidth) continue;
               if (maxY + halfHeight < targetY - targetHalfHeight || minY - halfHeight > targetY + targetHalfHeight) continue;
-              ctx.events.emit(DamageRequested, { source: owner, target, amount: projectile.damage[row]! });
+              const direction = velocityX < 0 ? -1 : 1;
+              ctx.events.emit(DamageRequested, { source: owner, target, amount: projectile.damage[row]!, knockback: [direction * 4, 2] });
               hitTarget = true;
               break;
             }

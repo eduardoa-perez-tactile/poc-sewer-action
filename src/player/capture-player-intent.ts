@@ -1,13 +1,17 @@
 import { defineSystem, query, read, write } from '@gameengine/runtime';
-import { Player, PlayerActionState, PlayerControl, PlayerIntent, PlayerStepInput } from '../schema.gen.ts';
+import { GameState, Player, PlayerActionState, PlayerControl, PlayerIntent, PlayerStepInput } from '../schema.gen.ts';
 
 export const CapturePlayerIntent = defineSystem({
   name: 'CapturePlayerIntent',
   stage: 'PreUpdate',
   after: ['MapInputActions'],
   query: query(read(Player), write(PlayerControl)),
-  resources: [read(PlayerActionState), write(PlayerStepInput)],
+  resources: [read(GameState), read(PlayerActionState), write(PlayerStepInput)],
   events: [PlayerIntent],
+  runIf: [
+    { resource: GameState, field: 'phase', op: '!=', value: 'PlayerDead' },
+    { resource: GameState, field: 'phase', op: '!=', value: 'Completed' },
+  ],
   run(ctx, players) {
     const mapped = ctx.get(PlayerActionState);
     let moveX = mapped.moveX;
