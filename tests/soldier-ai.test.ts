@@ -126,5 +126,5 @@ worldTest('soldier patrol detection and chase memory produce a stable determinis
   await step(12);
   world.insert(player, LocalTransform, { position: [20, FLOOR_Y, 0] });
   await step(8);
-  expect(world.hash()).toBe('492c7ecca1be3900');
+  expect(world.hash()).toBe('ad9b6a25e077b3d3');
 });

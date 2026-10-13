@@ -1,0 +1,14 @@
+{
+  "$schemaVersion": 2,
+  "id": "enemy-bullet",
+  "entities": [
+    {
+      "name": "EnemyBullet",
+      "id": "root",
+      "Bounds2D": { "shape": "Aabb", "size": [0.28, 0.12], "layer": 8, "mask": 1 },
+      "EnemyProjectile": {},
+      "LocalTransform": {},
+      "Sprite": { "image": "art/effects/bullet/enemy-bullet", "size": [0.32, 0.16], "sortingLayer": "Effects" }
+    }
+  ]
+}

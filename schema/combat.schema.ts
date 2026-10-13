@@ -1,4 +1,4 @@
-import { bool, component, entity, event, f32, resource, u16, u32 } from '@gameengine/schema';
+import { bool, component, entity, enumOf, event, f32, resource, u16, u32 } from '@gameengine/schema';
 
 export const Health = component(
   'Health',
@@ -35,6 +35,27 @@ export const ProjectilePoolState = resource(
   'ProjectilePoolState',
   { warmed: bool({ default: false, doc: 'Whether the deterministic projectile pool has been queued.' }) },
   { sim: true, doc: 'One-shot projectile pool bootstrap state.' },
+);
+
+export const EnemyProjectile = component(
+  'EnemyProjectile',
+  {
+    kind: enumOf('EnemyProjectileKind', ['Bullet', 'Bomb'], { default: 'Bullet' }),
+    velocityX: f32({ default: 0 }),
+    velocityY: f32({ default: 0 }),
+    gravity: f32({ default: 0, min: 0 }),
+    distanceRemaining: f32({ default: 0, min: 0 }),
+    lifetimeStepsRemaining: u32({ default: 0 }),
+    damage: u16({ default: 1, min: 1 }),
+    owner: entity({ optional: true }),
+  },
+  { sim: true, doc: 'Pooled fixed-step enemy bullet or ballistic bomb state.' },
+);
+
+export const EnemyAttackPoolState = resource(
+  'EnemyAttackPoolState',
+  { warmed: bool({ default: false }) },
+  { sim: true, doc: 'One-shot enemy bullet and bomb pool bootstrap state.' },
 );
 
 export const DamageRequested = event(

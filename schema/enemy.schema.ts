@@ -20,6 +20,12 @@ export const EnemyBrain = component(
     targetMemoryStepsRemaining: u32({ default: 0 }),
     targetDetected: bool({ default: false }),
     lastKnownTargetX: f32({ default: 0 }),
+    attackKind: enumOf('EnemyAttackKind', ['None', 'Shoot', 'CrouchShoot', 'Bomb'], { default: 'None' }),
+    attackSequence: u32({ default: 0, doc: 'Round-robin attack selection; deterministic and replayed.' }),
+    attackRange: f32({ default: 4.5, min: 0 }),
+    attackCooldownSteps: u32({ default: 48, min: 1 }),
+    attackCooldownStepsRemaining: u32({ default: 0 }),
+    attackTelegraphed: bool({ default: false, doc: 'True from attack start until its clip event releases the projectile.' }),
   },
-  { sim: true, doc: 'Deterministic soldier configuration, decisions and chase memory.' },
+  { sim: true, doc: 'Deterministic soldier configuration, decisions, chase memory and ranged attack cadence.' },
 );

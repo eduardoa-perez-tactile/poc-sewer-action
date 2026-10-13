@@ -1,0 +1,8 @@
+{
+  "$schemaVersion": 1,
+  "fps": 8,
+  "loop": "once",
+  "frames": ["art/soldier/crouch-shoot/crouch-shoot-export1", "art/soldier/crouch-shoot/crouch-shoot-export2"],
+  "events": [{ "frame": 1, "name": "fire-crouch-bullet" }],
+  "keys": { "tint": [{ "frame": 0, "value": "#ffd36aff", "ease": "step" }, { "frame": 1, "value": "#ffffffff", "ease": "step" }] }
+}

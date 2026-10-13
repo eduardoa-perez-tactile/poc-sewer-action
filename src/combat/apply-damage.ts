@@ -3,7 +3,7 @@ import { ActorDied, DamageRequested, Health } from '../schema.gen.ts';
 
 export const ApplyDamage = defineSystem({
   name: 'ApplyDamage',
-  after: ['AdvanceProjectiles'],
+  after: ['AdvanceProjectiles', 'AdvanceEnemyProjectiles'],
   query: query(write(Health)),
   runOn: [DamageRequested],
   run(ctx, health) {
