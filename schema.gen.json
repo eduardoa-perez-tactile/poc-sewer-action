@@ -252,6 +252,14 @@
           "min": 1
         },
         {
+          "name": "bypassInvulnerability",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Environmental entry damage must not leave an invulnerable player stranded alive in water."
+        },
+        {
           "name": "knockback",
           "kind": "vec2",
           "scalar": "f32",
@@ -1126,6 +1134,104 @@
       ],
       "package": "SewerAction",
       "doc": "Data-driven environmental damage contract."
+    },
+    {
+      "name": "WaterContact",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "inside",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "splashCooldownSteps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 30,
+          "min": 1
+        },
+        {
+          "name": "nextSplashStep",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Player contact with the union of water volumes. Entry damage is independent of splash cooldown."
+    },
+    {
+      "name": "WaterEntered",
+      "kind": "event",
+      "sim": true,
+      "fields": [
+        {
+          "name": "player",
+          "kind": "entity",
+          "scalar": "u32",
+          "lanes": 2
+        },
+        {
+          "name": "position",
+          "kind": "vec2",
+          "scalar": "f32",
+          "lanes": 2
+        },
+        {
+          "name": "entryStep",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Accepted water entry fact; presentation observes this without affecting the hazard outcome."
+    },
+    {
+      "name": "WaterSplash",
+      "kind": "component",
+      "sim": false,
+      "fields": [
+        {
+          "name": "secondsRemaining",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "min": 0
+        },
+        {
+          "name": "lastEntryStep",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "One preallocated splash slot for the single-player slice, hidden when its one-shot clip ends."
+    },
+    {
+      "name": "WaterSplashState",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "active",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Run gate for bounded splash presentation; stops all adapter work once hidden."
     },
     {
       "name": "MenuIntent",

@@ -29,3 +29,6 @@ export { DriveParallaxLayers } from './presentation/drive-parallax-layers.ts';
 export { DriveSoldierFacing } from './presentation/drive-soldier-facing.ts';
 export { DriveEnemyDamagePresentation } from './presentation/drive-enemy-damage-presentation.ts';
 export { bumpCamera, DriveCameraFeedback, shakeCamera } from './presentation/drive-camera-feedback.ts';
+
+export { ResolveWaterContact } from './hazards/resolve-water-contact.ts';
+export { DriveWaterSplash } from './presentation/drive-water-splash.ts';
