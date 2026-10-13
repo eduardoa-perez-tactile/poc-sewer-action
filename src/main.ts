@@ -45,3 +45,6 @@ export { BuildLevel } from './game-flow/build-level.ts';
 export { AdvanceLevel } from './game-flow/advance-level.ts';
 
 export { RequestCheckpointRestart } from './game-flow/request-checkpoint-restart.ts';
+
+export { AdvanceFinalEncounter } from './game-flow/advance-final-encounter.ts';
+export { DriveFinalCues } from './presentation/drive-final-cues.ts';

@@ -1,11 +1,11 @@
-import { type Chunk, type EntityId, assetKey, Clip2D, clip2DFrame, clip2DInfo, defineSystem, entityAt, LocalTransform, query, read, RenderTime, Sprite, VisualOffset, write } from '@gameengine/runtime';
+import { type Chunk, type EntityId, assetKey, Bounds2D, Clip2D, clip2DFrame, clip2DInfo, defineSystem, entityAt, LocalTransform, query, read, RenderTime, Sprite, VisualOffset, write } from '@gameengine/runtime';
 import { EnemyBrain, Health, HitReaction, RestartRequested, SoldierVisual, SoldierVisualState } from '../schema.gen.ts';
 
 /** The attack clock remains on the actor. This proxy samples that clock without advancing it. */
 export const DriveSoldierAnimation = defineSystem({
   name: 'DriveSoldierAnimation', stage: 'LateUpdate',
   queries: {
-    actors: query(read(EnemyBrain), read(Health), read(HitReaction), read(Clip2D), read(LocalTransform), write(Sprite)),
+    actors: query(read(Bounds2D), read(EnemyBrain), read(Health), read(HitReaction), read(Clip2D), read(LocalTransform), write(Sprite)),
     visuals: query(write(SoldierVisual), read(LocalTransform), write(Sprite), write(VisualOffset)),
   },
   resources: [read(RenderTime), write(SoldierVisualState)], events: [RestartRequested],
@@ -23,6 +23,9 @@ export const DriveSoldierAnimation = defineSystem({
       if (!actorRow) continue;
       {
         const chunk = actorRow.chunk, i = actorRow.row;
+        const visible = chunk.col(Bounds2D).mask[i] !== 0;
+        visual.setField(Sprite, row, 'visible', visible);
+        if (!visible) continue;
         const previousClip = assetKey(state.clip[row]!) ?? 'art/soldier/idle.clip2d.json';
         const previousInfo = clip2DInfo(previousClip);
         const unfinished = previousInfo.loop === 'loop' || state.time[row]! < previousInfo.duration;

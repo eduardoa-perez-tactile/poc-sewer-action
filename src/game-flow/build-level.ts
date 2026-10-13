@@ -1,6 +1,6 @@
 import { added, defineSystem, loadData, query, read, write } from '@gameengine/runtime';
 import { validateLevel } from './validate-level.ts';
-import { LevelProgress, SewerLevelDef } from '../schema.gen.ts';
+import { FinalSoldier, LevelProgress, SewerLevelDef } from '../schema.gen.ts';
 
 export const BuildLevel = defineSystem({
   name: 'BuildLevel', before: ['BuildRoomCollision'],
@@ -14,7 +14,7 @@ export const BuildLevel = defineSystem({
       for (const spawn of def.soldiers) {
         const actor = ctx.commands.spawn({
           ActorSpawn: { position: [spawn.x, spawn.y] }, Alive: {},
-          Bounds2D: { shape: 'Aabb', size: [0.7, 1.5], offset: [0, 0.75], layer: 4, mask: 2 },
+          Bounds2D: { shape: 'Aabb', size: [0.7, 1.5], offset: [0, 0.75], layer: 4, mask: spawn.finalPhase === undefined ? 2 : 0 },
           Clip2D: { clip: 'art/soldier/idle.clip2d.json' },
           EnemyBrain: { state: 'Idle', patrolMinX: spawn.patrolMinX, patrolMaxX: spawn.patrolMaxX, attackCooldownSteps: spawn.cooldown },
           EnemyRestartState: { state: 'Idle' }, EncounterMember: { beat: spawn.beat },
@@ -22,6 +22,7 @@ export const BuildLevel = defineSystem({
           LocalTransform: { position: [spawn.x, spawn.y, 0] },
           Sprite: { image: 'art/soldier/idle', size: [1.28, 1.54], anchor: [0.5, 0], sortingLayer: 'Characters', visible: false },
         });
+        if (spawn.finalPhase !== undefined) ctx.commands.insert(actor, FinalSoldier, { phase: spawn.finalPhase, active: false });
         ctx.commands.spawn({
           LocalTransform: {}, SoldierVisual: { actor }, VisualOffset: {},
           Sprite: { image: 'art/soldier/idle', size: [1.28, 1.2], anchor: [0.5, 0], sortingLayer: 'Characters' },

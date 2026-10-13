@@ -83,6 +83,26 @@
       "patrolMaxX": 44.75,
       "health": 3,
       "cooldown": 48
+    },
+    {
+      "beat": 3,
+      "x": 49,
+      "y": -1,
+      "patrolMinX": 48.25,
+      "patrolMaxX": 49.5,
+      "health": 4,
+      "cooldown": 90,
+      "finalPhase": 0
+    },
+    {
+      "beat": 3,
+      "x": 52,
+      "y": -2.5,
+      "patrolMinX": 51.5,
+      "patrolMaxX": 53,
+      "health": 4,
+      "cooldown": 90,
+      "finalPhase": 1
     }
   ],
   "water": [
@@ -101,5 +121,13 @@
       "width": 4,
       "surfaceY": -3
     }
-  ]
+  ],
+  "finalEncounter": {
+    "triggerX": 47.5,
+    "minY": -2.75,
+    "maxY": 1,
+    "warningSteps": 45,
+    "cameraX": 50,
+    "cameraY": -0.25
+  }
 }

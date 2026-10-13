@@ -1,12 +1,14 @@
 import { burstAt, clip2DInfo, defineSystem, ParticleSystem, query, read, RenderTime, write } from '@gameengine/runtime';
-import { CombatEffect, CombatVisual, CombatVisualState, RestartRequested } from '../schema.gen.ts';
+import { FinalEncounter, CombatEffect, CombatVisual, CombatVisualState, RestartRequested } from '../schema.gen.ts';
 
 export const DriveCombatEffects = defineSystem({
   name: 'DriveCombatEffects', stage: 'LateUpdate',
-  query: query(write(CombatVisual), write(ParticleSystem)),
+  queries: { hosts: query(write(CombatVisual), write(ParticleSystem)), finals: query(read(FinalEncounter)) },
   resources: [read(RenderTime), write(CombatVisualState)], events: [CombatEffect, RestartRequested],
   runIf: { any: [{ event: CombatEffect }, { event: RestartRequested }, { resource: CombatVisualState, field: 'active', value: true }] },
-  run(ctx, hosts) {
+  run(ctx, { hosts, finals }) {
+    let prioritizeBomb = false;
+    for (const chunk of finals.chunks()) for (let row = 0; row < chunk.length; row++) prioritizeBomb ||= chunk.is(FinalEncounter, row, 'phase', 'Bombardment') || chunk.is(FinalEncounter, row, 'phase', 'ExitOpen') || chunk.is(FinalEncounter, row, 'phase', 'Won');
     const restart = ctx.events.count(RestartRequested) > 0;
     const lastStep = ctx.resource(CombatVisualState).lastStep[0]!;
     let newestStep = lastStep;
@@ -19,6 +21,8 @@ export const DriveCombatEffects = defineSystem({
     }
     if (!restart) ctx.events.forEach(CombatEffect, (event) => {
       if (event.step <= lastStep) return;
+      // The final arena reserves its tight draw headroom for bombs and hit/explosion feedback.
+      if (prioritizeBomb && event.kind === 'muzzle') return;
       newestStep = Math.max(newestStep, event.step);
       for (const chunk of hosts.chunks()) for (let row = 0; row < chunk.length; row++) {
         if (!chunk.is(CombatVisual, row, 'kind', event.kind)) continue;

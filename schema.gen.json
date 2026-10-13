@@ -121,6 +121,19 @@
       "package": "SewerAction"
     },
     {
+      "name": "FinalEncounterPhase",
+      "values": [
+        "Waiting",
+        "Guard",
+        "Warning",
+        "Bombardment",
+        "ExitOpen",
+        "Won",
+        "Failed"
+      ],
+      "package": "SewerAction"
+    },
+    {
       "name": "DashDirection",
       "values": [
         "Left",
@@ -1452,6 +1465,73 @@
       "doc": "Authored encounter membership; bounded actors allocated once during boot."
     },
     {
+      "name": "FinalCue",
+      "kind": "component",
+      "sim": false,
+      "fields": [
+        {
+          "name": "phase",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Static in-world phase lamp; phase 2 is the existing outlet arrow."
+    },
+    {
+      "name": "FinalEncounter",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "phase",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "FinalEncounterPhase",
+          "default": "Waiting"
+        },
+        {
+          "name": "deadlineStep",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Final fight owner. Warning uses an absolute fixed-step deadline; terminal phases are latched."
+    },
+    {
+      "name": "FinalSoldier",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "phase",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "active",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "One preallocated actor per final combat phase; inactive actors cannot take damage."
+    },
+    {
+      "name": "FinalWarning",
+      "kind": "tag",
+      "sim": true,
+      "fields": [],
+      "package": "SewerAction",
+      "doc": "Present only while the final warning deadline needs fixed-step work."
+    },
+    {
       "name": "LevelCollisionIndex",
       "kind": "component",
       "sim": true,
@@ -1517,7 +1597,7 @@
         }
       ],
       "package": "SewerAction",
-      "doc": "Level anchor owns ordered progress and checkpoint state. No final encounter or win UI."
+      "doc": "Level anchor owns ordered progress and checkpoint state. Route gates and checkpoint state; finished means the final outlet was accepted."
     },
     {
       "name": "TerrainVisual",
@@ -2299,6 +2379,9 @@
                 },
                 "cooldown": {
                   "type": "integer"
+                },
+                "finalPhase": {
+                  "type": "integer"
                 }
               },
               "required": [
@@ -2312,6 +2395,38 @@
               ],
               "additionalProperties": false
             }
+          },
+          "finalEncounter": {
+            "type": "object",
+            "properties": {
+              "triggerX": {
+                "type": "number"
+              },
+              "minY": {
+                "type": "number"
+              },
+              "maxY": {
+                "type": "number"
+              },
+              "warningSteps": {
+                "type": "integer"
+              },
+              "cameraX": {
+                "type": "number"
+              },
+              "cameraY": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "triggerX",
+              "minY",
+              "maxY",
+              "warningSteps",
+              "cameraX",
+              "cameraY"
+            ],
+            "additionalProperties": false
           },
           "water": {
             "type": "array",
@@ -2343,6 +2458,7 @@
           "transition",
           "beats",
           "soldiers",
+          "finalEncounter",
           "water"
         ],
         "additionalProperties": false

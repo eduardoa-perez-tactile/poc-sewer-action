@@ -14,6 +14,7 @@ export const AdvanceLevel = defineSystem({
   run(ctx, { levels, players, soldiers }) {
     for (const level of levels.chunks()) for (let row = 0; row < level.length; row++) {
       const state = level.col(LevelProgress);
+      if (state.beat[row] === 3) continue; // FinalEncounter owns the outlet beat and finish.
       if (state.built[row] === 0 || state.finished[row] !== 0) continue;
       const def = loadData(SewerLevelDef, level.get(LevelProgress, row).data!);
       let beat = state.beat[row]!;

@@ -28,6 +28,7 @@
     {
       "name": "FirstSewerRoom",
       "id": "first-sewer-room",
+      "FinalEncounter": {},
       "LevelCollisionIndex": {},
       "LevelProgress": { "data": "rooms/complete-sewer.json" },
       "LocalTransform": { "position": [-8, -4.5, 0] },
@@ -441,20 +442,37 @@
     {
       "name": "RouteArrow54-shaft",
       "id": "route-arrow-54-shaft",
+      "FinalCue": { "phase": 2 },
       "LocalTransform": { "position": [54, -0.9, 0] },
       "Shape": { "size": [0.6, 0.08], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
     },
     {
       "name": "RouteArrow54-upper",
       "id": "route-arrow-54-upper",
+      "FinalCue": { "phase": 2 },
       "LocalTransform": { "position": [54.25, -0.78, 0], "rotation": [0, 0, -0.382683, 0.92388] },
       "Shape": { "size": [0.32, 0.08], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
     },
     {
       "name": "RouteArrow54-lower",
       "id": "route-arrow-54-lower",
+      "FinalCue": { "phase": 2 },
       "LocalTransform": { "position": [54.25, -1.02, 0], "rotation": [0, 0, 0.382683, 0.92388] },
       "Shape": { "size": [0.32, 0.08], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "FinalPhaseLamp0",
+      "id": "final-phase-lamp-0",
+      "FinalCue": {},
+      "LocalTransform": { "position": [49.5, 0.4, 0] },
+      "Shape": { "size": [0.5, 0.12], "color": "#54616bff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "FinalPhaseLamp1",
+      "id": "final-phase-lamp-1",
+      "FinalCue": { "phase": 1 },
+      "LocalTransform": { "position": [51.5, 0.4, 0] },
+      "Shape": { "size": [0.5, 0.12], "color": "#54616bff", "sortingLayer": "Foreground" }
     }
   ]
 }

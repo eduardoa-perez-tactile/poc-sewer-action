@@ -1,6 +1,9 @@
-import { defineSystem, LocalTransform, pool, query, read, write } from '@gameengine/runtime';
+import { Bounds2D, defineSystem, LocalTransform, pool, query, read, write } from '@gameengine/runtime';
 import {
   ActorSpawn,
+  FinalEncounter,
+  FinalSoldier,
+  FinalWarning,
   LevelProgress,
   EncounterMember,
   Alive,
@@ -30,6 +33,8 @@ export const RestartGame = defineSystem({
   name: 'RestartGame',
   after: ['AdvanceCadavers'],
   queries: {
+    finals: query(write(FinalEncounter)),
+    finalSoldiers: query(write(FinalSoldier), write(Bounds2D)),
     levels: query(write(LevelProgress)),
     members: query(write(EncounterMember)),
     players: query(read(Player), read(PlayerRestartState), read(ActorSpawn), write(Health), write(HitReaction), write(LocalTransform), write(PlayerControl), write(PlayerDashState), write(PlayerGroundContact), write(PlayerMotion), write(Weapon), write(WaterContact)),
@@ -40,7 +45,16 @@ export const RestartGame = defineSystem({
   },
   resources: [write(GameState), write(PlayerStepInput)],
   runOn: [RestartRequested],
-  run(ctx, { players, enemies, cadavers, projectiles, enemyProjectiles, levels, members }) {
+  run(ctx, { players, enemies, cadavers, projectiles, enemyProjectiles, levels, members, finals, finalSoldiers }) {
+    if (ctx.is(GameState, 'phase', 'Completed')) return; // Victory is terminal; issue 27 owns a new run.
+    for (const chunk of finals.chunks()) for (let row = 0; row < chunk.length; row++) {
+      chunk.set(FinalEncounter, row, { phase: 'Waiting', deadlineStep: 0 });
+      ctx.commands.remove(chunk.entity(row), FinalWarning);
+    }
+    for (const chunk of finalSoldiers.chunks()) for (let row = 0; row < chunk.length; row++) {
+      chunk.setField(FinalSoldier, row, 'active', false);
+      chunk.setField(Bounds2D, row, 'mask', 0);
+    }
     let checkpoint = -1;
     for (const chunk of levels.chunks()) for (let row = 0; row < chunk.length; row++) {
       checkpoint = chunk.col(LevelProgress).checkpoint[row]!;
