@@ -1,5 +1,5 @@
 import { Bounds2D, defineSystem, entityAt, type EntityId, LocalTransform, pool, query, read, write } from '@gameengine/runtime';
-import { DamageRequested, EnemyProjectile, GameState, Health, PlatformCollisionGrid } from '../schema.gen.ts';
+import { CombatEffect, DamageRequested, EnemyProjectile, GameState, Health, PlatformCollisionGrid } from '../schema.gen.ts';
 
 const EPSILON = 0.00001;
 
@@ -95,6 +95,7 @@ export const AdvanceEnemyProjectiles = defineSystem({
         const travelled = absDx > absDy ? absDx : absDy;
         const exhausted = travelled + EPSILON >= projectile.distanceRemaining[row]!;
         const lifetime = projectile.lifetimeStepsRemaining[row]!;
+        if (hitWall || hitTarget || (chunk.is(EnemyProjectile, row, 'kind', 'Bomb') && (exhausted || lifetime <= 1))) ctx.events.emit(CombatEffect, { kind: chunk.is(EnemyProjectile, row, 'kind', 'Bomb') ? 'explosion' : 'hit', position: [toX, toY], step: ctx.step });
         if (hitWall || hitTarget || exhausted || lifetime <= 1) recycle.push(entity);
         else {
           position[row * 3] = toX;

@@ -137,6 +137,150 @@
   ],
   "types": [
     {
+      "name": "CombatEffect",
+      "kind": "event",
+      "sim": false,
+      "fields": [
+        {
+          "name": "kind",
+          "kind": "string",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "position",
+          "kind": "vec2",
+          "scalar": "f32",
+          "lanes": 2
+        },
+        {
+          "name": "step",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Write-only feedback from accepted projectile releases and impacts; never consumed by gameplay."
+    },
+    {
+      "name": "CombatVisual",
+      "kind": "component",
+      "sim": false,
+      "fields": [
+        {
+          "name": "kind",
+          "kind": "string",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "remaining",
+          "kind": "array",
+          "scalar": "f32",
+          "lanes": 4
+        },
+        {
+          "name": "bursts",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Fixed presentation effect slot, hidden after its authored one-shot duration."
+    },
+    {
+      "name": "CombatVisualState",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "active",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "lastStep",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Run gate and per-step feedback deduplication."
+    },
+    {
+      "name": "SoldierVisual",
+      "kind": "component",
+      "sim": false,
+      "fields": [
+        {
+          "name": "actor",
+          "kind": "entity",
+          "scalar": "u32",
+          "lanes": 2
+        },
+        {
+          "name": "clip",
+          "kind": "asset",
+          "scalar": "u32",
+          "lanes": 1,
+          "assetType": "clip2d",
+          "default": "art/soldier/idle.clip2d.json"
+        },
+        {
+          "name": "previousPosition",
+          "kind": "vec2",
+          "scalar": "f32",
+          "lanes": 2
+        },
+        {
+          "name": "initialized",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "time",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0
+        },
+        {
+          "name": "frame",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Presentation proxy; the actor retains the authoritative attack Clip2D clock."
+    },
+    {
+      "name": "SoldierVisualState",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "active",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Stops the animation adapter between movement, combat and settling bursts."
+    },
+    {
       "name": "ActorDied",
       "kind": "event",
       "sim": true,

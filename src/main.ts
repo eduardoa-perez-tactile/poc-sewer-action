@@ -32,3 +32,9 @@ export { bumpCamera, DriveCameraFeedback, shakeCamera } from './presentation/dri
 
 export { ResolveWaterContact } from './hazards/resolve-water-contact.ts';
 export { DriveWaterSplash } from './presentation/drive-water-splash.ts';
+
+export { WarmSoldierVisual } from "./presentation/warm-soldier-visual.ts";
+
+export { DriveSoldierAnimation } from "./presentation/drive-soldier-animation.ts";
+
+export { DriveCombatEffects } from "./presentation/drive-combat-effects.ts";

@@ -1,0 +1,63 @@
+{
+  "$schemaVersion": 1,
+  "name": "hit",
+  "emitters": [
+    {
+      "name": "hit",
+      "capacity": 1,
+      "bursts": [
+        {
+          "at": 0,
+          "count": 1
+        }
+      ],
+      "loop": false,
+      "duration": 0.2,
+      "lifetime": [
+        0.2,
+        0.2
+      ],
+      "speed": [
+        0,
+        0
+      ],
+      "size": [
+        0.32,
+        0.32
+      ],
+      "texture": "art/effects/hit-sheet",
+      "blend": "alpha",
+      "sheet": {
+        "cols": 2,
+        "rows": 1,
+        "fps": 10
+      },
+      "sizeOverLife": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "colorOverLife": [
+        [
+          0,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      ]
+    }
+  ]
+}

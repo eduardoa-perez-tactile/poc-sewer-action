@@ -1,0 +1,69 @@
+{
+  "$schemaVersion": 1,
+  "name": "explosion",
+  "emitters": [
+    {
+      "name": "explosion",
+      "capacity": 1,
+      "bursts": [
+        {
+          "at": 0,
+          "count": 1
+        }
+      ],
+      "loop": false,
+      "duration": 0.2,
+      "lifetime": [
+        0.2,
+        0.2
+      ],
+      "speed": [
+        0,
+        0
+      ],
+      "size": [
+        1.28,
+        1.28
+      ],
+      "texture": "art/effects/hit-sheet",
+      "blend": "alpha",
+      "sheet": {
+        "cols": 2,
+        "rows": 1,
+        "fps": 10
+      },
+      "color": [
+        1,
+        0.65,
+        0.18,
+        1
+      ],
+      "sizeOverLife": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "colorOverLife": [
+        [
+          0,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      ]
+    }
+  ]
+}

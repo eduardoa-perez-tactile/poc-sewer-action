@@ -28,6 +28,12 @@
      "debug": 0
     }
    }
+  },
+  {
+   "r": "particles",
+   "additive": false,
+   "samples": 1,
+   "format": 22
   }
  ],
  "desktop": [
@@ -59,6 +65,12 @@
      "debug": 0
     }
    }
+  },
+  {
+   "r": "particles",
+   "additive": false,
+   "samples": 4,
+   "format": 40
   }
  ],
  "mobile": [
@@ -90,6 +102,12 @@
      "debug": 0
     }
    }
+  },
+  {
+   "r": "particles",
+   "additive": false,
+   "samples": 1,
+   "format": 22
   }
  ]
 }

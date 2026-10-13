@@ -1,0 +1,59 @@
+{
+  "$schemaVersion": 1,
+  "name": "muzzle",
+  "emitters": [
+    {
+      "name": "muzzle",
+      "capacity": 1,
+      "bursts": [
+        {
+          "at": 0,
+          "count": 1
+        }
+      ],
+      "loop": false,
+      "duration": 0.05,
+      "lifetime": [
+        0.05,
+        0.05
+      ],
+      "speed": [
+        0,
+        0
+      ],
+      "size": [
+        0.28,
+        0.28
+      ],
+      "texture": "art/effects/bullet/muzzle-flash",
+      "blend": "alpha",
+      "aspect": 0.5,
+      "sizeOverLife": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "colorOverLife": [
+        [
+          0,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      ]
+    }
+  ]
+}

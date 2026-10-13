@@ -1,0 +1,6 @@
+{
+  "$schemaVersion": 1,
+  "fps": 10,
+  "loop": "once",
+  "frames": "art/effects/hit/hit{1..2}"
+}

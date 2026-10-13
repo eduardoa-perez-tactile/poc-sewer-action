@@ -1,5 +1,5 @@
 import { Clip2DEvent, Clip2DFinished, defineSystem, LocalTransform, playClip2D, pool, query, read, write } from '@gameengine/runtime';
-import { EnemyAttackPoolState, EnemyBrain, EnemyProjectile } from '../schema.gen.ts';
+import { CombatEffect, EnemyAttackPoolState, EnemyBrain, EnemyProjectile } from '../schema.gen.ts';
 import { ENEMY_BOMB_POOL, ENEMY_BULLET_POOL } from './warm-enemy-attack-pools.ts';
 
 const IDLE_CLIP = 'art/soldier/idle.clip2d.json';
@@ -38,6 +38,7 @@ export const ResolveSoldierAttackEvents = defineSystem({
             damage: 1,
             owner: chunk.entity(row),
           });
+          if (!bomb) ctx.events.emit(CombatEffect, { kind: 'muzzle', position: [x, y], step: ctx.step });
           brain.attackTelegraphed[row] = 0;
           return;
         }
