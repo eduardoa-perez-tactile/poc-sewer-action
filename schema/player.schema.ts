@@ -1,4 +1,4 @@
-import { asset, bool, component, enumOf, event, f32, i32, resource, u32 } from '@gameengine/schema';
+import { array, asset, bool, component, enumOf, event, f32, i32, resource, u32 } from '@gameengine/schema';
 
 export const Player = component(
   'Player',
@@ -43,8 +43,11 @@ export const PlatformCollisionGrid = resource(
     originX: f32({ default: 0, doc: 'World x coordinate of cell (0, 0) lower-left corner.' }),
     originY: f32({ default: -0.5, doc: 'World y coordinate of cell (0, 0) lower-left corner.' }),
     cellSize: f32({ default: 1, min: 0.01, doc: 'Square cell size in world units.' }),
+    columns: u32({ default: 0, max: 32, doc: 'Active columns in the packed static occupancy rows.' }),
+    rows: u32({ default: 0, max: 32, doc: 'Active rows in the packed static occupancy rows.' }),
+    solidRows: array(u32(), 32, { doc: 'Immutable packed index derived exclusively by BuildRoomCollision from the same static cells it spawns.' }),
   },
-  { sim: true, doc: 'World mapping for deterministic platform collision cells.' },
+  { sim: true, doc: 'World mapping and builder-owned immutable lookup index for deterministic platform collision cells.' },
 );
 
 export const PlayerMotion = component(

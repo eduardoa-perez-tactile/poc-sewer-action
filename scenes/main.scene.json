@@ -97,6 +97,15 @@
       "Weapon": {}
     },
     {
+      "name": "Soldier",
+      "id": "soldier",
+      "Bounds2D": { "shape": "Aabb", "size": [0.7, 1.5], "offset": [0, 0.75], "layer": 4, "mask": 2 },
+      "EnemyBrain": { "patrolMinX": 0.5, "patrolMaxX": 4.75 },
+      "Health": { "current": 3, "maximum": 3 },
+      "LocalTransform": { "position": [2, -2.5, 0] },
+      "Sprite": { "image": "art/soldier/idle", "size": [1.28, 1.54], "anchor": [0.5, 0], "sortingLayer": "Characters" }
+    },
+    {
       "name": "DistantSewerLeft",
       "id": "distant-sewer-left",
       "LocalTransform": { "position": [-9.6, 0, -3] },

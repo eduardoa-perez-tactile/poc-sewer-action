@@ -1,7 +1,7 @@
 {
   "replay": "tests/replays/held_fire_obeys_fixed_step_cadence__applies_recoil__and_reuses_the_warmed_projectile_pool.greplay",
   "structural": {
-    "drawCallsMax": 4,
+    "drawCallsMax": 5,
     "pipelinesCreatedDuringPlay": 0,
     "gcPausesOver4msMax": 0
   },

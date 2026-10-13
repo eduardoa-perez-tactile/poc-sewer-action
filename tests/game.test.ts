@@ -79,6 +79,14 @@ worldTest('the first sewer tilemap deterministically derives every static collis
   expect(world.entities(PlatformCollisionCell).length).toBe(expected.size);
   expect(actual.size).toBe(expected.size);
   expect([...actual].sort()).toEqual([...expected].sort());
+  expect(mapping.columns).toBe(32);
+  expect(mapping.rows).toBe(18);
+  const expectedSolidRows = new Array<number>(32).fill(0);
+  for (const coordinate of expected) {
+    const [x, y] = coordinate.split(',').map(Number);
+    expectedSolidRows[y!] = (expectedSolidRows[y!]! | (1 << x!)) >>> 0;
+  }
+  expect(mapping.solidRows).toEqual(expectedSolidRows);
   expect(actual.has('5,3')).toBe(true);
   expect(actual.has('10,8')).toBe(true);
   expect(actual.has('24,8')).toBe(true);
@@ -452,7 +460,7 @@ worldTest('held fire obeys fixed-step cadence, applies recoil, and reuses the wa
   expect(world.get(player!, Weapon).cooldownStepsRemaining).toBe(9);
   const firingPool = pool.stats()[0]!;
   expect([firingPool.size, firingPool.free, firingPool.misses]).toEqual([12, 10, 0]);
-  expect(world.hash()).toBe('a8bc727b2ff252eb');
+  expect(world.hash()).toBe('c5bb1310ad23a5f8');
 });
 
 worldTest('projectiles hit deterministic wall cells and return cleanly to the pool', async ({ world, step, input }) => {
@@ -838,7 +846,7 @@ worldTest('platform collision stops at walls and cannot tunnel at extreme dash s
 
   expect(world.get(player, LocalTransform).position[0]).toBeCloseTo(24.58);
   expect(world.get(player, PlayerMotion).horizontalVelocity).toBe(0);
-  expect(world.hash()).toBe('a9fe2ab1863b515f');
+  expect(world.hash()).toBe('a1bdba82fd7dc3c1');
 });
 
 worldTest('platform collision resolves a diagonal floor-wall corner without penetration', async ({ world, step }) => {
@@ -863,7 +871,7 @@ worldTest('platform collision resolves a diagonal floor-wall corner without pene
   expect(position[0]).toBeCloseTo(30.58);
   expect(position[1]).toBeCloseTo(0.5);
   expect(world.get(player, PlayerGroundContact).grounded).toBe(true);
-  expect(world.hash()).toBe('7be729a5911b32ce');
+  expect(world.hash()).toBe('4c46843ce0c9245d');
 });
 
 worldTest('small-step assistance climbs only ledges within its configured boundary', async ({ world, step, input }) => {
@@ -894,7 +902,7 @@ worldTest('small-step assistance climbs only ledges within its configured bounda
   }
   expect(world.get(player, LocalTransform).position[0]).toBeLessThanOrEqual(41.58);
   expect(world.get(player, LocalTransform).position[1]).toBeCloseTo(0.5);
-  expect(world.hash()).toBe('2d6861926f50ac7b');
+  expect(world.hash()).toBe('c5ad890ef72beb1b');
 });
 
 worldTest('cliff edges end ground contact exactly after support and preserve coyote integration', async ({ world, step, input }) => {
@@ -1061,7 +1069,7 @@ worldTest('dash mechanics produce a stable deterministic state hash', async ({ w
   input.action('dash', 1);
   await step(9);
 
-  expect(world.hash()).toBe('c60469e313110836');
+  expect(world.hash()).toBe('fee46ac189c377e5');
 });
 
 worldTest('jump mechanics produce a stable deterministic state hash', async ({ world, step, input }) => {
@@ -1075,7 +1083,7 @@ worldTest('jump mechanics produce a stable deterministic state hash', async ({ w
   input.action('moveX', -0.75);
   await step(17);
 
-  expect(world.hash()).toBe('50c5a4ff3f5550c5');
+  expect(world.hash()).toBe('dab323ade8301b2e');
 });
 
 worldTest('horizontal movement produces a stable deterministic state hash', async ({ world, step, input }) => {
@@ -1090,7 +1098,7 @@ worldTest('horizontal movement produces a stable deterministic state hash', asyn
   }
   await step(5);
 
-  expect(world.hash()).toBe('31dd68aab935ed5e');
+  expect(world.hash()).toBe('a444e27e730ba7d6');
 });
 
 worldTest('camera look-ahead follows authoritative velocity and reverses direction', async ({ world, step, input }) => {
