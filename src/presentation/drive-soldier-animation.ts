@@ -1,5 +1,5 @@
 import { type Chunk, type EntityId, assetKey, Bounds2D, Clip2D, clip2DFrame, clip2DInfo, defineSystem, entityAt, LocalTransform, query, read, RenderTime, Sprite, VisualOffset, write } from '@gameengine/runtime';
-import { EnemyBrain, Health, HitReaction, RestartRequested, SoldierVisual, SoldierVisualState } from '../schema.gen.ts';
+import { GameFeelComparison, EnemyBrain, Health, HitReaction, RestartRequested, SoldierVisual, SoldierVisualState } from '../schema.gen.ts';
 
 /** The attack clock remains on the actor. This proxy samples that clock without advancing it. */
 export const DriveSoldierAnimation = defineSystem({
@@ -8,9 +8,9 @@ export const DriveSoldierAnimation = defineSystem({
     actors: query(read(Bounds2D), read(EnemyBrain), read(Health), read(HitReaction), read(Clip2D), read(LocalTransform), write(Sprite)),
     visuals: query(write(SoldierVisual), read(LocalTransform), write(Sprite), write(VisualOffset)),
   },
-  resources: [read(RenderTime), write(SoldierVisualState)], events: [RestartRequested],
+  resources: [read(RenderTime), write(SoldierVisualState), read(GameFeelComparison)], events: [RestartRequested],
   after: ['DriveEnemyDamagePresentation'],
-  runIf: { any: [{ changed: [EnemyBrain, Health, HitReaction, Clip2D, LocalTransform] }, { event: RestartRequested }, { resource: SoldierVisualState, field: 'active', value: true }] },
+  runIf: { any: [{ changed: GameFeelComparison }, { changed: [EnemyBrain, Health, HitReaction, Clip2D, LocalTransform] }, { event: RestartRequested }, { resource: SoldierVisualState, field: 'active', value: true }] },
   run(ctx, { actors, visuals }) {
     let active = false;
     const actorRows = new Map<EntityId, { chunk: Chunk; row: number }>();
@@ -29,7 +29,8 @@ export const DriveSoldierAnimation = defineSystem({
         const previousClip = assetKey(state.clip[row]!) ?? 'art/soldier/idle.clip2d.json';
         const previousInfo = clip2DInfo(previousClip);
         const unfinished = previousInfo.loop === 'loop' || state.time[row]! < previousInfo.duration;
-        const dirty = !state.initialized[row] || ctx.events.count(RestartRequested) > 0 || chunk.changed(EnemyBrain, i) || chunk.changed(Health, i) || chunk.changed(HitReaction, i) || chunk.changed(Clip2D, i) || chunk.changed(LocalTransform, i);
+        const flashes = ctx.resource(GameFeelComparison).flashes[0]!;
+        const dirty = !state.initialized[row] || state.flashesApplied[row] !== flashes || ctx.events.count(RestartRequested) > 0 || chunk.changed(EnemyBrain, i) || chunk.changed(Health, i) || chunk.changed(HitReaction, i) || chunk.changed(Clip2D, i) || chunk.changed(LocalTransform, i);
         if (!dirty && !unfinished) continue;
         const p = chunk.col(LocalTransform).position;
         const x = p[i * 3]!, y = p[i * 3 + 1]!;
@@ -64,6 +65,7 @@ export const DriveSoldierAnimation = defineSystem({
         offset.position[row * 3 + 1] = y - visual.col(LocalTransform).position[row * 3 + 1]!;
         offset.scale[row * 3] = 1 + settle * 0.25;
         offset.scale[row * 3 + 1] = 1 - settle * 0.65;
+        state.flashesApplied[row] = flashes;
         state.previousPosition[row * 2] = x; state.previousPosition[row * 2 + 1] = y; state.initialized[row] = 1;
         chunk.setField(Sprite, i, 'visible', false);
         const color = chunk.col(Sprite).color;

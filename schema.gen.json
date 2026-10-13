@@ -21,6 +21,30 @@
       "package": "SewerAction"
     },
     {
+      "name": "ComparisonAction",
+      "values": [
+        "open",
+        "close",
+        "baseline",
+        "polished",
+        "shake",
+        "recoil",
+        "particles",
+        "flashes",
+        "audio"
+      ],
+      "package": "SewerAction"
+    },
+    {
+      "name": "ComparisonExposure",
+      "values": [
+        "hidden",
+        "developer",
+        "bonus"
+      ],
+      "package": "SewerAction"
+    },
+    {
       "name": "EnemyState",
       "values": [
         "Idle",
@@ -268,6 +292,13 @@
           "scalar": "u8",
           "lanes": 1,
           "default": false
+        },
+        {
+          "name": "flashesApplied",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true
         },
         {
           "name": "time",
@@ -787,6 +818,135 @@
       ],
       "package": "SewerAction",
       "doc": "Deterministic weapon cadence and damage configuration."
+    },
+    {
+      "name": "ComparisonRequested",
+      "kind": "event",
+      "sim": false,
+      "fields": [
+        {
+          "name": "enabled",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "action",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "ComparisonAction"
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "View/controller presentation intent; never consumed by simulation."
+    },
+    {
+      "name": "EnemyFlashState",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "enabled",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Last applied flash choice; global tint refresh only when this choice changes."
+    },
+    {
+      "name": "GameFeelComparison",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "config",
+          "kind": "asset",
+          "scalar": "u32",
+          "lanes": 1,
+          "assetType": "data",
+          "default": "settings/game-feel.json"
+        },
+        {
+          "name": "initialized",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "exposure",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "ComparisonExposure",
+          "default": "hidden"
+        },
+        {
+          "name": "open",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "shake",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "recoil",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "particles",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true
+        },
+        {
+          "name": "flashes",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true
+        },
+        {
+          "name": "audio",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Presentation choices only. No gameplay system reads this resource."
+    },
+    {
+      "name": "ShotFeedbackState",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "lastStep",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Accepted shot deduplication, including cues suppressed by comparison choices."
     },
     {
       "name": "EnemyBrain",
@@ -2312,6 +2472,47 @@
   "protocol": [],
   "services": [],
   "data": [
+    {
+      "name": "ComparisonDef",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "exposure": {
+            "enum": [
+              "hidden",
+              "developer",
+              "bonus"
+            ]
+          },
+          "shake": {
+            "type": "boolean"
+          },
+          "recoil": {
+            "type": "boolean"
+          },
+          "particles": {
+            "type": "boolean"
+          },
+          "flashes": {
+            "type": "boolean"
+          },
+          "audio": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "exposure",
+          "shake",
+          "recoil",
+          "particles",
+          "flashes",
+          "audio"
+        ],
+        "additionalProperties": false
+      },
+      "package": "SewerAction",
+      "doc": "Shipped product choice. Developer exposure is opened by the optional QA cheat; bonus exposes a launcher."
+    },
     {
       "name": "SewerLevelDef",
       "schema": {

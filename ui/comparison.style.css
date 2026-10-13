@@ -1,0 +1,4 @@
+.comparison-screen { font-family: "fonts/Abel-Regular"; align-items: flex-end; justify-content: flex-start; padding: 20px; pointer-events: none; }
+.comparison-panel { width: 1880px; max-width: 100%; pointer-events: auto; }
+.comparison-launcher { width: 220px; height: 72px; background-color: #28434d; color: #edf5ee; font-size: 30px; text-fit: 20px 30px; pointer-events: auto; }
+.comparison-hidden { display: none; }

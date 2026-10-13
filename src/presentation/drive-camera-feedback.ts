@@ -1,6 +1,6 @@
 import { Camera, defineSystem, query, read, RenderTime, VisualOffset, write } from '@gameengine/runtime';
 import type { SystemContext } from '@gameengine/runtime';
-import { CameraFeedback, CameraFollowState } from '../schema.gen.ts';
+import { CameraFeedback, CameraFollowState, GameFeelComparison } from '../schema.gen.ts';
 
 const BUMP_DECAY = 0.72;
 const SETTLE_EPSILON = 0.001;
@@ -22,19 +22,19 @@ export const DriveCameraFeedback = defineSystem({
   stage: 'LateUpdate',
   after: ['FollowPlayerCamera'],
   query: query(read(Camera), write(VisualOffset)),
-  resources: [write(CameraFeedback), read(CameraFollowState), read(RenderTime)],
-  runIf: { any: [{ changed: CameraFollowState }, { changed: CameraFeedback }, { resource: CameraFeedback, field: 'active', value: true }] },
+  resources: [write(CameraFeedback), read(CameraFollowState), read(RenderTime), read(GameFeelComparison)],
+  runIf: { any: [{ changed: GameFeelComparison }, { changed: CameraFollowState }, { changed: CameraFeedback }, { resource: CameraFeedback, field: 'active', value: true }] },
   run(ctx, cameras) {
     const feedback = ctx.get(CameraFeedback);
     const follow = ctx.get(CameraFollowState);
     const dt = Math.min(ctx.get(RenderTime).realDelta, 1 / 15);
-    const shakeTime = Math.max(0, feedback.shakeTime - dt);
+    const shakeTime = Math.max(0, (ctx.is(GameFeelComparison, 'shake', true) ? feedback.shakeTime : 0) - dt);
     const shakeScale = feedback.shakeTime > 0 ? shakeTime / feedback.shakeTime : 0;
     const phase = ctx.get(RenderTime).frame;
     const shakeX = shakeTime > 0 ? Math.sin(phase * 2.399) * feedback.shake * shakeScale : 0;
     const shakeY = shakeTime > 0 ? Math.sin(phase * 3.883) * feedback.shake * shakeScale : 0;
-    const bumpX = Math.abs(feedback.bump[0]) <= SETTLE_EPSILON ? 0 : feedback.bump[0] * BUMP_DECAY;
-    const bumpY = Math.abs(feedback.bump[1]) <= SETTLE_EPSILON ? 0 : feedback.bump[1] * BUMP_DECAY;
+    const bumpX = !ctx.is(GameFeelComparison, 'recoil', true) || Math.abs(feedback.bump[0]) <= SETTLE_EPSILON ? 0 : feedback.bump[0] * BUMP_DECAY;
+    const bumpY = !ctx.is(GameFeelComparison, 'recoil', true) || Math.abs(feedback.bump[1]) <= SETTLE_EPSILON ? 0 : feedback.bump[1] * BUMP_DECAY;
 
     for (const chunk of cameras.chunks()) {
       const offset = chunk.col(VisualOffset);

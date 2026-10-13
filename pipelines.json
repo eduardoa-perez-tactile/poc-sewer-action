@@ -1,6 +1,12 @@
 {
  "compat": [
   {
+   "r": "particles",
+   "additive": false,
+   "samples": 1,
+   "format": 22
+  },
+  {
    "r": "2d",
    "key": {
     "Blit": {
@@ -30,13 +36,22 @@
    }
   },
   {
-   "r": "particles",
-   "additive": false,
-   "samples": 1,
-   "format": 22
+   "r": "2d",
+   "key": {
+    "Text": {
+     "samples": 1,
+     "format": 22
+    }
+   }
   }
  ],
  "desktop": [
+  {
+   "r": "particles",
+   "additive": false,
+   "samples": 4,
+   "format": 40
+  },
   {
    "r": "2d",
    "key": {
@@ -67,13 +82,22 @@
    }
   },
   {
-   "r": "particles",
-   "additive": false,
-   "samples": 4,
-   "format": 40
+   "r": "2d",
+   "key": {
+    "Text": {
+     "samples": 4,
+     "format": 40
+    }
+   }
   }
  ],
  "mobile": [
+  {
+   "r": "particles",
+   "additive": false,
+   "samples": 1,
+   "format": 22
+  },
   {
    "r": "2d",
    "key": {
@@ -104,10 +128,13 @@
    }
   },
   {
-   "r": "particles",
-   "additive": false,
-   "samples": 1,
-   "format": 22
+   "r": "2d",
+   "key": {
+    "Text": {
+     "samples": 1,
+     "format": 22
+    }
+   }
   }
  ]
 }

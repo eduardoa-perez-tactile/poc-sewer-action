@@ -1,0 +1,249 @@
+{
+  "$schemaVersion": 2,
+  "id": "comparison",
+  "resources": {
+    "GameFeelComparison": { "config": "settings/game-feel-bonus.json" },
+    "PlatformCollisionGrid": { "originX": -8, "originY": -4.5, "cellSize": 0.5 },
+    "RoomCameraBounds": { "left": -8, "right": 8, "bottom": -4.5, "top": 4.5 }
+  },
+  "entities": [
+    {
+      "name": "Camera",
+      "id": "camera",
+      "Camera": { "clearColor": "#09131cff" },
+      "CombatVisual": { "kind": "muzzle" },
+      "LocalTransform": {},
+      "ParticleSystem": { "effect": "art/effects/muzzle.vfx.json", "emitting": false, "sortingLayer": "Effects" },
+      "VisualOffset": {}
+    },
+    {
+      "name": "MiddleSewer",
+      "id": "middle-sewer",
+      "CombatVisual": { "kind": "hit" },
+      "LocalTransform": { "position": [0, 0, -2] },
+      "ParallaxLayer": { "factor": [0.32, 0.18] },
+      "ParticleSystem": { "effect": "art/effects/hit.vfx.json", "emitting": false, "sortingLayer": "Effects" },
+      "Sprite": { "image": "art/environment/middle", "size": [46.4, 12], "sortingLayer": "Background", "order": -20 },
+      "VisualOffset": {}
+    },
+    {
+      "name": "FirstSewerRoom",
+      "id": "first-sewer-room",
+      "LocalTransform": { "position": [-8, -4.5, 0] },
+      "Tilemap": {
+        "tileset": "art/environment/tileset",
+        "tileSize": [0.5, 0.5],
+        "columns": 17,
+        "data": "rooms/first-sewer-room.tilemap.json",
+        "sortingLayer": "World"
+      }
+    },
+    {
+      "name": "EncounterSpace",
+      "id": "encounter-space",
+      "LocalTransform": { "position": [1.5, -2.5, 0] },
+      "RoomLandmark": {}
+    },
+    {
+      "name": "WaterEdge",
+      "id": "water-edge",
+      "Bounds2D": { "shape": "Aabb", "size": [16, 1.5], "offset": [-5.5, -0.75], "layer": 16, "mask": 1 },
+      "Hazard": { "kind": "Water", "damage": 5 },
+      "LocalTransform": { "position": [5.5, -3, 0] },
+      "RoomLandmark": { "kind": "WaterEdge" }
+    },
+    {
+      "name": "Exit",
+      "id": "exit",
+      "LocalTransform": { "position": [7, -1.5, 0] },
+      "RoomLandmark": { "kind": "Exit" },
+      "Text2D": {
+        "text": "EXIT  >",
+        "size": 0.34,
+        "color": "#91d8a2ff",
+        "outlineColor": "#07140aff",
+        "outlineWidth": 2,
+        "sortingLayer": "Foreground"
+      }
+    },
+    {
+      "name": "ExitArrowShaft",
+      "id": "exit-arrow-shaft",
+      "LocalTransform": { "position": [6.65, -1.35, 0] },
+      "Shape": { "size": [0.9, 0.12], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "ExitArrowHeadUpper",
+      "id": "exit-arrow-head-upper",
+      "LocalTransform": { "position": [7.05, -1.18, 0], "rotation": [0, 0, -0.382683, 0.92388] },
+      "Shape": { "size": [0.48, 0.12], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "ExitArrowHeadLower",
+      "id": "exit-arrow-head-lower",
+      "LocalTransform": { "position": [7.05, -1.52, 0], "rotation": [0, 0, 0.382683, 0.92388] },
+      "Shape": { "size": [0.48, 0.12], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "Player",
+      "id": "player",
+      "ActorSpawn": { "position": [-5.25, -2.5] },
+      "Alive": {},
+      "Bounds2D": { "shape": "Aabb", "size": [0.7, 1.5], "offset": [0, 0.75], "mask": 24 },
+      "Health": { "current": 5, "maximum": 5 },
+      "HitReaction": { "steps": 10 },
+      "LocalTransform": { "position": [-5.25, -2.5, 0] },
+      "Player": {},
+      "PlayerAnimationPresentation": {},
+      "PlayerControl": {},
+      "PlayerDashState": {},
+      "PlayerGroundContact": {},
+      "PlayerMotion": {},
+      "PlayerRestartState": {},
+      "Sprite": {
+        "image": "art/player/idle/idle1",
+        "size": [1.28, 1.54],
+        "anchor": [0.5, 0],
+        "sortingLayer": "Characters"
+      },
+      "SpriteAnimation": { "frames": "art/player/idle/idle1", "fps": 1 },
+      "WaterContact": {},
+      "Weapon": {}
+    },
+    {
+      "name": "Soldier",
+      "id": "soldier",
+      "ActorSpawn": { "position": [2, -2.5] },
+      "Alive": {},
+      "Bounds2D": { "shape": "Aabb", "size": [0.7, 1.5], "offset": [0, 0.75], "layer": 4, "mask": 2 },
+      "Clip2D": { "clip": "art/soldier/idle.clip2d.json" },
+      "EnemyBrain": { "patrolMinX": 0.5, "patrolMaxX": 4.75 },
+      "EnemyRestartState": {},
+      "Health": { "current": 3, "maximum": 3 },
+      "HitReaction": {},
+      "LocalTransform": { "position": [2, -2.5, 0] },
+      "Sprite": { "image": "art/soldier/idle", "size": [1.28, 1.54], "anchor": [0.5, 0], "sortingLayer": "Characters" }
+    },
+    {
+      "name": "DistantSewerLeft",
+      "id": "distant-sewer-left",
+      "LocalTransform": { "position": [-9.6, 0, -3] },
+      "ParallaxLayer": { "factor": [0.12, 0.08] },
+      "Sprite": { "image": "art/environment/back", "size": [9.6, 12], "sortingLayer": "Background", "order": -30 },
+      "VisualOffset": {}
+    },
+    {
+      "name": "DistantSewerCentre",
+      "id": "distant-sewer-centre",
+      "LocalTransform": { "position": [0, 0, -3] },
+      "ParallaxLayer": { "factor": [0.12, 0.08] },
+      "Sprite": { "image": "art/environment/back", "size": [9.6, 12], "sortingLayer": "Background", "order": -30 },
+      "VisualOffset": {}
+    },
+    {
+      "name": "DistantSewerRight",
+      "id": "distant-sewer-right",
+      "LocalTransform": { "position": [9.6, 0, -3] },
+      "ParallaxLayer": { "factor": [0.12, 0.08] },
+      "Sprite": { "image": "art/environment/back", "size": [9.6, 12], "sortingLayer": "Background", "order": -30 },
+      "VisualOffset": {}
+    },
+    {
+      "name": "BackWaterLeft",
+      "id": "back-water-left",
+      "LocalTransform": { "position": [-6.4, -3.45, -1] },
+      "ParallaxLayer": { "factor": [0.5, 0.32] },
+      "Sprite": {
+        "image": "art/environment/back-water-1",
+        "size": [12.8, 1.2],
+        "sortingLayer": "Background",
+        "order": -10
+      },
+      "SpriteAnimation": {
+        "frames": "art/environment/back-water-1,art/environment/back-water-2,art/environment/back-water-3",
+        "fps": 4,
+        "loop": false
+      },
+      "VisualOffset": {}
+    },
+    {
+      "name": "BackWaterRight",
+      "id": "back-water-right",
+      "LocalTransform": { "position": [6.4, -3.45, -1] },
+      "ParallaxLayer": { "factor": [0.5, 0.32] },
+      "Sprite": {
+        "image": "art/environment/back-water-1",
+        "size": [12.8, 1.2],
+        "sortingLayer": "Background",
+        "order": -10
+      },
+      "SpriteAnimation": {
+        "frames": "art/environment/back-water-1,art/environment/back-water-2,art/environment/back-water-3",
+        "fps": 4,
+        "loop": false
+      },
+      "VisualOffset": {}
+    },
+    {
+      "name": "FrontSewer",
+      "id": "front-sewer",
+      "LocalTransform": { "position": [0, 0, 1] },
+      "ParallaxLayer": { "factor": [0.82, 0.72] },
+      "Sprite": { "image": "art/environment/front", "size": [29.6, 12], "sortingLayer": "Background" },
+      "VisualOffset": {}
+    },
+    {
+      "name": "FrontWaterLeft",
+      "id": "front-water-left",
+      "LocalTransform": { "position": [-6.4, -3.8, 2] },
+      "ParallaxLayer": {},
+      "Sprite": {
+        "image": "art/environment/front-water/front-water1",
+        "size": [12.8, 1.6],
+        "sortingLayer": "World",
+        "order": 10
+      },
+      "SpriteAnimation": {
+        "frames": "art/environment/front-water/front-water1,art/environment/front-water/front-water2,art/environment/front-water/front-water3,art/environment/front-water/front-water4",
+        "fps": 6,
+        "loop": false
+      },
+      "VisualOffset": {}
+    },
+    {
+      "name": "FrontWaterRight",
+      "id": "front-water-right",
+      "LocalTransform": { "position": [6.4, -3.8, 2] },
+      "ParallaxLayer": {},
+      "Sprite": {
+        "image": "art/environment/front-water/front-water1",
+        "size": [12.8, 1.6],
+        "sortingLayer": "World",
+        "order": 10
+      },
+      "SpriteAnimation": {
+        "frames": "art/environment/front-water/front-water1,art/environment/front-water/front-water2,art/environment/front-water/front-water3,art/environment/front-water/front-water4",
+        "fps": 6,
+        "loop": false
+      },
+      "VisualOffset": {}
+    },
+    {
+      "name": "WaterSplash",
+      "id": "water-splash",
+      "CombatVisual": { "kind": "explosion" },
+      "LocalTransform": {},
+      "ParticleSystem": { "effect": "art/effects/explosion.vfx.json", "emitting": false, "sortingLayer": "Effects" },
+      "Sprite": {
+        "image": "art/effects/water-splash/water-splash1",
+        "size": [1.92, 1.28],
+        "anchor": [0.5, 0],
+        "sortingLayer": "Effects",
+        "visible": false
+      },
+      "SpriteAnimation": { "frames": "art/effects/water-splash/water-splash1", "playing": false, "loop": false },
+      "VisualOffset": {},
+      "WaterSplash": {}
+    }
+  ]
+}

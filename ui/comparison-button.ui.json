@@ -1,0 +1,43 @@
+{
+  "$schemaVersion": 1,
+  "guid": "7c5651f6-3878-429b-b102-57229e35e382",
+  "name": "comparison-button",
+  "kind": "widget",
+  "behaviour": "button",
+  "transition": {
+    "type": "instant"
+  },
+  "properties": {
+    "label": {
+      "type": "text",
+      "default": ""
+    }
+  },
+  "root": "root",
+  "nodes": {
+    "root": {
+      "type": "element",
+      "style": {
+        "h": 72,
+        "grow": 1,
+        "bg": "#28434d",
+        "pad": 8,
+        "justify": "center"
+      },
+      "children": [
+        "label"
+      ]
+    },
+    "label": {
+      "type": "label",
+      "text": "{label}",
+      "style": {
+        "h": 40,
+        "fontSize": 30,
+        "fitMin": 20,
+        "color": "#edf5ee",
+        "textAlign": "center"
+      }
+    }
+  }
+}
