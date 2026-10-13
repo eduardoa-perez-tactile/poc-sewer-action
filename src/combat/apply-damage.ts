@@ -1,16 +1,20 @@
-import { defineSystem, query, write } from '@gameengine/runtime';
-import { ActorDied, DamageRequested, Health, HitReacting, HitReaction } from '../schema.gen.ts';
+import { defineSystem, query, read, write } from '@gameengine/runtime';
+import { ActorDied, FinalSoldier, GameState, DamageRequested, Health, HitReacting, HitReaction } from '../schema.gen.ts';
 
 export const ApplyDamage = defineSystem({
   name: 'ApplyDamage',
   after: ['AdvanceProjectiles', 'AdvanceEnemyProjectiles', 'ResolveWaterContact'],
   queries: {
+    finals: query(read(FinalSoldier)),
     health: query(write(Health)),
     reactions: query(write(HitReaction)),
   },
+  resources: [read(GameState)],
   runOn: [DamageRequested],
-  run(ctx, { health, reactions }) {
+  run(ctx, { health, reactions, finals }) {
+    if (ctx.is(GameState, 'phase', 'Completed')) return;
     ctx.events.forEach(DamageRequested, (damage) => {
+      for (const chunk of finals.chunks()) for (let row = 0; row < chunk.length; row++) if (chunk.entity(row) === damage.target && chunk.col(FinalSoldier).active[row] === 0) return;
       for (const chunk of health.chunks()) {
         for (let row = 0; row < chunk.length; row++) {
           if (chunk.entity(row) !== damage.target) continue;

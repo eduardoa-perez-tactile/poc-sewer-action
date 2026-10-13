@@ -128,6 +128,19 @@ export const schemaIr = {
       "package": "SewerAction"
     },
     {
+      "name": "FinalEncounterPhase",
+      "values": [
+        "Waiting",
+        "Guard",
+        "Warning",
+        "Bombardment",
+        "ExitOpen",
+        "Won",
+        "Failed"
+      ],
+      "package": "SewerAction"
+    },
+    {
       "name": "DashDirection",
       "values": [
         "Left",
@@ -1459,6 +1472,73 @@ export const schemaIr = {
       "doc": "Authored encounter membership; bounded actors allocated once during boot."
     },
     {
+      "name": "FinalCue",
+      "kind": "component",
+      "sim": false,
+      "fields": [
+        {
+          "name": "phase",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Static in-world phase lamp; phase 2 is the existing outlet arrow."
+    },
+    {
+      "name": "FinalEncounter",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "phase",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "FinalEncounterPhase",
+          "default": "Waiting"
+        },
+        {
+          "name": "deadlineStep",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Final fight owner. Warning uses an absolute fixed-step deadline; terminal phases are latched."
+    },
+    {
+      "name": "FinalSoldier",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "phase",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "active",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "One preallocated actor per final combat phase; inactive actors cannot take damage."
+    },
+    {
+      "name": "FinalWarning",
+      "kind": "tag",
+      "sim": true,
+      "fields": [],
+      "package": "SewerAction",
+      "doc": "Present only while the final warning deadline needs fixed-step work."
+    },
+    {
       "name": "LevelCollisionIndex",
       "kind": "component",
       "sim": true,
@@ -1524,7 +1604,7 @@ export const schemaIr = {
         }
       ],
       "package": "SewerAction",
-      "doc": "Level anchor owns ordered progress and checkpoint state. No final encounter or win UI."
+      "doc": "Level anchor owns ordered progress and checkpoint state. Route gates and checkpoint state; finished means the final outlet was accepted."
     },
     {
       "name": "TerrainVisual",
@@ -2306,6 +2386,9 @@ export const schemaIr = {
                 },
                 "cooldown": {
                   "type": "integer"
+                },
+                "finalPhase": {
+                  "type": "integer"
                 }
               },
               "required": [
@@ -2319,6 +2402,38 @@ export const schemaIr = {
               ],
               "additionalProperties": false
             }
+          },
+          "finalEncounter": {
+            "type": "object",
+            "properties": {
+              "triggerX": {
+                "type": "number"
+              },
+              "minY": {
+                "type": "number"
+              },
+              "maxY": {
+                "type": "number"
+              },
+              "warningSteps": {
+                "type": "integer"
+              },
+              "cameraX": {
+                "type": "number"
+              },
+              "cameraY": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "triggerX",
+              "minY",
+              "maxY",
+              "warningSteps",
+              "cameraX",
+              "cameraY"
+            ],
+            "additionalProperties": false
           },
           "water": {
             "type": "array",
@@ -2350,6 +2465,7 @@ export const schemaIr = {
           "transition",
           "beats",
           "soldiers",
+          "finalEncounter",
           "water"
         ],
         "additionalProperties": false
@@ -2452,6 +2568,17 @@ export const HazardKind = {
   Contact: 2,
 } as const;
 export type HazardKindName = 'Water' | 'Explosive' | 'Contact';
+
+export const FinalEncounterPhase = {
+  Waiting: 0,
+  Guard: 1,
+  Warning: 2,
+  Bombardment: 3,
+  ExitOpen: 4,
+  Won: 5,
+  Failed: 6,
+} as const;
+export type FinalEncounterPhaseName = 'Waiting' | 'Guard' | 'Warning' | 'Bombardment' | 'ExitOpen' | 'Won' | 'Failed';
 
 export const DashDirection = {
   Left: 0,
@@ -3061,6 +3188,42 @@ export interface EncounterMemberValue {
 /** Authored encounter membership; bounded actors allocated once during boot. (component, sim) */
 export const EncounterMember = typeToken<EncounterMemberViews, EncounterMemberValue>('EncounterMember', 'component', { sig: 'beat:u32:1,activated:bool:1', read: (v: EncounterMemberViews, i: number, o: Record<string, unknown>) => { o.beat = v.beat[i]; o.activated = v.activated[i] !== 0; return o; } });
 
+export interface FinalCueViews {
+  phase: Uint32Array;
+}
+export interface FinalCueValue {
+  phase: number;
+}
+/** Static in-world phase lamp; phase 2 is the existing outlet arrow. (component, presentation-only) */
+export const FinalCue = typeToken<FinalCueViews, FinalCueValue>('FinalCue', 'component', { sig: 'phase:u32:1', read: (v: FinalCueViews, i: number, o: Record<string, unknown>) => { o.phase = v.phase[i]; return o; } });
+
+export interface FinalEncounterViews {
+  phase: Uint8Array;
+  deadlineStep: Uint32Array;
+}
+export interface FinalEncounterValue {
+  phase: FinalEncounterPhaseName | number;
+  deadlineStep: number;
+}
+/** Final fight owner. Warning uses an absolute fixed-step deadline; terminal phases are latched. (component, sim) */
+export const FinalEncounter = typeToken<FinalEncounterViews, FinalEncounterValue>('FinalEncounter', 'component', { sig: 'phase:enum:1,deadlineStep:u32:1', read: (v: FinalEncounterViews, i: number, o: Record<string, unknown>) => { o.phase = $r.enm('FinalEncounterPhase', v.phase[i]!); o.deadlineStep = v.deadlineStep[i]; return o; } });
+
+export interface FinalSoldierViews {
+  phase: Uint32Array;
+  active: Uint8Array;
+}
+export interface FinalSoldierValue {
+  phase: number;
+  active: boolean;
+}
+/** One preallocated actor per final combat phase; inactive actors cannot take damage. (component, sim) */
+export const FinalSoldier = typeToken<FinalSoldierViews, FinalSoldierValue>('FinalSoldier', 'component', { sig: 'phase:u32:1,active:bool:1', read: (v: FinalSoldierViews, i: number, o: Record<string, unknown>) => { o.phase = v.phase[i]; o.active = v.active[i] !== 0; return o; } });
+
+export type FinalWarningViews = Record<string, never>;
+export type FinalWarningValue = Record<string, never>;
+/** Present only while the final warning deadline needs fixed-step work. (tag, sim) */
+export const FinalWarning = typeToken<FinalWarningViews, FinalWarningValue>('FinalWarning', 'tag');
+
 export interface LevelCollisionIndexViews {
   words: Uint32Array;
 }
@@ -3088,7 +3251,7 @@ export interface LevelProgressValue {
   finished: boolean;
   activationPending: boolean;
 }
-/** Level anchor owns ordered progress and checkpoint state. No final encounter or win UI. (component, sim) */
+/** Level anchor owns ordered progress and checkpoint state. Route gates and checkpoint state; finished means the final outlet was accepted. (component, sim) */
 export const LevelProgress = typeToken<LevelProgressViews, LevelProgressValue>('LevelProgress', 'component', { sig: 'data:asset:1,built:bool:1,beat:u32:1,checkpoint:u32:1,cleared:u32:1,finished:bool:1,activationPending:bool:1', read: (v: LevelProgressViews, i: number, o: Record<string, unknown>) => { o.data = $r.asset(v.data[i]!); o.built = v.built[i] !== 0; o.beat = v.beat[i]; o.checkpoint = v.checkpoint[i]; o.cleared = v.cleared[i]; o.finished = v.finished[i] !== 0; o.activationPending = v.activationPending[i] !== 0; return o; } });
 
 export interface TerrainVisualViews {
@@ -3448,7 +3611,16 @@ export type SewerLevelDefData = {
     patrolMaxX: number;
     health: number;
     cooldown: number;
+    finalPhase?: number;
   }[];
+  finalEncounter: {
+    triggerX: number;
+    minY: number;
+    maxY: number;
+    warningSteps: number;
+    cameraX: number;
+    cameraY: number;
+  };
   water: {
     x: number;
     width: number;

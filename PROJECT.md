@@ -113,3 +113,31 @@ blocker while development and verification use the desktop host.
   created during play and zero GC pauses over 4 ms. Preserve this tight cap as content grows.
 - Authoring, inspection and exact measurement limits: `docs/level/ISSUE-24.md`. Real phone GPU,
   thermals/cold loading/frame skipping remain unmeasured; Hermes #6 and web packaging remain separate.
+
+## Final outlet encounter (issue #25)
+
+- Two existing soldiers implement Guard → 45-step Warning → Bombardment → ExitOpen. The
+  bomber opens with the shipped throw clip and ballistic bomb pool. Both actors allocate at boot;
+  inactive phases are hidden/protected. Content and tuning live in `rooms/complete-sewer.json`.
+- `FinalEncounter` owns the phase/deadline. Both clears plus a living player at the outlet latch
+  Won / `LevelProgress.finished` / `GameState.Completed`; `GameplayPresentation.phase` is the
+  minimal completion hook. Title/completion/pause/new-run UI remain issue #27. Terminal victory
+  ignores stale restart/damage/death inputs and holds a finite player pose.
+- Death from any active phase, including simultaneous final kill/arrival, enters Failed. Confirm
+  restarts the whole final fight at checkpoint 47 with cleared earlier beats retained. Retreat is
+  allowed; the camera follows outside the arena instead of losing the player offscreen.
+- The complete 706-step control replay observes the bomb opener and wins through every ordered
+  phase. Focused tests cover both paths, exact deadlines/duplicates, content/support, pools,
+  framing/retreat, terminal idle playback and presentation/hash separation. All 97 prior first-room
+  logic traces, seven earlier replay files, goldens and budgets remain intact. Full V8 prepush
+  passes 124 tests and cooked check. Fresh pipeline union is unchanged; zero play-time creation.
+- Final bomb/exit presentation omits decorative muzzle particles to preserve the existing 10-draw
+  cap while retaining shot audio, projectile sprites and impacts/explosions. Peak remains 10/10;
+  assets remain 2.77 MiB/192 MiB, with no pool growth/misses or GC pauses over 4 ms.
+- Quiet release desktop/mobile-tier medians: sim step p95 2.904 → 2.451 ms, presentation p95
+  1.704 → 1.430 ms, RSS 89.44 → 90.91 MiB, heap 9.95 → 10.68 MiB and readiness proxy
+  650.48 → 652.80 ms. Different route lengths mean no speedup claim. Architecture has no
+  must/should findings; performance has no blocker and notes the tight draw headroom.
+- Inspection/tuning and measurement limits: `docs/level/ISSUE-25.md`. Real phone GPU/thermal,
+  cold loading and idle skipping remain unmeasured; Hermes #6, browser packaging and the
+  missing Android package template remain separate limits.

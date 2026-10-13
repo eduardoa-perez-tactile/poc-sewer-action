@@ -1,5 +1,5 @@
-import { defineSystem, query, read, RenderTime, ViewInfo, write } from '@gameengine/runtime';
-import { LevelProgress, RestartRequested, CameraFollowState, GameplayPresentation, RoomCameraBounds } from '../schema.gen.ts';
+import { defineSystem, loadData, query, read, RenderTime, ViewInfo, write } from '@gameengine/runtime';
+import { FinalEncounter, SewerLevelDef, LevelProgress, RestartRequested, CameraFollowState, GameplayPresentation, RoomCameraBounds } from '../schema.gen.ts';
 
 export const CAMERA_VIEW_HEIGHT = 6.75;
 export const CAMERA_DESIGN_ASPECT = 16 / 9;
@@ -47,10 +47,10 @@ export const FollowPlayerCamera = defineSystem({
   name: 'FollowPlayerCamera',
   stage: 'LateUpdate',
   after: ['BuildGameplayPresentation'],
-  query: query(read(LevelProgress)), events: [RestartRequested],
+  queries: { levels: query(read(LevelProgress)), finals: query(read(FinalEncounter), read(LevelProgress)) }, events: [RestartRequested],
   resources: [read(GameplayPresentation), read(RenderTime), read(RoomCameraBounds), read(ViewInfo), write(CameraFollowState)],
-  runIf: { any: [{ event: RestartRequested }, { changed: GameplayPresentation }, { changed: ViewInfo }, { changed: RoomCameraBounds }, { resource: CameraFollowState, field: 'settled', value: false }] },
-  run(ctx, levels) {
+  runIf: { any: [{ event: RestartRequested }, { changed: [GameplayPresentation, FinalEncounter] }, { changed: ViewInfo }, { changed: RoomCameraBounds }, { resource: CameraFollowState, field: 'settled', value: false }] },
+  run(ctx, { levels, finals }) {
     const state = ctx.get(CameraFollowState);
     const snapshot = ctx.get(GameplayPresentation);
     const view = ctx.get(ViewInfo);
@@ -70,6 +70,13 @@ export const FollowPlayerCamera = defineSystem({
     if (framedY < targetY - VERTICAL_DEAD_ZONE) targetY = framedY + VERTICAL_DEAD_ZONE;
     if (framedY > targetY + VERTICAL_DEAD_ZONE) targetY = framedY - VERTICAL_DEAD_ZONE;
 
+    for (const chunk of finals.chunks()) for (let row = 0; row < chunk.length; row++) {
+      if (chunk.is(FinalEncounter, row, 'phase', 'Waiting')) continue;
+      const tuning = loadData(SewerLevelDef, chunk.get(LevelProgress, row).data!).finalEncounter;
+      const x = snapshot.playerPosition[0], y = snapshot.playerPosition[1];
+      if (x < tuning.triggerX - 0.5 || x > tuning.cameraX + 4.5 || y < tuning.minY || y > tuning.maxY) continue;
+      targetX = tuning.cameraX; targetY = tuning.cameraY;
+    }
     const roomCenterX = (room.left + room.right) / 2;
     const roomCenterY = (room.bottom + room.top) / 2;
     targetX = bounds.minX > bounds.maxX ? roomCenterX : clamp(targetX, bounds.minX, bounds.maxX);

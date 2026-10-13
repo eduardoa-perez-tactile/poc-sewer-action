@@ -22,7 +22,7 @@ export const DrivePlayerAnimation = defineSystem({
   ),
   resources: [read(GameState)],
   runIf: { any: [{ changed: PlayerControl }, { changed: PlayerGroundContact }, { changed: PlayerMotion }, { changed: Health }, { changed: HitReaction }, { changed: GameState }] },
-  run(_ctx, players) {
+  run(ctx, players) {
     for (const chunk of players.chunks()) {
       const control = chunk.col(PlayerControl);
       const contact = chunk.col(PlayerGroundContact);
@@ -36,7 +36,10 @@ export const DrivePlayerAnimation = defineSystem({
         const moving = Math.abs(motion.horizontalVelocity[row]!) > 0.1;
         let clip = 'art/player/idle.clip2d.json';
 
-        if (health.current[row] === 0 || reaction.stepsRemaining[row]! > 0) {
+        const completed = ctx.is(GameState, 'phase', 'Completed');
+        if (completed) {
+          clip = 'art/player/idle.clip2d.json';
+        } else if (health.current[row] === 0 || reaction.stepsRemaining[row]! > 0) {
           clip = 'art/player/hurt.clip2d.json';
         } else if (!grounded) {
           if (motion.verticalVelocity[row]! > 0.05) {
@@ -64,6 +67,7 @@ export const DrivePlayerAnimation = defineSystem({
             events: info.events.map((event) => `${event.frame}:${event.name}`).join(','),
           });
         }
+        if (completed) chunk.setField(SpriteAnimation, row, 'loop', false);
         sprite.flipX[row] = chunk.is(PlayerMotion, row, 'facing', 'Left') ? 1 : 0;
       }
     }
