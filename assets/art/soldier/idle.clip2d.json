@@ -1,0 +1,5 @@
+{
+  "$schemaVersion": 1,
+  "loop": "once",
+  "frames": [{ "sprite": "art/soldier/idle", "duration": 0.2 }]
+}

@@ -1,0 +1,14 @@
+{
+  "$schemaVersion": 2,
+  "id": "enemy-bomb",
+  "entities": [
+    {
+      "name": "EnemyBomb",
+      "id": "root",
+      "Bounds2D": { "radius": 0.18, "layer": 8, "mask": 1 },
+      "EnemyProjectile": { "kind": "Bomb" },
+      "LocalTransform": {},
+      "Sprite": { "image": "art/effects/bomb", "size": [0.38, 0.38], "sortingLayer": "Effects" }
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "$schemaVersion": 1,
+  "fps": 10,
+  "loop": "once",
+  "frames": ["art/soldier/shoot/shoot-export1", "art/soldier/shoot/shoot-export2"],
+  "events": [{ "frame": 1, "name": "fire-bullet" }],
+  "keys": { "tint": [{ "frame": 0, "value": "#ffd36aff", "ease": "step" }, { "frame": 1, "value": "#ffffffff", "ease": "step" }] }
+}

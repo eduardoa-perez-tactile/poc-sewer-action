@@ -1,0 +1,8 @@
+{
+  "$schemaVersion": 1,
+  "fps": 12,
+  "loop": "once",
+  "frames": "art/soldier/throw/throw-export{1..6}",
+  "events": [{ "frame": 3, "name": "throw-bomb" }],
+  "keys": { "tint": [{ "frame": 0, "value": "#ffb35cff", "ease": "step" }, { "frame": 3, "value": "#ffffffff", "ease": "step" }] }
+}

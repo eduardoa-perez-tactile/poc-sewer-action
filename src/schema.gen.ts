@@ -9,6 +9,14 @@ export const schemaIr = {
   "package": "SewerAction",
   "enums": [
     {
+      "name": "EnemyProjectileKind",
+      "values": [
+        "Bullet",
+        "Bomb"
+      ],
+      "package": "SewerAction"
+    },
+    {
       "name": "EnemyState",
       "values": [
         "Idle",
@@ -25,6 +33,16 @@ export const schemaIr = {
       "values": [
         "Left",
         "Right"
+      ],
+      "package": "SewerAction"
+    },
+    {
+      "name": "EnemyAttackKind",
+      "values": [
+        "None",
+        "Shoot",
+        "CrouchShoot",
+        "Bomb"
       ],
       "package": "SewerAction"
     },
@@ -148,6 +166,91 @@ export const schemaIr = {
       ],
       "package": "SewerAction",
       "doc": "Combat and hazards request damage; the health system validates and applies it."
+    },
+    {
+      "name": "EnemyAttackPoolState",
+      "kind": "resource",
+      "sim": true,
+      "fields": [
+        {
+          "name": "warmed",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "One-shot enemy bullet and bomb pool bootstrap state."
+    },
+    {
+      "name": "EnemyProjectile",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "kind",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "EnemyProjectileKind",
+          "default": "Bullet"
+        },
+        {
+          "name": "velocityX",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0
+        },
+        {
+          "name": "velocityY",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0
+        },
+        {
+          "name": "gravity",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "min": 0
+        },
+        {
+          "name": "distanceRemaining",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "min": 0
+        },
+        {
+          "name": "lifetimeStepsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        },
+        {
+          "name": "damage",
+          "kind": "u16",
+          "scalar": "u16",
+          "lanes": 1,
+          "default": 1,
+          "min": 1
+        },
+        {
+          "name": "owner",
+          "kind": "entity",
+          "scalar": "u32",
+          "lanes": 2,
+          "optional": true
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Pooled fixed-step enemy bullet or ballistic bomb state."
     },
     {
       "name": "Health",
@@ -436,10 +539,57 @@ export const schemaIr = {
           "scalar": "f32",
           "lanes": 1,
           "default": 0
+        },
+        {
+          "name": "attackKind",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "EnemyAttackKind",
+          "default": "None"
+        },
+        {
+          "name": "attackSequence",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Round-robin attack selection; deterministic and replayed."
+        },
+        {
+          "name": "attackRange",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 4.5,
+          "min": 0
+        },
+        {
+          "name": "attackCooldownSteps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 48,
+          "min": 1
+        },
+        {
+          "name": "attackCooldownStepsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        },
+        {
+          "name": "attackTelegraphed",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "True from attack start until its clip event releases the projectile."
         }
       ],
       "package": "SewerAction",
-      "doc": "Deterministic soldier configuration, decisions and chase memory."
+      "doc": "Deterministic soldier configuration, decisions, chase memory and ranged attack cadence."
     },
     {
       "name": "CameraFeedback",
@@ -1443,6 +1593,12 @@ export const schemaIr = {
 } as const;
 registerSchema(schemaIr);
 
+export const EnemyProjectileKind = {
+  Bullet: 0,
+  Bomb: 1,
+} as const;
+export type EnemyProjectileKindName = 'Bullet' | 'Bomb';
+
 export const EnemyState = {
   Idle: 0,
   Patrol: 1,
@@ -1458,6 +1614,14 @@ export const EnemyFacing = {
   Right: 1,
 } as const;
 export type EnemyFacingName = 'Left' | 'Right';
+
+export const EnemyAttackKind = {
+  None: 0,
+  Shoot: 1,
+  CrouchShoot: 2,
+  Bomb: 3,
+} as const;
+export type EnemyAttackKindName = 'None' | 'Shoot' | 'CrouchShoot' | 'Bomb';
 
 export const GamePhase = {
   Booting: 0,
@@ -1535,6 +1699,38 @@ export interface DamageRequestedValue {
 }
 /** Combat and hazards request damage; the health system validates and applies it. (event, sim) */
 export const DamageRequested = typeToken<DamageRequestedViews, DamageRequestedValue>('DamageRequested', 'event', { sig: 'source:entity:2,target:entity:2,amount:u16:1', read: (v: DamageRequestedViews, i: number, o: Record<string, unknown>) => { o.source = $r.ent(v.source, i); o.target = $r.ent(v.target, i); o.amount = v.amount[i]; return o; } });
+
+export interface EnemyAttackPoolStateViews {
+  warmed: Uint8Array;
+}
+export interface EnemyAttackPoolStateValue {
+  warmed: boolean;
+}
+/** One-shot enemy bullet and bomb pool bootstrap state. (resource, sim) */
+export const EnemyAttackPoolState = typeToken<EnemyAttackPoolStateViews, EnemyAttackPoolStateValue>('EnemyAttackPoolState', 'resource', { sig: 'warmed:bool:1', read: (v: EnemyAttackPoolStateViews, i: number, o: Record<string, unknown>) => { o.warmed = v.warmed[i] !== 0; return o; } });
+
+export interface EnemyProjectileViews {
+  kind: Uint8Array;
+  velocityX: Float32Array;
+  velocityY: Float32Array;
+  gravity: Float32Array;
+  distanceRemaining: Float32Array;
+  lifetimeStepsRemaining: Uint32Array;
+  damage: Uint16Array;
+  owner: Uint32Array;
+}
+export interface EnemyProjectileValue {
+  kind: EnemyProjectileKindName | number;
+  velocityX: number;
+  velocityY: number;
+  gravity: number;
+  distanceRemaining: number;
+  lifetimeStepsRemaining: number;
+  damage: number;
+  owner: EntityId;
+}
+/** Pooled fixed-step enemy bullet or ballistic bomb state. (component, sim) */
+export const EnemyProjectile = typeToken<EnemyProjectileViews, EnemyProjectileValue>('EnemyProjectile', 'component', { sig: 'kind:enum:1,velocityX:f32:1,velocityY:f32:1,gravity:f32:1,distanceRemaining:f32:1,lifetimeStepsRemaining:u32:1,damage:u16:1,owner:entity:2', read: (v: EnemyProjectileViews, i: number, o: Record<string, unknown>) => { o.kind = $r.enm('EnemyProjectileKind', v.kind[i]!); o.velocityX = v.velocityX[i]; o.velocityY = v.velocityY[i]; o.gravity = v.gravity[i]; o.distanceRemaining = v.distanceRemaining[i]; o.lifetimeStepsRemaining = v.lifetimeStepsRemaining[i]; o.damage = v.damage[i]; o.owner = $r.ent(v.owner, i); return o; } });
 
 export interface HealthViews {
   current: Uint16Array;
@@ -1626,6 +1822,14 @@ export interface EnemyBrainViews {
   targetMemoryStepsRemaining: Uint32Array;
   targetDetected: Uint8Array;
   lastKnownTargetX: Float32Array;
+  attackKind: Uint8Array;
+  /** Round-robin attack selection; deterministic and replayed. */
+  attackSequence: Uint32Array;
+  attackRange: Float32Array;
+  attackCooldownSteps: Uint32Array;
+  attackCooldownStepsRemaining: Uint32Array;
+  /** True from attack start until its clip event releases the projectile. */
+  attackTelegraphed: Uint8Array;
 }
 export interface EnemyBrainValue {
   state: EnemyStateName | number;
@@ -1647,9 +1851,17 @@ export interface EnemyBrainValue {
   targetMemoryStepsRemaining: number;
   targetDetected: boolean;
   lastKnownTargetX: number;
+  attackKind: EnemyAttackKindName | number;
+  /** Round-robin attack selection; deterministic and replayed. */
+  attackSequence: number;
+  attackRange: number;
+  attackCooldownSteps: number;
+  attackCooldownStepsRemaining: number;
+  /** True from attack start until its clip event releases the projectile. */
+  attackTelegraphed: boolean;
 }
-/** Deterministic soldier configuration, decisions and chase memory. (component, sim) */
-export const EnemyBrain = typeToken<EnemyBrainViews, EnemyBrainValue>('EnemyBrain', 'component', { sig: 'state:enum:1,facing:enum:1,patrolMinX:f32:1,patrolMaxX:f32:1,patrolSpeed:f32:1,chaseSpeed:f32:1,detectionRangeX:f32:1,detectionRangeY:f32:1,stopDistance:f32:1,collisionHalfWidth:f32:1,edgeProbeDistance:f32:1,turnPauseSteps:u32:1,turnPauseStepsRemaining:u32:1,targetMemorySteps:u32:1,targetMemoryStepsRemaining:u32:1,targetDetected:bool:1,lastKnownTargetX:f32:1', read: (v: EnemyBrainViews, i: number, o: Record<string, unknown>) => { o.state = $r.enm('EnemyState', v.state[i]!); o.facing = $r.enm('EnemyFacing', v.facing[i]!); o.patrolMinX = v.patrolMinX[i]; o.patrolMaxX = v.patrolMaxX[i]; o.patrolSpeed = v.patrolSpeed[i]; o.chaseSpeed = v.chaseSpeed[i]; o.detectionRangeX = v.detectionRangeX[i]; o.detectionRangeY = v.detectionRangeY[i]; o.stopDistance = v.stopDistance[i]; o.collisionHalfWidth = v.collisionHalfWidth[i]; o.edgeProbeDistance = v.edgeProbeDistance[i]; o.turnPauseSteps = v.turnPauseSteps[i]; o.turnPauseStepsRemaining = v.turnPauseStepsRemaining[i]; o.targetMemorySteps = v.targetMemorySteps[i]; o.targetMemoryStepsRemaining = v.targetMemoryStepsRemaining[i]; o.targetDetected = v.targetDetected[i] !== 0; o.lastKnownTargetX = v.lastKnownTargetX[i]; return o; } });
+/** Deterministic soldier configuration, decisions, chase memory and ranged attack cadence. (component, sim) */
+export const EnemyBrain = typeToken<EnemyBrainViews, EnemyBrainValue>('EnemyBrain', 'component', { sig: 'state:enum:1,facing:enum:1,patrolMinX:f32:1,patrolMaxX:f32:1,patrolSpeed:f32:1,chaseSpeed:f32:1,detectionRangeX:f32:1,detectionRangeY:f32:1,stopDistance:f32:1,collisionHalfWidth:f32:1,edgeProbeDistance:f32:1,turnPauseSteps:u32:1,turnPauseStepsRemaining:u32:1,targetMemorySteps:u32:1,targetMemoryStepsRemaining:u32:1,targetDetected:bool:1,lastKnownTargetX:f32:1,attackKind:enum:1,attackSequence:u32:1,attackRange:f32:1,attackCooldownSteps:u32:1,attackCooldownStepsRemaining:u32:1,attackTelegraphed:bool:1', read: (v: EnemyBrainViews, i: number, o: Record<string, unknown>) => { o.state = $r.enm('EnemyState', v.state[i]!); o.facing = $r.enm('EnemyFacing', v.facing[i]!); o.patrolMinX = v.patrolMinX[i]; o.patrolMaxX = v.patrolMaxX[i]; o.patrolSpeed = v.patrolSpeed[i]; o.chaseSpeed = v.chaseSpeed[i]; o.detectionRangeX = v.detectionRangeX[i]; o.detectionRangeY = v.detectionRangeY[i]; o.stopDistance = v.stopDistance[i]; o.collisionHalfWidth = v.collisionHalfWidth[i]; o.edgeProbeDistance = v.edgeProbeDistance[i]; o.turnPauseSteps = v.turnPauseSteps[i]; o.turnPauseStepsRemaining = v.turnPauseStepsRemaining[i]; o.targetMemorySteps = v.targetMemorySteps[i]; o.targetMemoryStepsRemaining = v.targetMemoryStepsRemaining[i]; o.targetDetected = v.targetDetected[i] !== 0; o.lastKnownTargetX = v.lastKnownTargetX[i]; o.attackKind = $r.enm('EnemyAttackKind', v.attackKind[i]!); o.attackSequence = v.attackSequence[i]; o.attackRange = v.attackRange[i]; o.attackCooldownSteps = v.attackCooldownSteps[i]; o.attackCooldownStepsRemaining = v.attackCooldownStepsRemaining[i]; o.attackTelegraphed = v.attackTelegraphed[i] !== 0; return o; } });
 
 export interface CameraFeedbackViews {
   /** Whether transient feedback still needs presentation frames. */
