@@ -1,0 +1,6 @@
+{
+  "$schemaVersion": 1,
+  "fps": 10,
+  "loop": "loop",
+  "frames": "art/soldier/run/run-export{1..6}"
+}

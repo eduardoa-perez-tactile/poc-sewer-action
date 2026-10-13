@@ -143,6 +143,150 @@ export const schemaIr = {
   ],
   "types": [
     {
+      "name": "CombatEffect",
+      "kind": "event",
+      "sim": false,
+      "fields": [
+        {
+          "name": "kind",
+          "kind": "string",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "position",
+          "kind": "vec2",
+          "scalar": "f32",
+          "lanes": 2
+        },
+        {
+          "name": "step",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Write-only feedback from accepted projectile releases and impacts; never consumed by gameplay."
+    },
+    {
+      "name": "CombatVisual",
+      "kind": "component",
+      "sim": false,
+      "fields": [
+        {
+          "name": "kind",
+          "kind": "string",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "remaining",
+          "kind": "array",
+          "scalar": "f32",
+          "lanes": 4
+        },
+        {
+          "name": "bursts",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Fixed presentation effect slot, hidden after its authored one-shot duration."
+    },
+    {
+      "name": "CombatVisualState",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "active",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "lastStep",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Run gate and per-step feedback deduplication."
+    },
+    {
+      "name": "SoldierVisual",
+      "kind": "component",
+      "sim": false,
+      "fields": [
+        {
+          "name": "actor",
+          "kind": "entity",
+          "scalar": "u32",
+          "lanes": 2
+        },
+        {
+          "name": "clip",
+          "kind": "asset",
+          "scalar": "u32",
+          "lanes": 1,
+          "assetType": "clip2d",
+          "default": "art/soldier/idle.clip2d.json"
+        },
+        {
+          "name": "previousPosition",
+          "kind": "vec2",
+          "scalar": "f32",
+          "lanes": 2
+        },
+        {
+          "name": "initialized",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "time",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0
+        },
+        {
+          "name": "frame",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Presentation proxy; the actor retains the authoritative attack Clip2D clock."
+    },
+    {
+      "name": "SoldierVisualState",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "active",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Stops the animation adapter between movement, combat and settling bursts."
+    },
+    {
       "name": "ActorDied",
       "kind": "event",
       "sim": true,
@@ -2034,6 +2178,71 @@ export const PlayerRestartFacing = {
   Right: 1,
 } as const;
 export type PlayerRestartFacingName = 'Left' | 'Right';
+
+export interface CombatEffectViews {
+  kind: Uint32Array;
+  position: Float32Array;
+  step: Uint32Array;
+}
+export interface CombatEffectValue {
+  kind: string;
+  position: [number, number];
+  step: number;
+}
+/** Write-only feedback from accepted projectile releases and impacts; never consumed by gameplay. (event, presentation-only) */
+export const CombatEffect = typeToken<CombatEffectViews, CombatEffectValue>('CombatEffect', 'event', { sig: 'kind:string:1,position:vec2:2,step:u32:1', read: (v: CombatEffectViews, i: number, o: Record<string, unknown>) => { o.kind = $r.str(v.kind[i]!); o.position = $r.lanes(v.position, i, 2, o.position); o.step = v.step[i]; return o; } });
+
+export interface CombatVisualViews {
+  kind: Uint32Array;
+  remaining: Float32Array;
+  bursts: Uint32Array;
+}
+export interface CombatVisualValue {
+  kind: string;
+  remaining: number[];
+  bursts: number;
+}
+/** Fixed presentation effect slot, hidden after its authored one-shot duration. (component, presentation-only) */
+export const CombatVisual = typeToken<CombatVisualViews, CombatVisualValue>('CombatVisual', 'component', { sig: 'kind:string:1,remaining:array:4,bursts:u32:1', read: (v: CombatVisualViews, i: number, o: Record<string, unknown>) => { o.kind = $r.str(v.kind[i]!); o.remaining = $r.lanes(v.remaining, i, 4, o.remaining); o.bursts = v.bursts[i]; return o; } });
+
+export interface CombatVisualStateViews {
+  active: Uint8Array;
+  lastStep: Uint32Array;
+}
+export interface CombatVisualStateValue {
+  active: boolean;
+  lastStep: number;
+}
+/** Run gate and per-step feedback deduplication. (resource, presentation-only) */
+export const CombatVisualState = typeToken<CombatVisualStateViews, CombatVisualStateValue>('CombatVisualState', 'resource', { sig: 'active:bool:1,lastStep:u32:1', read: (v: CombatVisualStateViews, i: number, o: Record<string, unknown>) => { o.active = v.active[i] !== 0; o.lastStep = v.lastStep[i]; return o; } });
+
+export interface SoldierVisualViews {
+  actor: Uint32Array;
+  clip: Uint32Array;
+  previousPosition: Float32Array;
+  initialized: Uint8Array;
+  time: Float32Array;
+  frame: Uint32Array;
+}
+export interface SoldierVisualValue {
+  actor: EntityId;
+  clip: string | null;
+  previousPosition: [number, number];
+  initialized: boolean;
+  time: number;
+  frame: number;
+}
+/** Presentation proxy; the actor retains the authoritative attack Clip2D clock. (component, presentation-only) */
+export const SoldierVisual = typeToken<SoldierVisualViews, SoldierVisualValue>('SoldierVisual', 'component', { sig: 'actor:entity:2,clip:asset:1,previousPosition:vec2:2,initialized:bool:1,time:f32:1,frame:u32:1', read: (v: SoldierVisualViews, i: number, o: Record<string, unknown>) => { o.actor = $r.ent(v.actor, i); o.clip = $r.asset(v.clip[i]!); o.previousPosition = $r.lanes(v.previousPosition, i, 2, o.previousPosition); o.initialized = v.initialized[i] !== 0; o.time = v.time[i]; o.frame = v.frame[i]; return o; } });
+
+export interface SoldierVisualStateViews {
+  active: Uint8Array;
+}
+export interface SoldierVisualStateValue {
+  active: boolean;
+}
+/** Stops the animation adapter between movement, combat and settling bursts. (resource, presentation-only) */
+export const SoldierVisualState = typeToken<SoldierVisualStateViews, SoldierVisualStateValue>('SoldierVisualState', 'resource', { sig: 'active:bool:1', read: (v: SoldierVisualStateViews, i: number, o: Record<string, unknown>) => { o.active = v.active[i] !== 0; return o; } });
 
 export interface ActorDiedViews {
   actor: Uint32Array;

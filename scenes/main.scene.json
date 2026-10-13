@@ -10,14 +10,18 @@
       "name": "Camera",
       "id": "camera",
       "Camera": { "clearColor": "#09131cff" },
+      "CombatVisual": { "kind": "muzzle" },
       "LocalTransform": {},
+      "ParticleSystem": { "effect": "art/effects/muzzle.vfx.json", "emitting": false, "sortingLayer": "Effects" },
       "VisualOffset": {}
     },
     {
       "name": "MiddleSewer",
       "id": "middle-sewer",
+      "CombatVisual": { "kind": "hit" },
       "LocalTransform": { "position": [0, 0, -2] },
       "ParallaxLayer": { "factor": [0.32, 0.18] },
+      "ParticleSystem": { "effect": "art/effects/hit.vfx.json", "emitting": false, "sortingLayer": "Effects" },
       "Sprite": { "image": "art/environment/middle", "size": [46.4, 12], "sortingLayer": "Background", "order": -20 },
       "VisualOffset": {}
     },
@@ -226,7 +230,9 @@
     {
       "name": "WaterSplash",
       "id": "water-splash",
+      "CombatVisual": { "kind": "explosion" },
       "LocalTransform": {},
+      "ParticleSystem": { "effect": "art/effects/explosion.vfx.json", "emitting": false, "sortingLayer": "Effects" },
       "Sprite": {
         "image": "art/effects/water-splash/water-splash1",
         "size": [1.92, 1.28],

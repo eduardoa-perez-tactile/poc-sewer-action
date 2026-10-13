@@ -57,3 +57,21 @@ blocker while development and verification use the desktop host.
 - Existing replay inputs and golden pixels were preserved; replay hashes/checkpoints and pinned test hashes were updated for the authored simulation schema/state. Water adds a recorded movement/death/restart replay, a single reviewed splash golden and a structural budget.
 - Architecture review: no remaining must/should findings. Performance review at one player/one water volume: water replay peaks at 6/7 draws, zero pipelines created during play and zero GC pauses over 4 ms; preserve batching as content grows. Release desktop V8 mobile-tier sample: step p95 0.313 ms, water marker 0.0092 ms, inactive splash 0 ms, RSS about 70.2 MiB and heap about 3.5 MiB. These are desktop relative measurements; real GPU/thermal/phone timings remain unmeasured.
 - V8 and phone-low residency/render coverage are supported. Hermes parity remains blocked by open issue #6 (missing Hermes host). Browser packaging remains separately unavailable in the engine. Android package-size dry-run is unavailable because the installed engine lacks its platform template; Android asset cooking succeeded.
+
+## Soldier and combat presentation (issue #22)
+
+- All 19 supplied soldier master frames have clips; the sole hurt pose is intentionally reused
+  for a 10-step visual death settle, and both supplied hit cels for a larger amber explosion.
+  Source contacts, tuning instructions and review are in `docs/animation/`.
+- The one-soldier slice uses its existing Encounter marker as a presentation proxy. Attack
+  `Clip2D` state, frame events and projectile release steps 6/8/15 stay authoritative and unchanged.
+  Three stopped effect hosts reuse scene entities and cap bursts at 2 muzzle / 4 hit / 2 explosion.
+  No new simulation entity/transform is needed; all 79 original hash traces are identical, with
+  existing replays, goldens, pools and splash audio preserved.
+- Before expanding soldier count, author associated presentation anchors and actor-specific
+  lookup/dirty work. Current architecture review has no must/should findings; performance review
+  has no blocking findings. New combat peaks at 7/8 draws, zero play-time pipeline creations and
+  zero GC pauses over 4 ms. Desktop release V8 active replay step p95 is 2.102 ms, presentation
+  p95 1.183 ms, RSS 86.1 MiB, heap 9.36 MiB; phone-low cooked residency is 2.54 MiB. Real phone
+  GPU/thermal/idle-skipping measurements remain outstanding; Hermes #6 and web packaging remain
+  separate blockers.

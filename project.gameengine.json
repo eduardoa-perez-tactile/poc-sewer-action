@@ -17,7 +17,7 @@
   "ui": { "referenceResolution": [1920, 1080], "orientation": "landscape" },
   "assets": {
     "groups": {
-      "boot": { "include": ["assets/art/start-screen.png", "assets/art/effects/water-splash.clip2d.json", "assets/art/effects/water-splash/**", "assets/audio/sfx/water-splash.wav", "prefabs/player-projectile.prefab.json", "prefabs/enemy-bullet.prefab.json", "prefabs/enemy-bomb.prefab.json"] },
+      "boot": { "include": ["assets/art/start-screen.png", "assets/art/effects/water-splash.clip2d.json", "assets/art/effects/water-splash/**", "assets/audio/sfx/water-splash.wav", "prefabs/player-projectile.prefab.json", "prefabs/enemy-bullet.prefab.json", "prefabs/enemy-bomb.prefab.json", "assets/art/effects/muzzle.clip2d.json", "assets/art/effects/hit.clip2d.json", "assets/art/effects/explosion.clip2d.json", "assets/art/effects/*.vfx.json", "assets/art/effects/hit/**", "assets/art/effects/hit-sheet.png", "assets/art/effects/bullet/muzzle-flash.png"] },
       "gameplay": {
         "include": [
           "assets/art/environment/**",

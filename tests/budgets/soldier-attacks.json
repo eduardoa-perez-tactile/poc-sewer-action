@@ -1,7 +1,7 @@
 {
   "replay": "tests/replays/the_soldier_ranged_encounter_replay_reaches_attacks_through_player_input.greplay",
   "structural": {
-    "drawCallsMax": 6,
+    "drawCallsMax": 7,
     "pipelinesCreatedDuringPlay": 0,
     "gcPausesOver4msMax": 0
   },
