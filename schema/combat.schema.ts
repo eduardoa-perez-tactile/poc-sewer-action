@@ -1,9 +1,44 @@
-import { bool, component, entity, enumOf, event, f32, resource, u16, u32 } from '@gameengine/schema';
+import { bool, component, entity, enumOf, event, f32, resource, tag, u16, u32, vec2 } from '@gameengine/schema';
+
+export const Alive = tag('Alive', { sim: true, doc: 'Present only while an actor can receive hits and participate in combat.' });
+export const HitReacting = tag('HitReacting', { sim: true, doc: 'Present only while fixed-step knockback remains active.' });
+export const CadaverSettling = tag('CadaverSettling', { sim: true, doc: 'Present only during the bounded cadaver settling burst.' });
 
 export const Health = component(
   'Health',
-  { current: u16({ default: 1, min: 0 }), maximum: u16({ default: 1, min: 1 }) },
+  {
+    current: u16({ default: 1, min: 0 }),
+    maximum: u16({ default: 1, min: 1 }),
+    invulnerabilitySteps: u32({ default: 6, doc: 'Fixed steps between accepted hits.' }),
+    invulnerableUntilStep: u32({ default: 0, doc: 'First fixed step on which another hit is valid.' }),
+  },
   { sim: true, doc: 'Single source of truth for actor survivability.' },
+);
+
+export const HitReaction = component(
+  'HitReaction',
+  {
+    steps: u32({ default: 8, min: 1 }),
+    stepsRemaining: u32({ default: 0 }),
+    knockback: vec2({ default: [0, 0], doc: 'Current deterministic world-space knockback velocity.' }),
+  },
+  { sim: true, doc: 'Fixed-step hit stun and knockback owned by gameplay.' },
+);
+
+export const ActorSpawn = component(
+  'ActorSpawn',
+  { position: vec2({ default: [0, 0], doc: 'Authored restart position for this actor.' }) },
+  { sim: true, doc: 'Stable authored state used by deterministic full restart.' },
+);
+
+export const Cadaver = component(
+  'Cadaver',
+  {
+    ageSteps: u32({ default: 0 }),
+    settleStepsRemaining: u32({ default: 10 }),
+    velocity: vec2({ default: [0, 0] }),
+  },
+  { sim: true, doc: 'Non-combat enemy corpse that settles deterministically and then remains still.' },
 );
 
 export const Weapon = component(
@@ -60,7 +95,12 @@ export const EnemyAttackPoolState = resource(
 
 export const DamageRequested = event(
   'DamageRequested',
-  { source: entity(), target: entity(), amount: u16({ min: 1 }) },
+  {
+    source: entity(),
+    target: entity(),
+    amount: u16({ min: 1 }),
+    knockback: vec2({ default: [0, 0] }),
+  },
   { sim: true, doc: 'Combat and hazards request damage; the health system validates and applies it.' },
 );
 
@@ -68,4 +108,10 @@ export const ActorDied = event(
   'ActorDied',
   { actor: entity(), killer: entity({ optional: true }) },
   { sim: true, doc: 'Fact emitted after health reaches zero; game flow and presentation may react.' },
+);
+
+export const RestartRequested = event(
+  'RestartRequested',
+  {},
+  { sim: true, doc: 'Recorded intent to rebuild the current encounter from authored state.' },
 );

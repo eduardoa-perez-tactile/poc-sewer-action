@@ -29,3 +29,13 @@ export const EnemyBrain = component(
   },
   { sim: true, doc: 'Deterministic soldier configuration, decisions, chase memory and ranged attack cadence.' },
 );
+
+export const EnemyRestartState = component(
+  'EnemyRestartState',
+  {
+    state: enumOf('EnemyRestartBrainState', ['Idle', 'Patrol', 'Chase'], { default: 'Patrol' }),
+    facing: enumOf('EnemyRestartFacing', ['Left', 'Right'], { default: 'Left' }),
+    attackSequence: u32({ default: 0 }),
+  },
+  { sim: true, doc: 'Authored enemy state restored by a deterministic encounter restart.' },
+);

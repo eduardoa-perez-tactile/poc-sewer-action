@@ -1,5 +1,5 @@
 import { clip2DInfo, defineSystem, query, read, Sprite, SpriteAnimation, write } from '@gameengine/runtime';
-import { GameState, Player, PlayerAnimationPresentation, PlayerControl, PlayerGroundContact, PlayerMotion } from '../schema.gen.ts';
+import { GameState, Health, HitReaction, Player, PlayerAnimationPresentation, PlayerControl, PlayerGroundContact, PlayerMotion } from '../schema.gen.ts';
 
 /**
  * Mirrors authoritative movement facts into presentation-only flipbook playback. The authored
@@ -14,20 +14,21 @@ export const DrivePlayerAnimation = defineSystem({
     read(PlayerControl),
     read(PlayerGroundContact),
     read(PlayerMotion),
+    read(Health),
+    read(HitReaction),
     write(PlayerAnimationPresentation),
     write(SpriteAnimation),
     write(Sprite),
   ),
   resources: [read(GameState)],
-  runIf: [
-    { resource: GameState, field: 'phase', value: 'Playing' },
-    { any: [{ changed: PlayerControl }, { changed: PlayerGroundContact }, { changed: PlayerMotion }] },
-  ],
+  runIf: { any: [{ changed: PlayerControl }, { changed: PlayerGroundContact }, { changed: PlayerMotion }, { changed: Health }, { changed: HitReaction }, { changed: GameState }] },
   run(_ctx, players) {
     for (const chunk of players.chunks()) {
       const control = chunk.col(PlayerControl);
       const contact = chunk.col(PlayerGroundContact);
       const motion = chunk.col(PlayerMotion);
+      const health = chunk.col(Health);
+      const reaction = chunk.col(HitReaction);
       const sprite = chunk.col(Sprite);
 
       for (let row = 0; row < chunk.length; row++) {
@@ -35,7 +36,9 @@ export const DrivePlayerAnimation = defineSystem({
         const moving = Math.abs(motion.horizontalVelocity[row]!) > 0.1;
         let clip = 'art/player/idle.clip2d.json';
 
-        if (!grounded) {
+        if (health.current[row] === 0 || reaction.stepsRemaining[row]! > 0) {
+          clip = 'art/player/hurt.clip2d.json';
+        } else if (!grounded) {
           if (motion.verticalVelocity[row]! > 0.05) {
             clip = 'art/player/jump.clip2d.json';
           } else {

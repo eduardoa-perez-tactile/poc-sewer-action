@@ -80,8 +80,11 @@
     {
       "name": "Player",
       "id": "player",
+      "ActorSpawn": { "position": [-5.25, -2.5] },
+      "Alive": {},
       "Bounds2D": { "shape": "Aabb", "size": [0.7, 1.5], "offset": [0, 0.75], "mask": 8 },
       "Health": { "current": 5, "maximum": 5 },
+      "HitReaction": { "steps": 10 },
       "LocalTransform": { "position": [-5.25, -2.5, 0] },
       "Player": {},
       "PlayerAnimationPresentation": {},
@@ -89,6 +92,7 @@
       "PlayerDashState": {},
       "PlayerGroundContact": {},
       "PlayerMotion": {},
+      "PlayerRestartState": {},
       "Sprite": {
         "image": "art/player/idle/idle1",
         "size": [1.28, 1.54],
@@ -101,10 +105,14 @@
     {
       "name": "Soldier",
       "id": "soldier",
+      "ActorSpawn": { "position": [2, -2.5] },
+      "Alive": {},
       "Bounds2D": { "shape": "Aabb", "size": [0.7, 1.5], "offset": [0, 0.75], "layer": 4, "mask": 2 },
       "Clip2D": { "clip": "art/soldier/idle.clip2d.json" },
       "EnemyBrain": { "patrolMinX": 0.5, "patrolMaxX": 4.75 },
+      "EnemyRestartState": {},
       "Health": { "current": 3, "maximum": 3 },
+      "HitReaction": {},
       "LocalTransform": { "position": [2, -2.5, 0] },
       "Sprite": { "image": "art/soldier/idle", "size": [1.28, 1.54], "anchor": [0.5, 0], "sortingLayer": "Characters" }
     },
