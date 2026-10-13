@@ -1,7 +1,7 @@
 {
   "replay": "tests/replays/complete_sewer_start_to_finish_replay_clears_ordered_encounters_and_checkpoints.greplay",
   "structural": {
-    "drawCallsMax": 10,
+    "drawCallsMax": 13,
     "pipelinesCreatedDuringPlay": 0,
     "gcPausesOver4msMax": 0
   },

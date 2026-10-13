@@ -1,7 +1,7 @@
 {
   "replay": "tests/replays/the_vertical_slice_replay_traverses_the_first_room_with_the_complete_movement_kit.greplay",
   "structural": {
-    "drawCallsMax": 5,
+    "drawCallsMax": 9,
     "pipelinesCreatedDuringPlay": 0,
     "gcPausesOver4msMax": 0
   },

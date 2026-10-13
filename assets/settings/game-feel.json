@@ -1,8 +1,8 @@
 {
   "$type": "ComparisonDef",
-  "exposure": "hidden",
-  "shake": false,
-  "recoil": false,
+  "exposure": "bonus",
+  "shake": true,
+  "recoil": true,
   "particles": true,
   "flashes": true,
   "audio": true

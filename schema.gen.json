@@ -2624,6 +2624,200 @@
       ],
       "package": "SewerAction",
       "doc": "Unconditionally overwritten input sample consumed in the same fixed step."
+    },
+    {
+      "name": "PointerControlState",
+      "kind": "resource",
+      "sim": true,
+      "fields": [
+        {
+          "name": "fire",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "jumpHeld",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "playing",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Recorded pointer holds merged into the normalized action sample."
+    },
+    {
+      "name": "CameraConsequenceState",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "lastExplosionStep",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "lastDeathStep",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Deduplicates accepted impact and death camera impulses without changing simulation."
+    },
+    {
+      "name": "FootDust",
+      "kind": "component",
+      "sim": false,
+      "fields": [
+        {
+          "name": "remaining",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction"
+    },
+    {
+      "name": "MotionEffectState",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "active",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1
+        },
+        {
+          "name": "nextSlot",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "sampleTime",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1
+        },
+        {
+          "name": "previousTakeoff",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1
+        },
+        {
+          "name": "previousLanding",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Presentation-only bounded trail sampler and footfall deduplication."
+    },
+    {
+      "name": "PlayerFeelState",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "initialized",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1
+        },
+        {
+          "name": "active",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1
+        },
+        {
+          "name": "grounded",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1
+        },
+        {
+          "name": "previousHealth",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "previousVerticalVelocity",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1
+        },
+        {
+          "name": "shotTime",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1
+        },
+        {
+          "name": "lastShotStep",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "takeoffTime",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1
+        },
+        {
+          "name": "landingTime",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1
+        },
+        {
+          "name": "landingStrength",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Bounded single-player pose envelopes derived only from accepted gameplay facts."
+    },
+    {
+      "name": "PlayerTrail",
+      "kind": "component",
+      "sim": false,
+      "fields": [
+        {
+          "name": "slot",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "remaining",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Three authored sprite hosts cap the finite dash silhouette trail."
     }
   ],
   "commands": [],

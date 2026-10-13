@@ -104,7 +104,7 @@ renderTest('combat animations render bounded effects across landscape screen ext
       expect(screenX).toBeGreaterThanOrEqual(safe[0]); expect(screenX).toBeLessThanOrEqual(width - safe[2]);
       expect(screenY).toBeGreaterThanOrEqual(safe[1]); expect(screenY).toBeLessThanOrEqual(height - safe[3]);
     }
-    render.expectDrawCalls('<=', 8, { width, height });
+    render.expectDrawCalls('<=', 11, { width, height });
   }
   await step(60);
   expect(world.resource(CombatVisualState).active).toBe(false);

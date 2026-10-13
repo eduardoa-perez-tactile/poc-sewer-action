@@ -141,7 +141,7 @@ worldTest('soldier attacks and pooled projectile cleanup have a stable determini
   await ready(world, step, 5);
   await step(160);
   expect(activeEnemyProjectiles(world).length).toBeLessThanOrEqual(1);
-  expect(world.hash()).toBe('29d32493bca8c4ba');
+  expect(world.hash()).toBe('1eab73fc56ba6776');
 });
 
 worldTest('the soldier ranged encounter replay reaches attacks through player input', async ({ world, step, input }) => {

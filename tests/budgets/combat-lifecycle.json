@@ -1,7 +1,7 @@
 {
   "replay": "tests/replays/combat_lifecycle_replay_reaches_enemy_death_and_restart_through_recorded_input.greplay",
   "structural": {
-    "drawCallsMax": 6,
+    "drawCallsMax": 8,
     "pipelinesCreatedDuringPlay": 0,
     "gcPausesOver4msMax": 0
   },

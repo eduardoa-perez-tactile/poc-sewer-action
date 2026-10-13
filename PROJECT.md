@@ -193,3 +193,15 @@ blocker while development and verification use the desktop host.
   performance has no blocker after removing fresh menu-choice allocations.
 - Ownership, tuning, reports and exact limits: `docs/ui/ISSUE-27.md`. Hermes #6, browser packaging,
   real phone measurements and the absent Android package template remain separate limitations.
+
+## Reference-directed recovery (issues #66–#69)
+
+- The quality reference is https://deepnight.net/games/game-feel/. Use the supplied first-party sewer art; the target is textured, readable scenes and consequential action feedback, not a reproduction of Deepnight's Inca artwork.
+- Shipping settings now expose the comparison launcher and enable all five feedback layers. C opens/closes it; 1 selects Baseline and 2 Polished. Arrows/Space and left/right mouse supplement WASD/F/Shift; Escape supplements P.
+- Terrain now renders source-art edge/corner strips instead of flat collision rectangles. Water preserves source aspect, depth layers repeat, actors retain their reviewed scale and debug arrows are hidden. Strips are split at 64 cells/1024 pixels so phone atlases retain gutter space.
+- Player shots, directional dash silhouettes, takeoff/landing squash and dust, damage/death/explosion camera response are finite presentation effects. Scene entry resets their resources, pause stops their adapters, timestamped facts reject retained duplicates, and recoil decay is independent of presentation rate.
+- Compact HUD and live comparison/menu controls use viewport-derived sizes to retain 44-point targets and safe gameplay framing. Menu covers suppress the world; native title measured 130/179 skipped frames at a 30 fps cap.
+- Existing movement/combat/collision outcomes remain covered. Authored scenery/entity allocation, added input actions and recorded pointer holds intentionally changed whole-world hashes. Rehashing preserves the exact recorded inputs and selects each tape's authored scene. Baseline/Polished complete-route digest is 94e92b24, final hash ad456cdff1eecb82.
+- Three implementation subagents and separate architecture/performance reviewers completed the scoped recovery. The user's explicit parallel-agent instruction supersedes the older one-chat sequential convention for this work. No old recurring coordinator was resumed; cancelled backlog issues remain cancelled.
+- Verification and visual evidence live in docs/recovery/. Fresh phone-low reported residency is 6.87 MiB/192 MiB; textures 6.59 MiB/128 MiB and audio 0.284 MiB/32 MiB. Measured replay peaks are 7–13 draws with zero play-time pipeline creation and zero GC pauses over 4 ms. These are desktop/headless measurements, not a phone GPU/thermal verdict.
+- Browser packaging, Hermes parity and Android package builds remain unavailable in the installed engine. Layered background fill needs a real low-end probe measurement before choosing a cheaper device presentation.

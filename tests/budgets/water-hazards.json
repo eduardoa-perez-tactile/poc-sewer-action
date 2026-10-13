@@ -1,7 +1,7 @@
 {
   "replay": "tests/replays/water_hazard_replay_reaches_death_and_restart_through_recorded_movement.greplay",
   "structural": {
-    "drawCallsMax": 7,
+    "drawCallsMax": 9,
     "pipelinesCreatedDuringPlay": 0,
     "gcPausesOver4msMax": 0
   },

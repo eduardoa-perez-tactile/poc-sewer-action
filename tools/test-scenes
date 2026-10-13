@@ -55,7 +55,7 @@ def run(directory, args):
 with tempfile.TemporaryDirectory(prefix='sewer-replay-scenes-') as temporary:
     reports = {}
     recorded_profiles = []
-    if ARGS[:2] == ['replay', 'verify']:
+    if ARGS[:2] in (['replay', 'verify'], ['replay', 'rehash']):
         replay = str(Path(ARGS[2]).resolve().relative_to(ROOT))
         selected = [(scene, config) for scene, config in MANIFEST.items() if replay in config['replays']]
     else:

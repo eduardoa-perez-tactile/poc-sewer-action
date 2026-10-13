@@ -16,7 +16,7 @@ if [[ "${SEWER_SCENE_PROFILE:-}" != "1" && "$#" -ge 1 ]]; then
       exec "$(dirname "$0")/test-scenes" "$@"
     fi
   fi
-  if [[ "$1" == "replay" && "${2:-}" == "verify" && "${3:-}" == *"tests/replays/"* ]]; then
+  if [[ "$1" == "replay" && ( "${2:-}" == "verify" || "${2:-}" == "rehash" ) && "${3:-}" == *"tests/replays/"* ]]; then
     exec "$(dirname "$0")/test-scenes" "$@"
   fi
 fi

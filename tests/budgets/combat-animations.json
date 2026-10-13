@@ -1,7 +1,7 @@
 {
   "replay": "tests/replays/combat_animation_feedback_replay_warms_soldier_attacks_and_effects.greplay",
   "structural": {
-    "drawCallsMax": 8,
+    "drawCallsMax": 10,
     "pipelinesCreatedDuringPlay": 0,
     "gcPausesOver4msMax": 0
   },

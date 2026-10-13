@@ -2631,6 +2631,200 @@ export const schemaIr = {
       ],
       "package": "SewerAction",
       "doc": "Unconditionally overwritten input sample consumed in the same fixed step."
+    },
+    {
+      "name": "PointerControlState",
+      "kind": "resource",
+      "sim": true,
+      "fields": [
+        {
+          "name": "fire",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "jumpHeld",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "playing",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Recorded pointer holds merged into the normalized action sample."
+    },
+    {
+      "name": "CameraConsequenceState",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "lastExplosionStep",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "lastDeathStep",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Deduplicates accepted impact and death camera impulses without changing simulation."
+    },
+    {
+      "name": "FootDust",
+      "kind": "component",
+      "sim": false,
+      "fields": [
+        {
+          "name": "remaining",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction"
+    },
+    {
+      "name": "MotionEffectState",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "active",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1
+        },
+        {
+          "name": "nextSlot",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "sampleTime",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1
+        },
+        {
+          "name": "previousTakeoff",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1
+        },
+        {
+          "name": "previousLanding",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Presentation-only bounded trail sampler and footfall deduplication."
+    },
+    {
+      "name": "PlayerFeelState",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "initialized",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1
+        },
+        {
+          "name": "active",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1
+        },
+        {
+          "name": "grounded",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1
+        },
+        {
+          "name": "previousHealth",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "previousVerticalVelocity",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1
+        },
+        {
+          "name": "shotTime",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1
+        },
+        {
+          "name": "lastShotStep",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "takeoffTime",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1
+        },
+        {
+          "name": "landingTime",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1
+        },
+        {
+          "name": "landingStrength",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Bounded single-player pose envelopes derived only from accepted gameplay facts."
+    },
+    {
+      "name": "PlayerTrail",
+      "kind": "component",
+      "sim": false,
+      "fields": [
+        {
+          "name": "slot",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "remaining",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Three authored sprite hosts cap the finite dash silhouette trail."
     }
   ],
   "commands": [],
@@ -4101,6 +4295,94 @@ export interface PlayerStepInputValue {
 }
 /** Unconditionally overwritten input sample consumed in the same fixed step. (resource, sim) */
 export const PlayerStepInput = typeToken<PlayerStepInputViews, PlayerStepInputValue>('PlayerStepInput', 'resource', { sig: 'jumpRequested:bool:1,dashRequested:bool:1', read: (v: PlayerStepInputViews, i: number, o: Record<string, unknown>) => { o.jumpRequested = v.jumpRequested[i] !== 0; o.dashRequested = v.dashRequested[i] !== 0; return o; } });
+
+export interface PointerControlStateViews {
+  fire: Uint8Array;
+  jumpHeld: Uint8Array;
+  playing: Uint8Array;
+}
+export interface PointerControlStateValue {
+  fire: boolean;
+  jumpHeld: boolean;
+  playing: boolean;
+}
+/** Recorded pointer holds merged into the normalized action sample. (resource, sim) */
+export const PointerControlState = typeToken<PointerControlStateViews, PointerControlStateValue>('PointerControlState', 'resource', { sig: 'fire:bool:1,jumpHeld:bool:1,playing:bool:1', read: (v: PointerControlStateViews, i: number, o: Record<string, unknown>) => { o.fire = v.fire[i] !== 0; o.jumpHeld = v.jumpHeld[i] !== 0; o.playing = v.playing[i] !== 0; return o; } });
+
+export interface CameraConsequenceStateViews {
+  lastExplosionStep: Uint32Array;
+  lastDeathStep: Uint32Array;
+}
+export interface CameraConsequenceStateValue {
+  lastExplosionStep: number;
+  lastDeathStep: number;
+}
+/** Deduplicates accepted impact and death camera impulses without changing simulation. (resource, presentation-only) */
+export const CameraConsequenceState = typeToken<CameraConsequenceStateViews, CameraConsequenceStateValue>('CameraConsequenceState', 'resource', { sig: 'lastExplosionStep:u32:1,lastDeathStep:u32:1', read: (v: CameraConsequenceStateViews, i: number, o: Record<string, unknown>) => { o.lastExplosionStep = v.lastExplosionStep[i]; o.lastDeathStep = v.lastDeathStep[i]; return o; } });
+
+export interface FootDustViews {
+  remaining: Float32Array;
+}
+export interface FootDustValue {
+  remaining: number;
+}
+/** FootDust (component, presentation-only) */
+export const FootDust = typeToken<FootDustViews, FootDustValue>('FootDust', 'component', { sig: 'remaining:f32:1', read: (v: FootDustViews, i: number, o: Record<string, unknown>) => { o.remaining = v.remaining[i]; return o; } });
+
+export interface MotionEffectStateViews {
+  active: Uint8Array;
+  nextSlot: Uint32Array;
+  sampleTime: Float32Array;
+  previousTakeoff: Float32Array;
+  previousLanding: Float32Array;
+}
+export interface MotionEffectStateValue {
+  active: boolean;
+  nextSlot: number;
+  sampleTime: number;
+  previousTakeoff: number;
+  previousLanding: number;
+}
+/** Presentation-only bounded trail sampler and footfall deduplication. (resource, presentation-only) */
+export const MotionEffectState = typeToken<MotionEffectStateViews, MotionEffectStateValue>('MotionEffectState', 'resource', { sig: 'active:bool:1,nextSlot:u32:1,sampleTime:f32:1,previousTakeoff:f32:1,previousLanding:f32:1', read: (v: MotionEffectStateViews, i: number, o: Record<string, unknown>) => { o.active = v.active[i] !== 0; o.nextSlot = v.nextSlot[i]; o.sampleTime = v.sampleTime[i]; o.previousTakeoff = v.previousTakeoff[i]; o.previousLanding = v.previousLanding[i]; return o; } });
+
+export interface PlayerFeelStateViews {
+  initialized: Uint8Array;
+  active: Uint8Array;
+  grounded: Uint8Array;
+  previousHealth: Uint32Array;
+  previousVerticalVelocity: Float32Array;
+  shotTime: Float32Array;
+  lastShotStep: Uint32Array;
+  takeoffTime: Float32Array;
+  landingTime: Float32Array;
+  landingStrength: Float32Array;
+}
+export interface PlayerFeelStateValue {
+  initialized: boolean;
+  active: boolean;
+  grounded: boolean;
+  previousHealth: number;
+  previousVerticalVelocity: number;
+  shotTime: number;
+  lastShotStep: number;
+  takeoffTime: number;
+  landingTime: number;
+  landingStrength: number;
+}
+/** Bounded single-player pose envelopes derived only from accepted gameplay facts. (resource, presentation-only) */
+export const PlayerFeelState = typeToken<PlayerFeelStateViews, PlayerFeelStateValue>('PlayerFeelState', 'resource', { sig: 'initialized:bool:1,active:bool:1,grounded:bool:1,previousHealth:u32:1,previousVerticalVelocity:f32:1,shotTime:f32:1,lastShotStep:u32:1,takeoffTime:f32:1,landingTime:f32:1,landingStrength:f32:1', read: (v: PlayerFeelStateViews, i: number, o: Record<string, unknown>) => { o.initialized = v.initialized[i] !== 0; o.active = v.active[i] !== 0; o.grounded = v.grounded[i] !== 0; o.previousHealth = v.previousHealth[i]; o.previousVerticalVelocity = v.previousVerticalVelocity[i]; o.shotTime = v.shotTime[i]; o.lastShotStep = v.lastShotStep[i]; o.takeoffTime = v.takeoffTime[i]; o.landingTime = v.landingTime[i]; o.landingStrength = v.landingStrength[i]; return o; } });
+
+export interface PlayerTrailViews {
+  slot: Uint32Array;
+  remaining: Float32Array;
+}
+export interface PlayerTrailValue {
+  slot: number;
+  remaining: number;
+}
+/** Three authored sprite hosts cap the finite dash silhouette trail. (component, presentation-only) */
+export const PlayerTrail = typeToken<PlayerTrailViews, PlayerTrailValue>('PlayerTrail', 'component', { sig: 'slot:u32:1,remaining:f32:1', read: (v: PlayerTrailViews, i: number, o: Record<string, unknown>) => { o.slot = v.slot[i]; o.remaining = v.remaining[i]; return o; } });
 
 /** Shipped product choice. Developer exposure is opened by the optional QA cheat; bonus exposes a launcher. */
 export type ComparisonDefData = {

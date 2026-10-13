@@ -146,7 +146,7 @@ worldTest('combat lifecycle and restart produce a stable deterministic hash', as
   await step(18);
   input.emit(RestartRequested, {});
   await step(4);
-  expect(world.hash()).toBe('917f8d32661ea03e');
+  expect(world.hash()).toBe('c357ef54a68d7a90');
 });
 
 worldTest('combat lifecycle replay reaches enemy death and restart through recorded input', async ({ world, step, input }) => {

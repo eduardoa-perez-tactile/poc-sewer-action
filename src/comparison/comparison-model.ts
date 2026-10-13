@@ -1,7 +1,7 @@
 import type { GameFeelComparisonValue } from '../schema.gen.ts';
 
 export const COMPARISON_LAYERS = ['shake', 'recoil', 'particles', 'flashes', 'audio'] as const;
-export type ComparisonModel = Pick<GameFeelComparisonValue, 'exposure' | 'open' | typeof COMPARISON_LAYERS[number]>;
+export type ComparisonModel = Pick<GameFeelComparisonValue, 'exposure' | 'open' | typeof COMPARISON_LAYERS[number]> & { controlHeight?: number };
 
 export function comparisonMode(model: ComparisonModel): string {
   if (COMPARISON_LAYERS.every((key) => model[key])) return 'Polished';
@@ -9,7 +9,7 @@ export function comparisonMode(model: ComparisonModel): string {
   return 'Custom';
 }
 
-export function comparisonIntent(model: ComparisonModel, action: string, enabled = false): Partial<ComparisonModel> {
+export function comparisonIntent(model: ComparisonModel, action: string, enabled = false): Partial<Omit<ComparisonModel, 'controlHeight'>> {
   if (model.exposure === 'hidden') return {};
   if (action === 'open' || action === 'close') return { open: action === 'open' };
   if (action === 'baseline' || action === 'polished') {

@@ -161,7 +161,7 @@ worldTest('water hazard replay reaches death and restart through recorded moveme
   expect(world.get(player, Health).current).toBe(5);
   expect(world.get(player, LocalTransform).position).toEqual([-5.25, -2.5, 0]);
   expect(world.get(player, WaterContact).inside).toBe(false);
-  expect(world.hash()).toBe('3ad86aa723e2e023');
+  expect(world.hash()).toBe('cc72538b55ab0214');
 });
 
 renderTest('water splash has bounded rendering and fits landscape screen extremes', async ({ world, step, render, input }) => {
