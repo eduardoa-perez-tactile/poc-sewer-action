@@ -1,4 +1,4 @@
-import { expect, type TestWorld, worldTest } from '@gameengine/test';
+import { expect, type TestWorld, worldTest } from './first-room-test.ts';
 import { Disabled, entityString, LoadingResumed, LocalTransform, pool } from '@gameengine/runtime';
 import {
   Alive,

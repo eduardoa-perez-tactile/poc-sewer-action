@@ -1,0 +1,105 @@
+{
+  "$type": "SewerLevelDef",
+  "tilemap": "rooms/complete-sewer.tilemap.json",
+  "finishX": 54,
+  "transition": "final-encounter",
+  "beats": [
+    {
+      "name": "Intake: move, jump, fire",
+      "startX": -8,
+      "checkpointX": -5.25,
+      "checkpointY": -2.5
+    },
+    {
+      "name": "Floodworks: double jump and dash",
+      "startX": 8,
+      "checkpointX": 9,
+      "checkpointY": -2.5
+    },
+    {
+      "name": "Pump gauntlet",
+      "startX": 27,
+      "checkpointX": 28,
+      "checkpointY": -2.5
+    },
+    {
+      "name": "Outlet: final encounter ahead",
+      "startX": 46,
+      "checkpointX": 47,
+      "checkpointY": -2.5
+    }
+  ],
+  "soldiers": [
+    {
+      "beat": 0,
+      "x": 2,
+      "y": -2.5,
+      "patrolMinX": 1.25,
+      "patrolMaxX": 2.75,
+      "health": 2,
+      "cooldown": 90
+    },
+    {
+      "beat": 1,
+      "x": 14,
+      "y": -2.5,
+      "patrolMinX": 13.25,
+      "patrolMaxX": 14.75,
+      "health": 3,
+      "cooldown": 72
+    },
+    {
+      "beat": 1,
+      "x": 19,
+      "y": -2.5,
+      "patrolMinX": 18.25,
+      "patrolMaxX": 19.75,
+      "health": 3,
+      "cooldown": 64
+    },
+    {
+      "beat": 2,
+      "x": 31,
+      "y": -2.5,
+      "patrolMinX": 30.25,
+      "patrolMaxX": 31.75,
+      "health": 3,
+      "cooldown": 56
+    },
+    {
+      "beat": 2,
+      "x": 35,
+      "y": -2.5,
+      "patrolMinX": 34.25,
+      "patrolMaxX": 35.75,
+      "health": 3,
+      "cooldown": 48
+    },
+    {
+      "beat": 2,
+      "x": 44,
+      "y": -2.5,
+      "patrolMinX": 43.25,
+      "patrolMaxX": 44.75,
+      "health": 3,
+      "cooldown": 48
+    }
+  ],
+  "water": [
+    {
+      "x": 6.75,
+      "width": 1.5,
+      "surfaceY": -3
+    },
+    {
+      "x": 21.5,
+      "width": 3,
+      "surfaceY": -3
+    },
+    {
+      "x": 39.0,
+      "width": 4,
+      "surfaceY": -3
+    }
+  ]
+}

@@ -90,3 +90,26 @@ blocker while development and verification use the desktop host.
   All 87 prior hash traces, replays, goldens, atlases, pools and pipeline warm-ups are preserved.
   V8 and cooked phone-low checks pass; Hermes #6, browser packaging and the missing Android
   package template remain separate verification limits.
+
+## Complete sewer route (issue #24)
+
+- Default play uses `scenes/complete-sewer.scene.json`: four ordered beats, six soldiers, three
+  widening water gaps and three recovery checkpoints. Typed content owns spawns/patrols/cadence,
+  water and checkpoints; the 608-step recorded-input route clears every encounter and finishes.
+- The outlet exposes `LevelProgress.finished` plus the `final-encounter` content hook. Issue #25
+  retains ownership of the final encounter/win flow. Restart restores the last accepted checkpoint
+  and active/future encounters while preserving earlier clears; Enter/gamepad confirm requests recovery
+  after death and the camera snaps to the checkpoint frame.
+- Extended 128x32 collision pages bound soldier support and projectile sweeps. Boot merges the
+  same occupancy into 52 static visible ledge/rim Shapes because this host emits no Tilemap geometry.
+  Actor-specific visual lookup and death-driven progression avoid per-step whole-encounter recounts.
+- Original first-room tests, replay inputs/hashes, goldens and budgets remain intact. The installed
+  replay/budget runner assumes startScene; `tools/gameengine` selects isolated scene profiles for T1
+  and recorded replay verification. Assign new scenarios in `tools/replay-scenes.json`; never loosen
+  earlier budgets to compensate for playing the wrong scene. Pipeline recording unions fresh profiles.
+- Release desktop/mobile-tier relative samples: active step p95 1.653 → 1.714 ms, presentation p95
+  1.186 → 1.118 ms, RSS 86.75 → 87.52 MiB, heap 10.08 → 9.60 MiB; host readiness proxy 617 → 613 ms.
+  Residency stays 2.77 MiB/192 MiB. Complete structural draw peak is 10/10, with zero pipelines
+  created during play and zero GC pauses over 4 ms. Preserve this tight cap as content grows.
+- Authoring, inspection and exact measurement limits: `docs/level/ISSUE-24.md`. Real phone GPU,
+  thermals/cold loading/frame skipping remain unmeasured; Hermes #6 and web packaging remain separate.

@@ -1,0 +1,137 @@
+#!/usr/bin/env python3
+"""Select authored replay scenes without modifying the live project or recorded input."""
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+
+ROOT = Path(__file__).resolve().parent.parent
+ARGS = sys.argv[1:]
+MANIFEST = json.loads((ROOT / 'tools/replay-scenes.json').read_text())
+ENV = dict(os.environ, SEWER_SCENE_PROFILE='1')
+JS = ARGS[ARGS.index('--js') + 1] if '--js' in ARGS else 'v8'
+
+# A new scenario must be assigned explicitly: no silently omitted replay/budget warm-up.
+known_replays = [name for config in MANIFEST.values() for name in config['replays']]
+known_budgets = [name for config in MANIFEST.values() for name in config['budgets']]
+actual_replays = [str(path.relative_to(ROOT)) for path in (ROOT / 'tests/replays').glob('*.greplay')]
+actual_budgets = [path.name for path in (ROOT / 'tests/budgets').glob('*.json') if 'structural' in json.loads(path.read_text())]
+if sorted(known_replays) != sorted(actual_replays) or sorted(known_budgets) != sorted(actual_budgets):
+    raise SystemExit('Update tools/replay-scenes.json: each replay and structural budget needs exactly one authored scene')
+for scene, config in MANIFEST.items():
+    for budget in config['budgets']:
+        if json.loads((ROOT / 'tests/budgets' / budget).read_text())['replay'] not in config['replays']:
+            raise SystemExit(f'{budget} uses a replay from another scene')
+
+
+
+def profile(directory, scene, budgets):
+    directory.mkdir()
+    for item in ROOT.iterdir():
+        if item.name.startswith('.') or item.name in ['project.gameengine.json', 'tests', 'pipelines.json']:
+            continue
+        (directory / item.name).symlink_to(item, target_is_directory=item.is_dir())
+    config = json.loads((ROOT / 'project.gameengine.json').read_text())
+    config['startScene'] = scene
+    (directory / 'project.gameengine.json').write_text(json.dumps(config))
+    (directory / 'pipelines.json').write_text((ROOT / 'pipelines.json').read_text())
+    tests = directory / 'tests'
+    tests.mkdir()
+    for item in (ROOT / 'tests').iterdir():
+        if item.name != 'budgets':
+            (tests / item.name).symlink_to(item, target_is_directory=item.is_dir())
+    (tests / 'budgets').mkdir()
+    for name in budgets:
+        (tests / 'budgets' / name).symlink_to(ROOT / 'tests/budgets' / name)
+
+
+def run(directory, args):
+    # Capture JSON for one merged report; engine progress remains visible on stderr.
+    return subprocess.run([str(ROOT / 'tools/gameengine'), *args, '--project', str(directory), '--json'], cwd=ROOT, env=ENV, capture_output=True, text=True)
+
+
+with tempfile.TemporaryDirectory(prefix='sewer-replay-scenes-') as temporary:
+    reports = {}
+    recorded_profiles = []
+    if ARGS[:2] == ['replay', 'verify']:
+        replay = str(Path(ARGS[2]).resolve().relative_to(ROOT))
+        selected = [(scene, config) for scene, config in MANIFEST.items() if replay in config['replays']]
+    else:
+        selected = list(MANIFEST.items())
+    if not selected:
+        raise SystemExit('Replay has no authored scene in tools/replay-scenes.json')
+    args = [arg for arg in ARGS if arg != '--json']
+    for index, (scene, config) in enumerate(selected):
+        directory = Path(temporary) / str(index)
+        profile(directory, scene, config['budgets'])
+        print(f'verifying authored scene: {scene}', file=sys.stderr)
+        process = run(directory, args)
+        print(process.stderr, end='', file=sys.stderr)
+        try:
+            report = json.loads(process.stdout)
+        except json.JSONDecodeError:
+            print(process.stdout, file=sys.stderr)
+            raise SystemExit(process.returncode or 1)
+        report['ok'] = process.returncode == 0 and report.get('ok')
+        if ARGS[0] == 'test':
+            verifications = []
+            for replay in config['replays']:
+                verified = run(directory, ['replay', 'verify', str(ROOT / replay), '--js', JS])
+                verification = json.loads(verified.stdout)
+                if verified.returncode != 0 or not verification.get('ok'):
+                    print(verified.stderr, end='', file=sys.stderr)
+                verifications.append({'file': replay, 'ok': verified.returncode == 0 and verification.get('ok'), 'results': verification.get('results')})
+            report['replayVerifications'] = verifications
+            report['ok'] = report.get('ok') and all(item['ok'] for item in verifications)
+        reports[scene] = report
+        if '--record-pipelines' in args:
+            recorded_profiles.append(json.loads((directory / 'pipelines.json').read_text()))
+    ok = all(report.get('ok') for report in reports.values())
+    if ok and recorded_profiles:
+        # Fresh union of every scenario, not old/stale pipeline records.
+        merged = {}
+        for recorded in recorded_profiles:
+            for tier, values in recorded.items():
+                unique = merged.setdefault(tier, {})
+                for value in values:
+                    unique[json.dumps(value, sort_keys=True)] = value
+        combined = {tier: [values[key] for key in sorted(values)] for tier, values in sorted(merged.items())}
+        existing = json.loads((ROOT / 'pipelines.json').read_text())
+        canonical = lambda data: {tier: sorted(json.dumps(value, sort_keys=True) for value in values) for tier, values in data.items()}
+        if canonical(existing) != canonical(combined):
+            (ROOT / 'pipelines.json').write_text(json.dumps(combined, indent=1) + '\n')
+    if ARGS[0] == 'test':
+        # Each test explicitly selects its fixture; report the shared tests once and all budgets.
+        result = dict(next(iter(reports.values())))
+        result['ok'] = ok
+        for report in reports.values():
+            for lane, tests in report.get('results', {}).items():
+                by_name = {test['name']: test for test in result['results'].get(lane, [])}
+                for test in tests:
+                    if test['name'] not in by_name or not test['ok']:
+                        by_name[test['name']] = test
+                result['results'][lane] = list(by_name.values())
+        result['replayVerifications'] = [item for report in reports.values() for item in report.get('replayVerifications', [])]
+        result['structural'] = [row for report in reports.values() for row in report.get('structural', [])]
+        result['sceneProfiles'] = {scene: {'ok': report.get('ok'), 'failures': [{'name': test['name'], 'error': test.get('error')} for lane in report.get('results', {}).values() for test in lane if not test['ok']]} for scene, report in reports.items()}
+    else:
+        result = next(iter(reports.values()))
+    if '--json' in ARGS:
+        print(json.dumps(result))
+    else:
+        for scene, report in reports.items():
+            if ARGS[0] != 'test':
+                print(f"{scene}: replay {'verified' if report.get('ok') else 'FAILED'}")
+                continue
+            tests = [test for lane in report.get('results', {}).values() for test in lane]
+            failed = [test for test in tests if not test['ok']]
+            print(f'{scene}: {len(tests) - len(failed)} tests passed, {len(failed)} failed')
+            for test in failed:
+                print(test['name'] + ': ' + test.get('error', 'failed'))
+            for replay in report.get('replayVerifications', []):
+                print(('PASS ' if replay['ok'] else 'FAIL ') + replay['file'])
+            for row in report.get('structural', []):
+                print(('PASS ' if row['ok'] else 'FAIL ') + row['file'] + ': ' + json.dumps(row.get('checks', [])))
+    raise SystemExit(0 if ok else 1)

@@ -1,4 +1,4 @@
-import { expect, renderTest, type TestWorld, worldTest } from '@gameengine/test';
+import { expect, renderTest, type TestWorld, worldTest } from './first-room-test.ts';
 import { Bounds2D, Disabled, LocalTransform, Sprite, SpriteAnimation, VisualOffset } from '@gameengine/runtime';
 import { Alive, CameraFollowState, GameState, Hazard, Health, Player, PlayerMotion, RestartRequested, RoomCollisionState, WaterContact, WaterEntered, WaterSplash, WaterSplashState } from '../src/schema.gen.ts';
 

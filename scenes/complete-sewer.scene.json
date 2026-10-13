@@ -1,0 +1,460 @@
+{
+  "$schemaVersion": 2,
+  "id": "complete-sewer",
+  "resources": {
+    "PlatformCollisionGrid": { "originX": -8, "originY": -4.5, "cellSize": 0.5 },
+    "RoomCameraBounds": { "left": -8, "right": 56, "bottom": -4.5, "top": 4.5 }
+  },
+  "entities": [
+    {
+      "name": "Camera",
+      "id": "camera",
+      "Camera": { "clearColor": "#09131cff" },
+      "CombatVisual": { "kind": "muzzle" },
+      "LocalTransform": {},
+      "ParticleSystem": { "effect": "art/effects/muzzle.vfx.json", "emitting": false, "sortingLayer": "Effects" },
+      "VisualOffset": {}
+    },
+    {
+      "name": "MiddleSewer",
+      "id": "middle-sewer",
+      "CombatVisual": { "kind": "hit" },
+      "LocalTransform": { "position": [0, 0, -2] },
+      "ParallaxLayer": { "factor": [0.32, 0.18] },
+      "ParticleSystem": { "effect": "art/effects/hit.vfx.json", "emitting": false, "sortingLayer": "Effects" },
+      "Sprite": { "image": "art/environment/middle", "size": [46.4, 12], "sortingLayer": "Background", "order": -20 },
+      "VisualOffset": {}
+    },
+    {
+      "name": "FirstSewerRoom",
+      "id": "first-sewer-room",
+      "LevelCollisionIndex": {},
+      "LevelProgress": { "data": "rooms/complete-sewer.json" },
+      "LocalTransform": { "position": [-8, -4.5, 0] },
+      "Tilemap": {
+        "tileset": "art/environment/tileset",
+        "tileSize": [0.5, 0.5],
+        "columns": 17,
+        "data": "rooms/complete-sewer.tilemap.json",
+        "sortingLayer": "World"
+      }
+    },
+    {
+      "name": "Exit",
+      "id": "exit",
+      "LocalTransform": { "position": [54, -1.5, 0] },
+      "RoomLandmark": { "kind": "Exit" },
+      "Text2D": {
+        "text": "OUTLET > FINAL ENCOUNTER",
+        "size": 0.34,
+        "color": "#91d8a2ff",
+        "outlineColor": "#07140aff",
+        "outlineWidth": 2,
+        "sortingLayer": "Foreground"
+      }
+    },
+    {
+      "name": "Player",
+      "id": "player",
+      "ActorSpawn": { "position": [-5.25, -2.5] },
+      "Alive": {},
+      "Bounds2D": { "shape": "Aabb", "size": [0.7, 1.5], "offset": [0, 0.75], "mask": 24 },
+      "Health": { "current": 5, "maximum": 5 },
+      "HitReaction": { "steps": 10 },
+      "LocalTransform": { "position": [-5.25, -2.5, 0] },
+      "Player": {},
+      "PlayerAnimationPresentation": {},
+      "PlayerControl": {},
+      "PlayerDashState": {},
+      "PlayerGroundContact": {},
+      "PlayerMotion": {},
+      "PlayerRestartState": {},
+      "Sprite": {
+        "image": "art/player/idle/idle1",
+        "size": [1.28, 1.54],
+        "anchor": [0.5, 0],
+        "sortingLayer": "Characters"
+      },
+      "SpriteAnimation": { "frames": "art/player/idle/idle1", "fps": 1 },
+      "WaterContact": {},
+      "Weapon": {}
+    },
+    {
+      "name": "DistantSewerLeft",
+      "id": "distant-sewer-left",
+      "LocalTransform": { "position": [-9.6, 0, -3] },
+      "ParallaxLayer": { "factor": [0.12, 0.08] },
+      "Sprite": { "image": "art/environment/back", "size": [9.6, 12], "sortingLayer": "Background", "order": -30 },
+      "VisualOffset": {}
+    },
+    {
+      "name": "DistantSewerCentre",
+      "id": "distant-sewer-centre",
+      "LocalTransform": { "position": [0, 0, -3] },
+      "ParallaxLayer": { "factor": [0.12, 0.08] },
+      "Sprite": { "image": "art/environment/back", "size": [9.6, 12], "sortingLayer": "Background", "order": -30 },
+      "VisualOffset": {}
+    },
+    {
+      "name": "DistantSewerRight",
+      "id": "distant-sewer-right",
+      "LocalTransform": { "position": [9.6, 0, -3] },
+      "ParallaxLayer": { "factor": [0.12, 0.08] },
+      "Sprite": { "image": "art/environment/back", "size": [9.6, 12], "sortingLayer": "Background", "order": -30 },
+      "VisualOffset": {}
+    },
+    {
+      "name": "BackWaterLeft",
+      "id": "back-water-left",
+      "LocalTransform": { "position": [-6.4, -3.45, -1] },
+      "ParallaxLayer": { "factor": [0.5, 0.32] },
+      "Sprite": {
+        "image": "art/environment/back-water-1",
+        "size": [12.8, 1.2],
+        "sortingLayer": "Background",
+        "order": -10
+      },
+      "SpriteAnimation": {
+        "frames": "art/environment/back-water-1,art/environment/back-water-2,art/environment/back-water-3",
+        "fps": 4,
+        "loop": false
+      },
+      "VisualOffset": {}
+    },
+    {
+      "name": "BackWaterRight",
+      "id": "back-water-right",
+      "LocalTransform": { "position": [6.4, -3.45, -1] },
+      "ParallaxLayer": { "factor": [0.5, 0.32] },
+      "Sprite": {
+        "image": "art/environment/back-water-1",
+        "size": [12.8, 1.2],
+        "sortingLayer": "Background",
+        "order": -10
+      },
+      "SpriteAnimation": {
+        "frames": "art/environment/back-water-1,art/environment/back-water-2,art/environment/back-water-3",
+        "fps": 4,
+        "loop": false
+      },
+      "VisualOffset": {}
+    },
+    {
+      "name": "FrontSewer",
+      "id": "front-sewer",
+      "LocalTransform": { "position": [0, 0, 1] },
+      "ParallaxLayer": { "factor": [0.82, 0.72] },
+      "Sprite": { "image": "art/environment/front", "size": [29.6, 12], "sortingLayer": "Background" },
+      "VisualOffset": {}
+    },
+    {
+      "name": "FrontWaterLeft",
+      "id": "front-water-left",
+      "LocalTransform": { "position": [-6.4, -3.8, 2] },
+      "ParallaxLayer": {},
+      "Sprite": {
+        "image": "art/environment/front-water/front-water1",
+        "size": [12.8, 1.6],
+        "sortingLayer": "World",
+        "order": 10
+      },
+      "SpriteAnimation": {
+        "frames": "art/environment/front-water/front-water1,art/environment/front-water/front-water2,art/environment/front-water/front-water3,art/environment/front-water/front-water4",
+        "fps": 6,
+        "loop": false
+      },
+      "VisualOffset": {}
+    },
+    {
+      "name": "FrontWaterRight",
+      "id": "front-water-right",
+      "LocalTransform": { "position": [6.4, -3.8, 2] },
+      "ParallaxLayer": {},
+      "Sprite": {
+        "image": "art/environment/front-water/front-water1",
+        "size": [12.8, 1.6],
+        "sortingLayer": "World",
+        "order": 10
+      },
+      "SpriteAnimation": {
+        "frames": "art/environment/front-water/front-water1,art/environment/front-water/front-water2,art/environment/front-water/front-water3,art/environment/front-water/front-water4",
+        "fps": 6,
+        "loop": false
+      },
+      "VisualOffset": {}
+    },
+    {
+      "name": "WaterSplash",
+      "id": "water-splash",
+      "CombatVisual": { "kind": "explosion" },
+      "LocalTransform": {},
+      "ParticleSystem": { "effect": "art/effects/explosion.vfx.json", "emitting": false, "sortingLayer": "Effects" },
+      "Sprite": {
+        "image": "art/effects/water-splash/water-splash1",
+        "size": [1.92, 1.28],
+        "anchor": [0.5, 0],
+        "sortingLayer": "Effects",
+        "visible": false
+      },
+      "SpriteAnimation": { "frames": "art/effects/water-splash/water-splash1", "playing": false, "loop": false },
+      "VisualOffset": {},
+      "WaterSplash": {}
+    },
+    {
+      "name": "BeatSign0",
+      "id": "beat-sign-0",
+      "LocalTransform": { "position": [-5.25, -0.6, 0] },
+      "Text2D": { "text": "Intake: move, jump, fire", "size": 0.22, "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "BeatSign1",
+      "id": "beat-sign-1",
+      "LocalTransform": { "position": [9, -0.6, 0] },
+      "Text2D": {
+        "text": "Floodworks: double jump and dash",
+        "size": 0.22,
+        "color": "#91d8a2ff",
+        "sortingLayer": "Foreground"
+      }
+    },
+    {
+      "name": "BeatSign2",
+      "id": "beat-sign-2",
+      "LocalTransform": { "position": [28, -0.6, 0] },
+      "Text2D": { "text": "Pump gauntlet", "size": 0.22, "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "BeatSign3",
+      "id": "beat-sign-3",
+      "LocalTransform": { "position": [47, -0.6, 0] },
+      "Text2D": {
+        "text": "Outlet: final encounter ahead",
+        "size": 0.22,
+        "color": "#91d8a2ff",
+        "sortingLayer": "Foreground"
+      }
+    },
+    {
+      "name": "MiddleSewer46.4",
+      "id": "middle-sewer46.4",
+      "LocalTransform": { "position": [46.4, 0, -2] },
+      "ParallaxLayer": { "factor": [0.32, 0.18] },
+      "Sprite": { "image": "art/environment/middle", "size": [46.4, 12], "sortingLayer": "Background", "order": -20 },
+      "VisualOffset": {}
+    },
+    {
+      "name": "BackWaterLeft25.6",
+      "id": "back-water-left25.6",
+      "LocalTransform": { "position": [19.200000000000003, -3.45, -1] },
+      "ParallaxLayer": { "factor": [0.5, 0.32] },
+      "Sprite": {
+        "image": "art/environment/back-water-1",
+        "size": [12.8, 1.2],
+        "sortingLayer": "Background",
+        "order": -10
+      },
+      "SpriteAnimation": {
+        "frames": "art/environment/back-water-1,art/environment/back-water-2,art/environment/back-water-3",
+        "fps": 4,
+        "loop": false
+      },
+      "VisualOffset": {}
+    },
+    {
+      "name": "BackWaterRight25.6",
+      "id": "back-water-right25.6",
+      "LocalTransform": { "position": [32.0, -3.45, -1] },
+      "ParallaxLayer": { "factor": [0.5, 0.32] },
+      "Sprite": {
+        "image": "art/environment/back-water-1",
+        "size": [12.8, 1.2],
+        "sortingLayer": "Background",
+        "order": -10
+      },
+      "SpriteAnimation": {
+        "frames": "art/environment/back-water-1,art/environment/back-water-2,art/environment/back-water-3",
+        "fps": 4,
+        "loop": false
+      },
+      "VisualOffset": {}
+    },
+    {
+      "name": "FrontSewer29.6",
+      "id": "front-sewer29.6",
+      "LocalTransform": { "position": [29.6, 0, 1] },
+      "ParallaxLayer": { "factor": [0.82, 0.72] },
+      "Sprite": { "image": "art/environment/front", "size": [29.6, 12], "sortingLayer": "Background" },
+      "VisualOffset": {}
+    },
+    {
+      "name": "FrontSewer59.2",
+      "id": "front-sewer59.2",
+      "LocalTransform": { "position": [59.2, 0, 1] },
+      "ParallaxLayer": { "factor": [0.82, 0.72] },
+      "Sprite": { "image": "art/environment/front", "size": [29.6, 12], "sortingLayer": "Background" },
+      "VisualOffset": {}
+    },
+    {
+      "name": "FrontWaterLeft25.6",
+      "id": "front-water-left25.6",
+      "LocalTransform": { "position": [19.200000000000003, -3.8, 2] },
+      "ParallaxLayer": {},
+      "Sprite": {
+        "image": "art/environment/front-water/front-water1",
+        "size": [12.8, 1.6],
+        "sortingLayer": "World",
+        "order": 10
+      },
+      "SpriteAnimation": {
+        "frames": "art/environment/front-water/front-water1,art/environment/front-water/front-water2,art/environment/front-water/front-water3,art/environment/front-water/front-water4",
+        "fps": 6,
+        "loop": false
+      },
+      "VisualOffset": {}
+    },
+    {
+      "name": "FrontWaterLeft51.2",
+      "id": "front-water-left51.2",
+      "LocalTransform": { "position": [44.800000000000004, -3.8, 2] },
+      "ParallaxLayer": {},
+      "Sprite": {
+        "image": "art/environment/front-water/front-water1",
+        "size": [12.8, 1.6],
+        "sortingLayer": "World",
+        "order": 10
+      },
+      "SpriteAnimation": {
+        "frames": "art/environment/front-water/front-water1,art/environment/front-water/front-water2,art/environment/front-water/front-water3,art/environment/front-water/front-water4",
+        "fps": 6,
+        "loop": false
+      },
+      "VisualOffset": {}
+    },
+    {
+      "name": "FrontWaterRight25.6",
+      "id": "front-water-right25.6",
+      "LocalTransform": { "position": [32.0, -3.8, 2] },
+      "ParallaxLayer": {},
+      "Sprite": {
+        "image": "art/environment/front-water/front-water1",
+        "size": [12.8, 1.6],
+        "sortingLayer": "World",
+        "order": 10
+      },
+      "SpriteAnimation": {
+        "frames": "art/environment/front-water/front-water1,art/environment/front-water/front-water2,art/environment/front-water/front-water3,art/environment/front-water/front-water4",
+        "fps": 6,
+        "loop": false
+      },
+      "VisualOffset": {}
+    },
+    {
+      "name": "FrontWaterRight51.2",
+      "id": "front-water-right51.2",
+      "LocalTransform": { "position": [57.6, -3.8, 2] },
+      "ParallaxLayer": {},
+      "Sprite": {
+        "image": "art/environment/front-water/front-water1",
+        "size": [12.8, 1.6],
+        "sortingLayer": "World",
+        "order": 10
+      },
+      "SpriteAnimation": {
+        "frames": "art/environment/front-water/front-water1,art/environment/front-water/front-water2,art/environment/front-water/front-water3,art/environment/front-water/front-water4",
+        "fps": 6,
+        "loop": false
+      },
+      "VisualOffset": {}
+    },
+    {
+      "name": "RouteArrow-5.25-shaft",
+      "id": "route-arrow--5.25-shaft",
+      "LocalTransform": { "position": [-5.25, -0.9, 0] },
+      "Shape": { "size": [0.6, 0.08], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "RouteArrow-5.25-upper",
+      "id": "route-arrow--5.25-upper",
+      "LocalTransform": { "position": [-5.0, -0.78, 0], "rotation": [0, 0, -0.382683, 0.92388] },
+      "Shape": { "size": [0.32, 0.08], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "RouteArrow-5.25-lower",
+      "id": "route-arrow--5.25-lower",
+      "LocalTransform": { "position": [-5.0, -1.02, 0], "rotation": [0, 0, 0.382683, 0.92388] },
+      "Shape": { "size": [0.32, 0.08], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "RouteArrow9-shaft",
+      "id": "route-arrow-9-shaft",
+      "LocalTransform": { "position": [9, -0.9, 0] },
+      "Shape": { "size": [0.6, 0.08], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "RouteArrow9-upper",
+      "id": "route-arrow-9-upper",
+      "LocalTransform": { "position": [9.25, -0.78, 0], "rotation": [0, 0, -0.382683, 0.92388] },
+      "Shape": { "size": [0.32, 0.08], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "RouteArrow9-lower",
+      "id": "route-arrow-9-lower",
+      "LocalTransform": { "position": [9.25, -1.02, 0], "rotation": [0, 0, 0.382683, 0.92388] },
+      "Shape": { "size": [0.32, 0.08], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "RouteArrow28-shaft",
+      "id": "route-arrow-28-shaft",
+      "LocalTransform": { "position": [28, -0.9, 0] },
+      "Shape": { "size": [0.6, 0.08], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "RouteArrow28-upper",
+      "id": "route-arrow-28-upper",
+      "LocalTransform": { "position": [28.25, -0.78, 0], "rotation": [0, 0, -0.382683, 0.92388] },
+      "Shape": { "size": [0.32, 0.08], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "RouteArrow28-lower",
+      "id": "route-arrow-28-lower",
+      "LocalTransform": { "position": [28.25, -1.02, 0], "rotation": [0, 0, 0.382683, 0.92388] },
+      "Shape": { "size": [0.32, 0.08], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "RouteArrow47-shaft",
+      "id": "route-arrow-47-shaft",
+      "LocalTransform": { "position": [47, -0.9, 0] },
+      "Shape": { "size": [0.6, 0.08], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "RouteArrow47-upper",
+      "id": "route-arrow-47-upper",
+      "LocalTransform": { "position": [47.25, -0.78, 0], "rotation": [0, 0, -0.382683, 0.92388] },
+      "Shape": { "size": [0.32, 0.08], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "RouteArrow47-lower",
+      "id": "route-arrow-47-lower",
+      "LocalTransform": { "position": [47.25, -1.02, 0], "rotation": [0, 0, 0.382683, 0.92388] },
+      "Shape": { "size": [0.32, 0.08], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "RouteArrow54-shaft",
+      "id": "route-arrow-54-shaft",
+      "LocalTransform": { "position": [54, -0.9, 0] },
+      "Shape": { "size": [0.6, 0.08], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "RouteArrow54-upper",
+      "id": "route-arrow-54-upper",
+      "LocalTransform": { "position": [54.25, -0.78, 0], "rotation": [0, 0, -0.382683, 0.92388] },
+      "Shape": { "size": [0.32, 0.08], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    },
+    {
+      "name": "RouteArrow54-lower",
+      "id": "route-arrow-54-lower",
+      "LocalTransform": { "position": [54.25, -1.02, 0], "rotation": [0, 0, 0.382683, 0.92388] },
+      "Shape": { "size": [0.32, 0.08], "color": "#91d8a2ff", "sortingLayer": "Foreground" }
+    }
+  ]
+}

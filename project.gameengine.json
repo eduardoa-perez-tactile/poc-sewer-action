@@ -25,7 +25,8 @@
           "assets/art/soldier/**",
           "assets/art/effects/**",
           "assets/rooms/**",
-          "scenes/main.scene.json"
+          "scenes/main.scene.json",
+          "scenes/complete-sewer.scene.json"
         ]
       }
     }
@@ -34,6 +35,6 @@
   "bundles": [{ "name": "base", "include": ["**"], "delivery": "in-app", "exclude": ["assets/audio/sfx/rainbowlaser.ogg"] }],
   "targets": ["ios", "android"],
   "platforms": ["web"],
-  "startScene": "scenes/main.scene.json",
+  "startScene": "scenes/complete-sewer.scene.json",
   "check": { "smoke": { "frames": 120 } }
 }

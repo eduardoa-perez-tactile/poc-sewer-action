@@ -1,4 +1,4 @@
-import { expect, renderTest, worldTest } from '@gameengine/test';
+import { expect, renderTest, worldTest } from './first-room-test.ts';
 import { Clip2D, clip2DInfo, Disabled, entityString, LoadingResumed, LocalTransform, ParticleSystem, Sprite, VisualOffset, WorldTransform } from '@gameengine/runtime';
 import { CameraFollowState, CombatEffect, CombatVisual, CombatVisualState, DamageRequested, EnemyBrain, EnemyProjectile, Health, HitReaction, Player, RestartRequested, SoldierVisual } from '../src/schema.gen.ts';
 

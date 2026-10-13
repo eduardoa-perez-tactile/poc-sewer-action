@@ -1,4 +1,4 @@
-import { expect, worldTest } from '@gameengine/test';
+import { expect, worldTest } from './first-room-test.ts';
 import { entityString, LoadingResumed, LocalTransform } from '@gameengine/runtime';
 import { AudioCue, CombatEffect, DamageRequested, EnemyBrain, GameState, GameplayAudioState, Health, Player, RestartRequested, WaterEntered } from '../src/schema.gen.ts';
 

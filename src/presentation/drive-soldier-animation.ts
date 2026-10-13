@@ -1,4 +1,4 @@
-import { assetKey, Clip2D, clip2DFrame, clip2DInfo, defineSystem, entityAt, LocalTransform, query, read, RenderTime, Sprite, VisualOffset, write } from '@gameengine/runtime';
+import { type Chunk, type EntityId, assetKey, Clip2D, clip2DFrame, clip2DInfo, defineSystem, entityAt, LocalTransform, query, read, RenderTime, Sprite, VisualOffset, write } from '@gameengine/runtime';
 import { EnemyBrain, Health, HitReaction, RestartRequested, SoldierVisual, SoldierVisualState } from '../schema.gen.ts';
 
 /** The attack clock remains on the actor. This proxy samples that clock without advancing it. */
@@ -13,12 +13,21 @@ export const DriveSoldierAnimation = defineSystem({
   runIf: { any: [{ changed: [EnemyBrain, Health, HitReaction, Clip2D, LocalTransform] }, { event: RestartRequested }, { resource: SoldierVisualState, field: 'active', value: true }] },
   run(ctx, { actors, visuals }) {
     let active = false;
+    const actorRows = new Map<EntityId, { chunk: Chunk; row: number }>();
+    for (const chunk of actors.chunks()) for (let row = 0; row < chunk.length; row++) actorRows.set(chunk.entity(row), { chunk, row });
     const delta = ctx.resource(RenderTime).realDelta[0]!;
     for (const visual of visuals.chunks()) for (let row = 0; row < visual.length; row++) {
       const state = visual.col(SoldierVisual);
       const actor = entityAt(state.actor, row);
-      for (const chunk of actors.chunks()) for (let i = 0; i < chunk.length; i++) {
-        if (chunk.entity(i) !== actor) continue;
+      const actorRow = actorRows.get(actor);
+      if (!actorRow) continue;
+      {
+        const chunk = actorRow.chunk, i = actorRow.row;
+        const previousClip = assetKey(state.clip[row]!) ?? 'art/soldier/idle.clip2d.json';
+        const previousInfo = clip2DInfo(previousClip);
+        const unfinished = previousInfo.loop === 'loop' || state.time[row]! < previousInfo.duration;
+        const dirty = !state.initialized[row] || ctx.events.count(RestartRequested) > 0 || chunk.changed(EnemyBrain, i) || chunk.changed(Health, i) || chunk.changed(HitReaction, i) || chunk.changed(Clip2D, i) || chunk.changed(LocalTransform, i);
+        if (!dirty && !unfinished) continue;
         const p = chunk.col(LocalTransform).position;
         const x = p[i * 3]!, y = p[i * 3 + 1]!;
         const attacking = chunk.is(EnemyBrain, i, 'state', 'Attack');

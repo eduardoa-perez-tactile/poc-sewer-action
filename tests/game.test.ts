@@ -1,4 +1,4 @@
-import { expect, renderTest, type TestWorld, worldTest } from '@gameengine/test';
+import { expect, renderTest, type TestWorld, worldTest } from './first-room-test.ts';
 import { ActionState, Bounds2D, Camera, clip2DInfo, Disabled, LoadingResumed, LocalTransform, NavGrid, pool, Sprite, SpriteAnimation, Tilemap, VisualOffset, WorldView } from '@gameengine/runtime';
 import {
   CameraFeedback,

@@ -1,10 +1,10 @@
-import { added, defineSystem, LocalTransform, query, read, Sprite, VisualOffset } from '@gameengine/runtime';
-import { EnemyBrain, EnemyProjectile, RoomLandmark, SoldierVisual } from '../schema.gen.ts';
+import { added, without, defineSystem, LocalTransform, query, read, Sprite, VisualOffset } from '@gameengine/runtime';
+import { EncounterMember, EnemyBrain, EnemyProjectile, RoomLandmark, SoldierVisual } from '../schema.gen.ts';
 
 /** Reserve presentation on the existing encounter marker: no new entities or hashed transforms. */
 export const WarmSoldierVisual = defineSystem({
   name: 'WarmSoldierVisual', stage: 'PostUpdate',
-  queries: { actors: query(read(EnemyBrain)), anchors: query(read(RoomLandmark), read(LocalTransform)) },
+  queries: { actors: query(read(EnemyBrain), without(EncounterMember)), anchors: query(read(RoomLandmark), read(LocalTransform)) },
   runIf: { query: query(added(EnemyProjectile), { includeDisabled: true }) },
   run(ctx, { actors, anchors }) {
     for (const chunk of actors.chunks()) for (let row = 0; row < chunk.length; row++) {

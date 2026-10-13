@@ -1,4 +1,4 @@
-import { expect, type TestWorld, worldTest } from '@gameengine/test';
+import { expect, type TestWorld, worldTest } from './first-room-test.ts';
 import { Clip2D, Disabled, LoadingResumed, LocalTransform, pool } from '@gameengine/runtime';
 import { EnemyAttackPoolState, EnemyBrain, EnemyProjectile, GameState, Health, Player, RoomCollisionState } from '../src/schema.gen.ts';
 

@@ -1,5 +1,5 @@
 import { defineSystem, LocalTransform, query, read, write } from '@gameengine/runtime';
-import { EnemyBrain, GameState, PlatformCollisionGrid, Player } from '../schema.gen.ts';
+import { LevelCollisionIndex, EnemyBrain, GameState, PlatformCollisionGrid, Player } from '../schema.gen.ts';
 
 const EDGE_EPSILON = 0.0001;
 
@@ -7,6 +7,7 @@ export const AdvanceSoldierAI = defineSystem({
   name: 'AdvanceSoldierAI',
   after: ['ResolvePlatformCollision'],
   queries: {
+    levelIndex: query(read(LevelCollisionIndex)),
     soldiers: query(write(EnemyBrain), write(LocalTransform)),
     players: query(read(Player), read(LocalTransform)),
   },
@@ -15,7 +16,7 @@ export const AdvanceSoldierAI = defineSystem({
     { resource: GameState, field: 'phase', value: 'Playing' },
     { query: query(read(EnemyBrain)) },
   ],
-  run(ctx, { soldiers, players }) {
+  run(ctx, { soldiers, players, levelIndex }) {
     let hasPlayer = false;
     let playerX = 0;
     let playerY = 0;
@@ -32,6 +33,9 @@ export const AdvanceSoldierAI = defineSystem({
     const originX = grid.originX[0]!;
     const originY = grid.originY[0]!;
     const cellSize = grid.cellSize[0]!;
+
+    let words: Uint32Array | undefined;
+    for (const chunk of levelIndex.chunks()) if (chunk.length > 0) words = chunk.col(LevelCollisionIndex).words;
 
     for (const chunk of soldiers.chunks()) {
       const brain = chunk.col(EnemyBrain);
@@ -113,7 +117,7 @@ export const AdvanceSoldierAI = defineSystem({
         const probeCellX = Math.floor((probeX - originX) / cellSize);
         const supportCellY = Math.floor((y - originY - EDGE_EPSILON) / cellSize);
         const supported = probeCellX >= 0 && probeCellX < grid.columns[0]! && supportCellY >= 0 && supportCellY < grid.rows[0]!
-          && ((grid.solidRows[supportCellY]! >>> probeCellX) & 1) !== 0;
+          && (((words ? words[supportCellY * 4 + (probeCellX >>> 5)]! : grid.solidRows[supportCellY]!) >>> (probeCellX & 31)) & 1) !== 0;
 
         if (!supported) {
           if (!chasing) {

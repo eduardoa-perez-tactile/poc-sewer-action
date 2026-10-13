@@ -1,5 +1,6 @@
+import { solidCells } from '../room/solid-cells.ts';
 import { Bounds2D, defineSystem, entityAt, type EntityId, LocalTransform, NO_ENTITY, pool, query, read, write } from '@gameengine/runtime';
-import { CombatEffect, DamageRequested, GameState, Health, PlatformCollisionCell, PlatformCollisionGrid, Projectile } from '../schema.gen.ts';
+import { LevelCollisionIndex, CombatEffect, DamageRequested, GameState, Health, PlatformCollisionCell, PlatformCollisionGrid, Projectile } from '../schema.gen.ts';
 
 const EPSILON = 0.00001;
 
@@ -8,16 +9,19 @@ export const AdvanceProjectiles = defineSystem({
   after: ['FirePlayerWeapon'],
   queries: {
     projectiles: query(write(Projectile), read(Bounds2D), write(LocalTransform)),
+    levelIndex: query(read(LevelCollisionIndex)),
     cells: query(read(PlatformCollisionCell)),
     targets: query(read(Health), read(Bounds2D), read(LocalTransform)),
   },
   resources: [read(GameState), read(PlatformCollisionGrid)],
   runIf: { resource: GameState, field: 'phase', value: 'Playing' },
-  run(ctx, { projectiles, cells, targets }) {
+  run(ctx, { projectiles, cells, targets, levelIndex }) {
     const grid = ctx.resource(PlatformCollisionGrid);
     const originX = grid.originX[0]!;
     const originY = grid.originY[0]!;
     const cellSize = grid.cellSize[0]!;
+    let words: Uint32Array | undefined;
+    for (const chunk of levelIndex.chunks()) if (chunk.length > 0) words = chunk.col(LevelCollisionIndex).words;
     const recycle: EntityId[] = [];
 
     for (const chunk of projectiles.chunks()) {
@@ -39,18 +43,15 @@ export const AdvanceProjectiles = defineSystem({
         const collisionToX = toX + offsetX;
         let hitWall = false;
 
-        for (const cellChunk of cells.chunks()) {
-          const cell = cellChunk.col(PlatformCollisionCell);
-          for (let cellRow = 0; cellRow < cellChunk.length; cellRow++) {
-            const left = originX + cell.x[cellRow]! * cellSize;
-            const bottom = originY + cell.y[cellRow]! * cellSize;
+        for (const coordinate of solidCells(cells, words, originX, originY, cellSize, grid.columns[0]!, grid.rows[0]!, Math.min(collisionFromX, collisionToX) - halfWidth, Math.max(collisionFromX, collisionToX) + halfWidth, y - halfHeight, y + halfHeight)) {
+            const left = originX + ((coordinate << 16) >> 16) * cellSize;
+            const bottom = originY + (coordinate >> 16) * cellSize;
             const right = left + cellSize;
             const top = bottom + cellSize;
             if (y + halfHeight <= bottom + EPSILON || y - halfHeight >= top - EPSILON) continue;
             if (projectile.direction[row]! > 0 && collisionFromX + halfWidth <= left + EPSILON && collisionToX + halfWidth >= left) hitWall = true;
             if (projectile.direction[row]! < 0 && collisionFromX - halfWidth >= right - EPSILON && collisionToX - halfWidth <= right) hitWall = true;
           }
-        }
 
         let hitTarget = false;
         if (!hitWall) {
