@@ -2,7 +2,7 @@ guid = "ef011ca4-3ccb-4854-8c53-1e674c6eaa40"
 importer = "texture"
 
 [settings]
-atlas = "ui"
+atlas = "effects"
 compression = "none"
 trim = true
 key = "#000000"

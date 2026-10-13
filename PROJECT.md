@@ -168,3 +168,28 @@ blocker while development and verification use the desktop host.
 - Architecture has no must/should findings; performance has no blocker and notes tight draw
   headroom. Inspect/tune through `docs/presentation/ISSUE-26.md`. Hermes #6, browser packaging,
   real phone measurement and the missing Android package template remain separate limits.
+
+## MVC view flow (issue #27)
+
+- Shipping boot shows the Title view; Start and Play again enter a fresh sewer-run scene using
+  the existing full-route content. HUD shows health, route beat and dash readiness. Pause/resume,
+  death/checkpoint retry and completion/title/play-again all have visible keyboard/gamepad focus
+  plus pointer/touch buttons. Controllers fill models; views observe no ECS state.
+- Recorded action entities persist across scene switches. PreUpdate flow decisions precede input
+  capture so released controls cannot leak into resume. Added-marker initializers explicitly reset bootstrap
+  resources and authored camera bounds on cooked scene swaps. Pause holds native attack clips, gameplay
+  counters and cadavers; resume compensates health/water/final-warning absolute deadlines.
+- All screen samples fit eight landscape safe-area extremes with 44-point controls. A fixed HUD
+  reserve preserves the complete 16:9 frame. Static opaque menu/terminal covers cap at 30 fps;
+  player/soldier clocks hold, finite feedback settles, and models update on changed facts only.
+- Nine focused tests, ten narrow/wide goldens and a start/pause/death/retry/full-win/play-again
+  input replay prove the flow. All 121 prior logic traces remain identical; existing replay,
+  golden and structural budgets are preserved. Flow peaks at 12/16 draws with zero play-time
+  pipeline creation and zero GC pauses over 4 ms. Title art shares the small boot feedback page
+  to preserve five-page residency; source art is unchanged.
+- Relative release desktop/mobile-tier idle-player step p95 is 0.239 → 0.261 ms, title 0.061 ms,
+  pause 0.081 ms, RSS peak 74.25 MiB and heap peak 6.34 MiB. These are host comparisons, not phone
+  GPU/thermal/idle-frame-skipping evidence. Architecture has no remaining must/should findings;
+  performance has no blocker after removing fresh menu-choice allocations.
+- Ownership, tuning, reports and exact limits: `docs/ui/ISSUE-27.md`. Hermes #6, browser packaging,
+  real phone measurements and the absent Android package template remain separate limitations.

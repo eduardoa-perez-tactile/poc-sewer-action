@@ -92,12 +92,25 @@
       "package": "SewerAction"
     },
     {
+      "name": "FlowAction",
+      "values": [
+        "Start",
+        "Pause",
+        "Resume",
+        "Restart",
+        "Title"
+      ],
+      "package": "SewerAction"
+    },
+    {
       "name": "GamePhase",
       "values": [
         "Booting",
         "Playing",
         "PlayerDead",
-        "Completed"
+        "Completed",
+        "Title",
+        "Paused"
       ],
       "package": "SewerAction"
     },
@@ -1167,6 +1180,144 @@
       "doc": "Authored enemy state restored by a deterministic encounter restart."
     },
     {
+      "name": "FlowRequested",
+      "kind": "event",
+      "sim": true,
+      "fields": [
+        {
+          "name": "action",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "FlowAction"
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Desired flow action from an MVC view; simulation validates the current phase."
+    },
+    {
+      "name": "GameplayUI",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "enabled",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1
+        },
+        {
+          "name": "focus",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "health",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "maximum",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "beat",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "cleared",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "dashReady",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Changed-only HUD snapshot. Excluded from simulation and legacy fixtures."
+    },
+    {
+      "name": "SessionFlow",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "focus",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "observedPhase",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "menuHeld",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1
+        },
+        {
+          "name": "pausedAt",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Authored only in the shipping flow scenes. Owns recorded menu selection and pause timing."
+    },
+    {
+      "name": "SessionRoom",
+      "kind": "component",
+      "sim": false,
+      "fields": [
+        {
+          "name": "left",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": -8
+        },
+        {
+          "name": "right",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 56
+        },
+        {
+          "name": "bottom",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": -4.5
+        },
+        {
+          "name": "top",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 4.5
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Authored camera envelope for shipping session scenes; applied on each new run, including cooked swaps."
+    },
+    {
       "name": "CameraFeedback",
       "kind": "resource",
       "sim": false,
@@ -2171,6 +2322,13 @@
           "lanes": 1,
           "assetType": "clip2d",
           "doc": "Current authored flipbook selected by presentation."
+        },
+        {
+          "name": "paused",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "doc": "Whether the flow paused this presentation clock."
         }
       ],
       "package": "SewerAction",

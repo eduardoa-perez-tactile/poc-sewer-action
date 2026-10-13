@@ -1,0 +1,89 @@
+{
+  "$schemaVersion": 1,
+  "guid": "064804b7-4c37-48ff-94fe-0dc62de90124",
+  "name": "flow-panel",
+  "kind": "widget",
+  "transition": {
+    "type": "instant"
+  },
+  "properties": {
+    "title": {
+      "type": "text",
+      "default": ""
+    },
+    "detail": {
+      "type": "text",
+      "default": ""
+    }
+  },
+  "root": "root",
+  "nodes": {
+    "root": {
+      "type": "element",
+      "style": {
+        "pad": 32,
+        "gap": 20,
+        "bg": "#09131c",
+        "justify": "center"
+      },
+      "children": [
+        "title",
+        "detail",
+        "actions",
+        "help",
+        "controls"
+      ]
+    },
+    "title": {
+      "type": "label",
+      "text": "{title}",
+      "style": {
+        "h": 88,
+        "fontSize": 72,
+        "fitMin": 40,
+        "color": "#a7e7c1",
+        "textAlign": "center"
+      }
+    },
+    "detail": {
+      "type": "label",
+      "text": "{detail}",
+      "style": {
+        "h": 72,
+        "fontSize": 32,
+        "fitMin": 22,
+        "color": "#edf5ee",
+        "textAlign": "center"
+      }
+    },
+    "actions": {
+      "type": "codeArea",
+      "key": "actions",
+      "style": {
+        "h": 148
+      }
+    },
+    "help": {
+      "type": "label",
+      "text": "Select: W/S or stick  |  Confirm: Enter or A  |  Back: Q or B",
+      "style": {
+        "h": 48,
+        "fontSize": 26,
+        "fitMin": 18,
+        "color": "#c5d5db",
+        "textAlign": "center"
+      }
+    },
+    "controls": {
+      "type": "label",
+      "text": "Move A/D  \u2022  Jump W  \u2022  Fire F  \u2022  Dash Shift  \u2022  Pause P / Start",
+      "style": {
+        "h": 48,
+        "fontSize": 26,
+        "fitMin": 18,
+        "color": "#c5d5db",
+        "textAlign": "center"
+      }
+    }
+  }
+}

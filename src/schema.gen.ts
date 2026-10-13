@@ -99,12 +99,25 @@ export const schemaIr = {
       "package": "SewerAction"
     },
     {
+      "name": "FlowAction",
+      "values": [
+        "Start",
+        "Pause",
+        "Resume",
+        "Restart",
+        "Title"
+      ],
+      "package": "SewerAction"
+    },
+    {
       "name": "GamePhase",
       "values": [
         "Booting",
         "Playing",
         "PlayerDead",
-        "Completed"
+        "Completed",
+        "Title",
+        "Paused"
       ],
       "package": "SewerAction"
     },
@@ -1174,6 +1187,144 @@ export const schemaIr = {
       "doc": "Authored enemy state restored by a deterministic encounter restart."
     },
     {
+      "name": "FlowRequested",
+      "kind": "event",
+      "sim": true,
+      "fields": [
+        {
+          "name": "action",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "FlowAction"
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Desired flow action from an MVC view; simulation validates the current phase."
+    },
+    {
+      "name": "GameplayUI",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "enabled",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1
+        },
+        {
+          "name": "focus",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "health",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "maximum",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "beat",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "cleared",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "dashReady",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Changed-only HUD snapshot. Excluded from simulation and legacy fixtures."
+    },
+    {
+      "name": "SessionFlow",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "focus",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "observedPhase",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "menuHeld",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1
+        },
+        {
+          "name": "pausedAt",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Authored only in the shipping flow scenes. Owns recorded menu selection and pause timing."
+    },
+    {
+      "name": "SessionRoom",
+      "kind": "component",
+      "sim": false,
+      "fields": [
+        {
+          "name": "left",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": -8
+        },
+        {
+          "name": "right",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 56
+        },
+        {
+          "name": "bottom",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": -4.5
+        },
+        {
+          "name": "top",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 4.5
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Authored camera envelope for shipping session scenes; applied on each new run, including cooked swaps."
+    },
+    {
       "name": "CameraFeedback",
       "kind": "resource",
       "sim": false,
@@ -2178,6 +2329,13 @@ export const schemaIr = {
           "lanes": 1,
           "assetType": "clip2d",
           "doc": "Current authored flipbook selected by presentation."
+        },
+        {
+          "name": "paused",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "doc": "Whether the flow paused this presentation clock."
         }
       ],
       "package": "SewerAction",
@@ -2749,13 +2907,24 @@ export const EnemyRestartFacing = {
 } as const;
 export type EnemyRestartFacingName = 'Left' | 'Right';
 
+export const FlowAction = {
+  Start: 0,
+  Pause: 1,
+  Resume: 2,
+  Restart: 3,
+  Title: 4,
+} as const;
+export type FlowActionName = 'Start' | 'Pause' | 'Resume' | 'Restart' | 'Title';
+
 export const GamePhase = {
   Booting: 0,
   Playing: 1,
   PlayerDead: 2,
   Completed: 3,
+  Title: 4,
+  Paused: 5,
 } as const;
-export type GamePhaseName = 'Booting' | 'Playing' | 'PlayerDead' | 'Completed';
+export type GamePhaseName = 'Booting' | 'Playing' | 'PlayerDead' | 'Completed' | 'Title' | 'Paused';
 
 export const MoveDirection = {
   Left: 0,
@@ -3234,6 +3403,66 @@ export interface EnemyRestartStateValue {
 }
 /** Authored enemy state restored by a deterministic encounter restart. (component, sim) */
 export const EnemyRestartState = typeToken<EnemyRestartStateViews, EnemyRestartStateValue>('EnemyRestartState', 'component', { sig: 'state:enum:1,facing:enum:1,attackSequence:u32:1', read: (v: EnemyRestartStateViews, i: number, o: Record<string, unknown>) => { o.state = $r.enm('EnemyRestartBrainState', v.state[i]!); o.facing = $r.enm('EnemyRestartFacing', v.facing[i]!); o.attackSequence = v.attackSequence[i]; return o; } });
+
+export interface FlowRequestedViews {
+  action: Uint8Array;
+}
+export interface FlowRequestedValue {
+  action: FlowActionName | number;
+}
+/** Desired flow action from an MVC view; simulation validates the current phase. (event, sim) */
+export const FlowRequested = typeToken<FlowRequestedViews, FlowRequestedValue>('FlowRequested', 'event', { sig: 'action:enum:1', read: (v: FlowRequestedViews, i: number, o: Record<string, unknown>) => { o.action = $r.enm('FlowAction', v.action[i]!); return o; } });
+
+export interface GameplayUIViews {
+  enabled: Uint8Array;
+  focus: Uint32Array;
+  health: Uint32Array;
+  maximum: Uint32Array;
+  beat: Uint32Array;
+  cleared: Uint32Array;
+  dashReady: Uint8Array;
+}
+export interface GameplayUIValue {
+  enabled: boolean;
+  focus: number;
+  health: number;
+  maximum: number;
+  beat: number;
+  cleared: number;
+  dashReady: boolean;
+}
+/** Changed-only HUD snapshot. Excluded from simulation and legacy fixtures. (resource, presentation-only) */
+export const GameplayUI = typeToken<GameplayUIViews, GameplayUIValue>('GameplayUI', 'resource', { sig: 'enabled:bool:1,focus:u32:1,health:u32:1,maximum:u32:1,beat:u32:1,cleared:u32:1,dashReady:bool:1', read: (v: GameplayUIViews, i: number, o: Record<string, unknown>) => { o.enabled = v.enabled[i] !== 0; o.focus = v.focus[i]; o.health = v.health[i]; o.maximum = v.maximum[i]; o.beat = v.beat[i]; o.cleared = v.cleared[i]; o.dashReady = v.dashReady[i] !== 0; return o; } });
+
+export interface SessionFlowViews {
+  focus: Uint32Array;
+  observedPhase: Uint32Array;
+  menuHeld: Uint8Array;
+  pausedAt: Uint32Array;
+}
+export interface SessionFlowValue {
+  focus: number;
+  observedPhase: number;
+  menuHeld: boolean;
+  pausedAt: number;
+}
+/** Authored only in the shipping flow scenes. Owns recorded menu selection and pause timing. (component, sim) */
+export const SessionFlow = typeToken<SessionFlowViews, SessionFlowValue>('SessionFlow', 'component', { sig: 'focus:u32:1,observedPhase:u32:1,menuHeld:bool:1,pausedAt:u32:1', read: (v: SessionFlowViews, i: number, o: Record<string, unknown>) => { o.focus = v.focus[i]; o.observedPhase = v.observedPhase[i]; o.menuHeld = v.menuHeld[i] !== 0; o.pausedAt = v.pausedAt[i]; return o; } });
+
+export interface SessionRoomViews {
+  left: Float32Array;
+  right: Float32Array;
+  bottom: Float32Array;
+  top: Float32Array;
+}
+export interface SessionRoomValue {
+  left: number;
+  right: number;
+  bottom: number;
+  top: number;
+}
+/** Authored camera envelope for shipping session scenes; applied on each new run, including cooked swaps. (component, presentation-only) */
+export const SessionRoom = typeToken<SessionRoomViews, SessionRoomValue>('SessionRoom', 'component', { sig: 'left:f32:1,right:f32:1,bottom:f32:1,top:f32:1', read: (v: SessionRoomViews, i: number, o: Record<string, unknown>) => { o.left = v.left[i]; o.right = v.right[i]; o.bottom = v.bottom[i]; o.top = v.top[i]; return o; } });
 
 export interface CameraFeedbackViews {
   /** Whether transient feedback still needs presentation frames. */
@@ -3718,13 +3947,17 @@ export const PlayerActionState = typeToken<PlayerActionStateViews, PlayerActionS
 export interface PlayerAnimationPresentationViews {
   /** Current authored flipbook selected by presentation. */
   clip: Uint32Array;
+  /** Whether the flow paused this presentation clock. */
+  paused: Uint8Array;
 }
 export interface PlayerAnimationPresentationValue {
   /** Current authored flipbook selected by presentation. */
   clip: string | null;
+  /** Whether the flow paused this presentation clock. */
+  paused: boolean;
 }
 /** Presentation-only animation controller state; never read by gameplay. (component, presentation-only) */
-export const PlayerAnimationPresentation = typeToken<PlayerAnimationPresentationViews, PlayerAnimationPresentationValue>('PlayerAnimationPresentation', 'component', { sig: 'clip:asset:1', read: (v: PlayerAnimationPresentationViews, i: number, o: Record<string, unknown>) => { o.clip = $r.asset(v.clip[i]!); return o; } });
+export const PlayerAnimationPresentation = typeToken<PlayerAnimationPresentationViews, PlayerAnimationPresentationValue>('PlayerAnimationPresentation', 'component', { sig: 'clip:asset:1,paused:bool:1', read: (v: PlayerAnimationPresentationViews, i: number, o: Record<string, unknown>) => { o.clip = $r.asset(v.clip[i]!); o.paused = v.paused[i] !== 0; return o; } });
 
 export interface PlayerControlViews {
   /** Recorded horizontal intent normalized to [-1, 1]. */

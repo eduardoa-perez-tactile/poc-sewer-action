@@ -9,6 +9,8 @@ export const CapturePlayerIntent = defineSystem({
   resources: [read(GameState), read(PlayerActionState), write(PlayerStepInput)],
   events: [PlayerIntent],
   runIf: [
+    { resource: GameState, field: 'phase', op: '!=', value: 'Title' },
+    { resource: GameState, field: 'phase', op: '!=', value: 'Paused' },
     { resource: GameState, field: 'phase', op: '!=', value: 'PlayerDead' },
     { resource: GameState, field: 'phase', op: '!=', value: 'Completed' },
   ],
