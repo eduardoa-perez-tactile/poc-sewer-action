@@ -1,5 +1,6 @@
 // @generated — do not edit. Regenerate with `pnpm gen` (tools/bindgen).
-import { typeToken, rowRead as $r, registerSchema, type EntityId } from '@gameengine/runtime';
+import { typeToken, rowRead as $r, registerSchema, dataToken, type DataRecord, type EntityId } from '@gameengine/runtime';
+import './content.gen.ts';
 
 export type { EntityId };
 
@@ -1437,6 +1438,116 @@ export const schemaIr = {
       "doc": "Run gate for bounded splash presentation; stops all adapter work once hidden."
     },
     {
+      "name": "EncounterMember",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "beat",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "activated",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Authored encounter membership; bounded actors allocated once during boot."
+    },
+    {
+      "name": "LevelCollisionIndex",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "words",
+          "kind": "array",
+          "scalar": "u32",
+          "lanes": 128
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Four packed 32-bit words per row; at most 128 columns by 32 rows."
+    },
+    {
+      "name": "LevelProgress",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "data",
+          "kind": "asset",
+          "scalar": "u32",
+          "lanes": 1,
+          "assetType": "data"
+        },
+        {
+          "name": "built",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1
+        },
+        {
+          "name": "beat",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "checkpoint",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "cleared",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "finished",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1
+        },
+        {
+          "name": "activationPending",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Level anchor owns ordered progress and checkpoint state. No final encounter or win UI."
+    },
+    {
+      "name": "TerrainVisual",
+      "kind": "component",
+      "sim": false,
+      "fields": [
+        {
+          "name": "row",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "columns",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Merged visible sewer ledges derived from the collision tilemap during boot."
+    },
+    {
       "name": "MenuIntent",
       "kind": "event",
       "sim": true,
@@ -1545,7 +1656,7 @@ export const schemaIr = {
           "scalar": "u32",
           "lanes": 1,
           "default": 0,
-          "max": 32,
+          "max": 128,
           "doc": "Active columns in the packed static occupancy rows."
         },
         {
@@ -2126,7 +2237,127 @@ export const schemaIr = {
   ],
   "commands": [],
   "protocol": [],
-  "services": []
+  "services": [],
+  "data": [
+    {
+      "name": "SewerLevelDef",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "tilemap": {
+            "type": "string",
+            "x-ref": "asset"
+          },
+          "finishX": {
+            "type": "number"
+          },
+          "transition": {
+            "type": "string"
+          },
+          "beats": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "startX": {
+                  "type": "number"
+                },
+                "checkpointX": {
+                  "type": "number"
+                },
+                "checkpointY": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "name",
+                "startX",
+                "checkpointX",
+                "checkpointY"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "soldiers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "beat": {
+                  "type": "integer"
+                },
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "patrolMinX": {
+                  "type": "number"
+                },
+                "patrolMaxX": {
+                  "type": "number"
+                },
+                "health": {
+                  "type": "integer"
+                },
+                "cooldown": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "beat",
+                "x",
+                "y",
+                "patrolMinX",
+                "patrolMaxX",
+                "health",
+                "cooldown"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "water": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number"
+                },
+                "width": {
+                  "type": "number"
+                },
+                "surfaceY": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "x",
+                "width",
+                "surfaceY"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "tilemap",
+          "finishX",
+          "transition",
+          "beats",
+          "soldiers",
+          "water"
+        ],
+        "additionalProperties": false
+      },
+      "package": "SewerAction",
+      "doc": "Complete sewer route, spawn manifest, checkpoints and issue-25 transition hook."
+    }
+  ]
 } as const;
 registerSchema(schemaIr);
 
@@ -2819,6 +3050,58 @@ export interface WaterSplashStateValue {
 /** Run gate for bounded splash presentation; stops all adapter work once hidden. (resource, presentation-only) */
 export const WaterSplashState = typeToken<WaterSplashStateViews, WaterSplashStateValue>('WaterSplashState', 'resource', { sig: 'active:bool:1', read: (v: WaterSplashStateViews, i: number, o: Record<string, unknown>) => { o.active = v.active[i] !== 0; return o; } });
 
+export interface EncounterMemberViews {
+  beat: Uint32Array;
+  activated: Uint8Array;
+}
+export interface EncounterMemberValue {
+  beat: number;
+  activated: boolean;
+}
+/** Authored encounter membership; bounded actors allocated once during boot. (component, sim) */
+export const EncounterMember = typeToken<EncounterMemberViews, EncounterMemberValue>('EncounterMember', 'component', { sig: 'beat:u32:1,activated:bool:1', read: (v: EncounterMemberViews, i: number, o: Record<string, unknown>) => { o.beat = v.beat[i]; o.activated = v.activated[i] !== 0; return o; } });
+
+export interface LevelCollisionIndexViews {
+  words: Uint32Array;
+}
+export interface LevelCollisionIndexValue {
+  words: number[];
+}
+/** Four packed 32-bit words per row; at most 128 columns by 32 rows. (component, sim) */
+export const LevelCollisionIndex = typeToken<LevelCollisionIndexViews, LevelCollisionIndexValue>('LevelCollisionIndex', 'component', { sig: 'words:array:128', read: (v: LevelCollisionIndexViews, i: number, o: Record<string, unknown>) => { o.words = $r.lanes(v.words, i, 128, o.words); return o; } });
+
+export interface LevelProgressViews {
+  data: Uint32Array;
+  built: Uint8Array;
+  beat: Uint32Array;
+  checkpoint: Uint32Array;
+  cleared: Uint32Array;
+  finished: Uint8Array;
+  activationPending: Uint8Array;
+}
+export interface LevelProgressValue {
+  data: string | null;
+  built: boolean;
+  beat: number;
+  checkpoint: number;
+  cleared: number;
+  finished: boolean;
+  activationPending: boolean;
+}
+/** Level anchor owns ordered progress and checkpoint state. No final encounter or win UI. (component, sim) */
+export const LevelProgress = typeToken<LevelProgressViews, LevelProgressValue>('LevelProgress', 'component', { sig: 'data:asset:1,built:bool:1,beat:u32:1,checkpoint:u32:1,cleared:u32:1,finished:bool:1,activationPending:bool:1', read: (v: LevelProgressViews, i: number, o: Record<string, unknown>) => { o.data = $r.asset(v.data[i]!); o.built = v.built[i] !== 0; o.beat = v.beat[i]; o.checkpoint = v.checkpoint[i]; o.cleared = v.cleared[i]; o.finished = v.finished[i] !== 0; o.activationPending = v.activationPending[i] !== 0; return o; } });
+
+export interface TerrainVisualViews {
+  row: Uint32Array;
+  columns: Uint32Array;
+}
+export interface TerrainVisualValue {
+  row: number;
+  columns: number;
+}
+/** Merged visible sewer ledges derived from the collision tilemap during boot. (component, presentation-only) */
+export const TerrainVisual = typeToken<TerrainVisualViews, TerrainVisualValue>('TerrainVisual', 'component', { sig: 'row:u32:1,columns:u32:1', read: (v: TerrainVisualViews, i: number, o: Record<string, unknown>) => { o.row = v.row[i]; o.columns = v.columns[i]; return o; } });
+
 export interface MenuIntentViews {
   moveX: Float32Array;
   moveY: Float32Array;
@@ -3145,3 +3428,33 @@ export interface PlayerStepInputValue {
 }
 /** Unconditionally overwritten input sample consumed in the same fixed step. (resource, sim) */
 export const PlayerStepInput = typeToken<PlayerStepInputViews, PlayerStepInputValue>('PlayerStepInput', 'resource', { sig: 'jumpRequested:bool:1,dashRequested:bool:1', read: (v: PlayerStepInputViews, i: number, o: Record<string, unknown>) => { o.jumpRequested = v.jumpRequested[i] !== 0; o.dashRequested = v.dashRequested[i] !== 0; return o; } });
+
+/** Complete sewer route, spawn manifest, checkpoints and issue-25 transition hook. */
+export type SewerLevelDefData = {
+  tilemap: string;
+  finishX: number;
+  transition: string;
+  beats: {
+    name: string;
+    startX: number;
+    checkpointX: number;
+    checkpointY: number;
+  }[];
+  soldiers: {
+    beat: number;
+    x: number;
+    y: number;
+    patrolMinX: number;
+    patrolMaxX: number;
+    health: number;
+    cooldown: number;
+  }[];
+  water: {
+    x: number;
+    width: number;
+    surfaceY: number;
+  }[];
+};
+/** A loaded SewerLevelDef as `loadData` returns it (frozen). */
+export type ReadonlySewerLevelDefData = DataRecord<SewerLevelDefData>;
+export const SewerLevelDef = dataToken<SewerLevelDefData>('SewerLevelDef');

@@ -25,7 +25,7 @@ case "$mode" in
   prepush)
     "$ge" gen --check
     "$ge" fmt --check
-    "$ge" test --tier t0,t1 --js "$local_js"
+    "$ge" test --tier t0,t1 --js "$local_js" --memory-class phone-low
     "$ge" check
     ;;
   release)

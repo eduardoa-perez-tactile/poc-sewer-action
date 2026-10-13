@@ -40,3 +40,8 @@ export { DriveSoldierAnimation } from "./presentation/drive-soldier-animation.ts
 export { DriveCombatEffects } from "./presentation/drive-combat-effects.ts";
 
 export { DriveGameplayAudio } from './audio/drive-gameplay-audio.ts';
+
+export { BuildLevel } from './game-flow/build-level.ts';
+export { AdvanceLevel } from './game-flow/advance-level.ts';
+
+export { RequestCheckpointRestart } from './game-flow/request-checkpoint-restart.ts';

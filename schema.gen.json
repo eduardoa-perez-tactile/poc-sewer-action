@@ -1431,6 +1431,116 @@
       "doc": "Run gate for bounded splash presentation; stops all adapter work once hidden."
     },
     {
+      "name": "EncounterMember",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "beat",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "activated",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Authored encounter membership; bounded actors allocated once during boot."
+    },
+    {
+      "name": "LevelCollisionIndex",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "words",
+          "kind": "array",
+          "scalar": "u32",
+          "lanes": 128
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Four packed 32-bit words per row; at most 128 columns by 32 rows."
+    },
+    {
+      "name": "LevelProgress",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "data",
+          "kind": "asset",
+          "scalar": "u32",
+          "lanes": 1,
+          "assetType": "data"
+        },
+        {
+          "name": "built",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1
+        },
+        {
+          "name": "beat",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "checkpoint",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "cleared",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "finished",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1
+        },
+        {
+          "name": "activationPending",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Level anchor owns ordered progress and checkpoint state. No final encounter or win UI."
+    },
+    {
+      "name": "TerrainVisual",
+      "kind": "component",
+      "sim": false,
+      "fields": [
+        {
+          "name": "row",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        },
+        {
+          "name": "columns",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Merged visible sewer ledges derived from the collision tilemap during boot."
+    },
+    {
       "name": "MenuIntent",
       "kind": "event",
       "sim": true,
@@ -1539,7 +1649,7 @@
           "scalar": "u32",
           "lanes": 1,
           "default": 0,
-          "max": 32,
+          "max": 128,
           "doc": "Active columns in the packed static occupancy rows."
         },
         {
@@ -2120,5 +2230,125 @@
   ],
   "commands": [],
   "protocol": [],
-  "services": []
+  "services": [],
+  "data": [
+    {
+      "name": "SewerLevelDef",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "tilemap": {
+            "type": "string",
+            "x-ref": "asset"
+          },
+          "finishX": {
+            "type": "number"
+          },
+          "transition": {
+            "type": "string"
+          },
+          "beats": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "startX": {
+                  "type": "number"
+                },
+                "checkpointX": {
+                  "type": "number"
+                },
+                "checkpointY": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "name",
+                "startX",
+                "checkpointX",
+                "checkpointY"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "soldiers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "beat": {
+                  "type": "integer"
+                },
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "patrolMinX": {
+                  "type": "number"
+                },
+                "patrolMaxX": {
+                  "type": "number"
+                },
+                "health": {
+                  "type": "integer"
+                },
+                "cooldown": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "beat",
+                "x",
+                "y",
+                "patrolMinX",
+                "patrolMaxX",
+                "health",
+                "cooldown"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "water": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "x": {
+                  "type": "number"
+                },
+                "width": {
+                  "type": "number"
+                },
+                "surfaceY": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "x",
+                "width",
+                "surfaceY"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "tilemap",
+          "finishX",
+          "transition",
+          "beats",
+          "soldiers",
+          "water"
+        ],
+        "additionalProperties": false
+      },
+      "package": "SewerAction",
+      "doc": "Complete sewer route, spawn manifest, checkpoints and issue-25 transition hook."
+    }
+  ]
 }

@@ -1,5 +1,5 @@
 import { Bounds2D, defineSystem, entityAt, type EntityId, LocalTransform, pool, query, read, write } from '@gameengine/runtime';
-import { CombatEffect, DamageRequested, EnemyProjectile, GameState, Health, PlatformCollisionGrid } from '../schema.gen.ts';
+import { CombatEffect, DamageRequested, LevelCollisionIndex, EnemyProjectile, GameState, Health, PlatformCollisionGrid } from '../schema.gen.ts';
 
 const EPSILON = 0.00001;
 
@@ -7,6 +7,7 @@ export const AdvanceEnemyProjectiles = defineSystem({
   name: 'AdvanceEnemyProjectiles',
   after: ['ResolveSoldierAttackEvents'],
   queries: {
+    levelIndex: query(read(LevelCollisionIndex)),
     projectiles: query(write(EnemyProjectile), read(Bounds2D), write(LocalTransform)),
     targets: query(read(Health), read(Bounds2D), read(LocalTransform)),
   },
@@ -15,11 +16,13 @@ export const AdvanceEnemyProjectiles = defineSystem({
     { resource: GameState, field: 'phase', value: 'Playing' },
     { query: query(read(EnemyProjectile)) },
   ],
-  run(ctx, { projectiles, targets }) {
+  run(ctx, { projectiles, targets, levelIndex }) {
     const grid = ctx.resource(PlatformCollisionGrid);
     const originX = grid.originX[0]!;
     const originY = grid.originY[0]!;
     const cellSize = grid.cellSize[0]!;
+    let words: Uint32Array | undefined;
+    for (const chunk of levelIndex.chunks()) if (chunk.length > 0) words = chunk.col(LevelCollisionIndex).words;
     const recycle: EntityId[] = [];
 
     for (const chunk of projectiles.chunks()) {
@@ -51,7 +54,7 @@ export const AdvanceEnemyProjectiles = defineSystem({
         for (let gridRow = firstRow; gridRow <= lastRow && !hitWall; gridRow++) {
           const solid = grid.solidRows[gridRow]!;
           for (let column = firstColumn; column <= lastColumn; column++) {
-            if (((solid >>> column) & 1) !== 0) {
+            if ((((words ? words[gridRow * 4 + (column >>> 5)]! : solid) >>> (column & 31)) & 1) !== 0) {
               hitWall = true;
               break;
             }

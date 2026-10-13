@@ -1,6 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# The installed engine's replay/budget runner assumes one startScene. Isolate known
+# authored scenarios so legacy first-room recordings retain their hashes and budgets.
+if [[ "${SEWER_SCENE_PROFILE:-}" != "1" && "$#" -ge 1 ]]; then
+  if [[ "$1" == "test" ]]; then
+    tier_value=""
+    prior_argument=""
+    for argument in "$@"; do
+      if [[ "$prior_argument" == "--tier" ]]; then tier_value="$argument"; fi
+      if [[ "$argument" == --tier=* ]]; then tier_value="${argument#--tier=}"; fi
+      prior_argument="$argument"
+    done
+    if [[ ",$tier_value," == *,t1,* ]]; then
+      exec "$(dirname "$0")/test-scenes" "$@"
+    fi
+  fi
+  if [[ "$1" == "replay" && "${2:-}" == "verify" && "${3:-}" == *"tests/replays/"* ]]; then
+    exec "$(dirname "$0")/test-scenes" "$@"
+  fi
+fi
+
 if command -v gameengine >/dev/null 2>&1; then
   exec gameengine "$@"
 fi

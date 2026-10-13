@@ -1,0 +1,29 @@
+{
+  "scenes/main.scene.json": {
+    "replays": [
+      "tests/replays/camera_preserves_the_gameplay_frame_at_standard_landscape.greplay",
+      "tests/replays/combat_animation_feedback_replay_warms_soldier_attacks_and_effects.greplay",
+      "tests/replays/combat_lifecycle_replay_reaches_enemy_death_and_restart_through_recorded_input.greplay",
+      "tests/replays/held_fire_obeys_fixed_step_cadence__applies_recoil__and_reuses_the_warmed_projectile_pool.greplay",
+      "tests/replays/the_soldier_ranged_encounter_replay_reaches_attacks_through_player_input.greplay",
+      "tests/replays/the_vertical_slice_replay_traverses_the_first_room_with_the_complete_movement_kit.greplay",
+      "tests/replays/water_hazard_replay_reaches_death_and_restart_through_recorded_movement.greplay"
+    ],
+    "budgets": [
+      "combat-animations.json",
+      "combat-lifecycle.json",
+      "player-weapon.json",
+      "soldier-attacks.json",
+      "vertical-slice.json",
+      "water-hazards.json"
+    ]
+  },
+  "scenes/complete-sewer.scene.json": {
+    "replays": [
+      "tests/replays/complete_sewer_start_to_finish_replay_clears_ordered_encounters_and_checkpoints.greplay"
+    ],
+    "budgets": [
+      "complete-sewer.json"
+    ]
+  }
+}

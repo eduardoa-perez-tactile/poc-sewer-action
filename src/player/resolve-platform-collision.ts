@@ -1,5 +1,7 @@
+import { solidCells } from '../room/solid-cells.ts';
 import { defineSystem, LocalTransform, query, read, write } from '@gameengine/runtime';
 import {
+  LevelCollisionIndex,
   GameState,
   PlatformCollisionCell,
   PlatformCollisionGrid,
@@ -16,15 +18,18 @@ export const ResolvePlatformCollision = defineSystem({
   before: ['AdvancePlayerDash'],
   queries: {
     players: query(read(Player), write(PlayerGroundContact), write(PlayerMotion), write(LocalTransform)),
+    levelIndex: query(read(LevelCollisionIndex)),
     cells: query(read(PlatformCollisionCell)),
   },
   resources: [read(GameState), read(PlatformCollisionGrid)],
   runIf: { resource: GameState, field: 'phase', value: 'Playing' },
-  run(ctx, { players, cells }) {
+  run(ctx, { players, cells, levelIndex }) {
     const grid = ctx.resource(PlatformCollisionGrid);
     const originX = grid.originX[0]!;
     const originY = grid.originY[0]!;
     const cellSize = grid.cellSize[0]!;
+    let words: Uint32Array | undefined;
+    for (const chunk of levelIndex.chunks()) if (chunk.length > 0) words = chunk.col(LevelCollisionIndex).words;
 
     for (const chunk of players.chunks()) {
       const config = chunk.col(Player);
@@ -48,11 +53,9 @@ export const ResolvePlatformCollision = defineSystem({
 
         if (dx !== 0) {
           let boundary = targetX;
-          for (const cellChunk of cells.chunks()) {
-            const cell = cellChunk.col(PlatformCollisionCell);
-            for (let cellRow = 0; cellRow < cellChunk.length; cellRow++) {
-              const left = originX + cell.x[cellRow]! * cellSize;
-              const bottom = originY + cell.y[cellRow]! * cellSize;
+          for (const coordinate of solidCells(cells, words, originX, originY, cellSize, grid.columns[0]!, grid.rows[0]!, Math.min(x, targetX) - halfWidth, Math.max(x, targetX) + halfWidth, y, y + height)) {
+              const left = originX + ((coordinate << 16) >> 16) * cellSize;
+              const bottom = originY + (coordinate >> 16) * cellSize;
               const right = left + cellSize;
               const top = bottom + cellSize;
               if (y + height <= bottom + EPSILON || y >= top - EPSILON) continue;
@@ -75,22 +78,18 @@ export const ResolvePlatformCollision = defineSystem({
                 }
               }
             }
-          }
 
           if (blockedX && stepY > y) {
             let clear = true;
-            for (const cellChunk of cells.chunks()) {
-              const cell = cellChunk.col(PlatformCollisionCell);
-              for (let cellRow = 0; cellRow < cellChunk.length; cellRow++) {
-                const left = originX + cell.x[cellRow]! * cellSize;
-                const bottom = originY + cell.y[cellRow]! * cellSize;
+            for (const coordinate of solidCells(cells, words, originX, originY, cellSize, grid.columns[0]!, grid.rows[0]!, targetX - halfWidth, targetX + halfWidth, stepY, stepY + height)) {
+                const left = originX + ((coordinate << 16) >> 16) * cellSize;
+                const bottom = originY + (coordinate >> 16) * cellSize;
                 const right = left + cellSize;
                 const top = bottom + cellSize;
                 if (targetX + halfWidth <= left + EPSILON || targetX - halfWidth >= right - EPSILON) continue;
                 if (stepY + height <= bottom + EPSILON || stepY >= top - EPSILON) continue;
                 clear = false;
               }
-            }
             if (clear) {
               y = stepY;
               targetY = stepY;
@@ -106,11 +105,9 @@ export const ResolvePlatformCollision = defineSystem({
         if (dy > 0) {
           let ceiling = targetY;
           let hit = false;
-          for (const cellChunk of cells.chunks()) {
-            const cell = cellChunk.col(PlatformCollisionCell);
-            for (let cellRow = 0; cellRow < cellChunk.length; cellRow++) {
-              const left = originX + cell.x[cellRow]! * cellSize;
-              const bottom = originY + cell.y[cellRow]! * cellSize;
+          for (const coordinate of solidCells(cells, words, originX, originY, cellSize, grid.columns[0]!, grid.rows[0]!, x - halfWidth, x + halfWidth, y, targetY + height)) {
+              const left = originX + ((coordinate << 16) >> 16) * cellSize;
+              const bottom = originY + (coordinate >> 16) * cellSize;
               const right = left + cellSize;
               if (x + halfWidth <= left + EPSILON || x - halfWidth >= right - EPSILON) continue;
               if (y + height <= bottom + EPSILON && targetY + height > bottom) {
@@ -119,7 +116,6 @@ export const ResolvePlatformCollision = defineSystem({
                 hit = true;
               }
             }
-          }
           y = hit ? ceiling : targetY;
           if (hit) velocityY = 0;
         } else {
@@ -127,11 +123,9 @@ export const ResolvePlatformCollision = defineSystem({
           const floorTarget = targetY - snap;
           let floor = floorTarget;
           let hit = false;
-          for (const cellChunk of cells.chunks()) {
-            const cell = cellChunk.col(PlatformCollisionCell);
-            for (let cellRow = 0; cellRow < cellChunk.length; cellRow++) {
-              const left = originX + cell.x[cellRow]! * cellSize;
-              const top = originY + (cell.y[cellRow]! + 1) * cellSize;
+          for (const coordinate of solidCells(cells, words, originX, originY, cellSize, grid.columns[0]!, grid.rows[0]!, x - halfWidth, x + halfWidth, floorTarget - cellSize, y + EPSILON)) {
+              const left = originX + ((coordinate << 16) >> 16) * cellSize;
+              const top = originY + ((coordinate >> 16) + 1) * cellSize;
               const right = left + cellSize;
               if (x + halfWidth <= left + EPSILON || x - halfWidth >= right - EPSILON) continue;
               if (y >= top - EPSILON && floorTarget <= top + EPSILON) {
@@ -139,7 +133,6 @@ export const ResolvePlatformCollision = defineSystem({
                 hit = true;
               }
             }
-          }
           y = hit ? floor : targetY;
           grounded = hit;
           if (hit && velocityY < 0) velocityY = 0;

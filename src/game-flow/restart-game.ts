@@ -1,6 +1,8 @@
 import { defineSystem, LocalTransform, pool, query, read, write } from '@gameengine/runtime';
 import {
   ActorSpawn,
+  LevelProgress,
+  EncounterMember,
   Alive,
   Cadaver,
   CadaverSettling,
@@ -28,6 +30,8 @@ export const RestartGame = defineSystem({
   name: 'RestartGame',
   after: ['AdvanceCadavers'],
   queries: {
+    levels: query(write(LevelProgress)),
+    members: query(write(EncounterMember)),
     players: query(read(Player), read(PlayerRestartState), read(ActorSpawn), write(Health), write(HitReaction), write(LocalTransform), write(PlayerControl), write(PlayerDashState), write(PlayerGroundContact), write(PlayerMotion), write(Weapon), write(WaterContact)),
     enemies: query(write(EnemyBrain), read(EnemyRestartState), read(ActorSpawn), write(Health), write(HitReaction), write(LocalTransform)),
     cadavers: query(read(Cadaver)),
@@ -36,7 +40,17 @@ export const RestartGame = defineSystem({
   },
   resources: [write(GameState), write(PlayerStepInput)],
   runOn: [RestartRequested],
-  run(ctx, { players, enemies, cadavers, projectiles, enemyProjectiles }) {
+  run(ctx, { players, enemies, cadavers, projectiles, enemyProjectiles, levels, members }) {
+    let checkpoint = -1;
+    for (const chunk of levels.chunks()) for (let row = 0; row < chunk.length; row++) {
+      checkpoint = chunk.col(LevelProgress).checkpoint[row]!;
+      chunk.setField(LevelProgress, row, 'beat', checkpoint);
+      chunk.setField(LevelProgress, row, 'cleared', checkpoint);
+      chunk.setField(LevelProgress, row, 'finished', false);
+      chunk.setField(LevelProgress, row, 'activationPending', true);
+    }
+    for (const chunk of members.chunks()) for (let row = 0; row < chunk.length; row++) chunk.setField(EncounterMember, row, 'activated', false);
+
     for (const chunk of players.chunks()) {
       const spawn = chunk.col(ActorSpawn);
       const restart = chunk.col(PlayerRestartState);
@@ -70,6 +84,16 @@ export const RestartGame = defineSystem({
         chunk.set(LocalTransform, row, { position: [spawn.position[row * 2]!, spawn.position[row * 2 + 1]!, 0] });
         chunk.set(Health, row, { current: health.maximum[row]!, maximum: health.maximum[row]!, invulnerabilitySteps: health.invulnerabilitySteps[row]!, invulnerableUntilStep: 0 });
         chunk.set(HitReaction, row, { steps: reaction.steps[row]!, stepsRemaining: 0, knockback: [0, 0] });
+        let priorEncounter = false;
+        for (const member of members.chunks()) for (let i = 0; i < member.length; i++) {
+          if (member.entity(i) === entity && member.col(EncounterMember).beat[i]! < checkpoint) priorEncounter = true;
+        }
+        if (priorEncounter) {
+          chunk.setField(Health, row, 'current', 0);
+          chunk.setField(EnemyBrain, row, 'state', 'Dead');
+          ctx.commands.remove(entity, Alive);
+          continue;
+        }
         chunk.set(EnemyBrain, row, {
           state: restart.state[row] === 0 ? 'Idle' : restart.state[row] === 1 ? 'Patrol' : 'Chase', facing: restart.facing[row] === 0 ? 'Left' : 'Right', patrolMinX: brain.patrolMinX[row]!, patrolMaxX: brain.patrolMaxX[row]!, patrolSpeed: brain.patrolSpeed[row]!, chaseSpeed: brain.chaseSpeed[row]!,
           detectionRangeX: brain.detectionRangeX[row]!, detectionRangeY: brain.detectionRangeY[row]!, stopDistance: brain.stopDistance[row]!, collisionHalfWidth: brain.collisionHalfWidth[row]!, edgeProbeDistance: brain.edgeProbeDistance[row]!,

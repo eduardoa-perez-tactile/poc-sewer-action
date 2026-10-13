@@ -1,4 +1,4 @@
-import { expect, type TestWorld, worldTest } from '@gameengine/test';
+import { expect, type TestWorld, worldTest } from './first-room-test.ts';
 import { LocalTransform } from '@gameengine/runtime';
 import { EnemyBrain, GameState, PlatformCollisionCell, PlatformCollisionGrid, Player, PlayerMotion } from '../src/schema.gen.ts';
 

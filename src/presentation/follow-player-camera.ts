@@ -1,5 +1,5 @@
-import { defineSystem, read, RenderTime, ViewInfo, write } from '@gameengine/runtime';
-import { CameraFollowState, GameplayPresentation, RoomCameraBounds } from '../schema.gen.ts';
+import { defineSystem, query, read, RenderTime, ViewInfo, write } from '@gameengine/runtime';
+import { LevelProgress, RestartRequested, CameraFollowState, GameplayPresentation, RoomCameraBounds } from '../schema.gen.ts';
 
 export const CAMERA_VIEW_HEIGHT = 6.75;
 export const CAMERA_DESIGN_ASPECT = 16 / 9;
@@ -47,9 +47,10 @@ export const FollowPlayerCamera = defineSystem({
   name: 'FollowPlayerCamera',
   stage: 'LateUpdate',
   after: ['BuildGameplayPresentation'],
+  query: query(read(LevelProgress)), events: [RestartRequested],
   resources: [read(GameplayPresentation), read(RenderTime), read(RoomCameraBounds), read(ViewInfo), write(CameraFollowState)],
-  runIf: { any: [{ changed: GameplayPresentation }, { changed: ViewInfo }, { changed: RoomCameraBounds }, { resource: CameraFollowState, field: 'settled', value: false }] },
-  run(ctx) {
+  runIf: { any: [{ event: RestartRequested }, { changed: GameplayPresentation }, { changed: ViewInfo }, { changed: RoomCameraBounds }, { resource: CameraFollowState, field: 'settled', value: false }] },
+  run(ctx, levels) {
     const state = ctx.get(CameraFollowState);
     const snapshot = ctx.get(GameplayPresentation);
     const view = ctx.get(ViewInfo);
@@ -73,9 +74,10 @@ export const FollowPlayerCamera = defineSystem({
     const roomCenterY = (room.bottom + room.top) / 2;
     targetX = bounds.minX > bounds.maxX ? roomCenterX : clamp(targetX, bounds.minX, bounds.maxX);
     targetY = bounds.minY > bounds.maxY ? roomCenterY : clamp(targetY, bounds.minY, bounds.maxY);
+    const snap = levels.count > 0 && ctx.events.count(RestartRequested) > 0;
     const followRate = 1 - Math.pow(1 - FOLLOW_RATE, frameScale);
-    const centerX = bounds.minX > bounds.maxX ? roomCenterX : clamp(approach(state.center[0], targetX, followRate), bounds.minX, bounds.maxX);
-    const centerY = bounds.minY > bounds.maxY ? roomCenterY : clamp(approach(state.center[1], targetY, followRate), bounds.minY, bounds.maxY);
+    const centerX = bounds.minX > bounds.maxX ? roomCenterX : clamp(snap ? targetX : approach(state.center[0], targetX, followRate), bounds.minX, bounds.maxX);
+    const centerY = bounds.minY > bounds.maxY ? roomCenterY : clamp(snap ? targetY : approach(state.center[1], targetY, followRate), bounds.minY, bounds.maxY);
     const settled = centerX === targetX && centerY === targetY && lookAhead === desiredLookAhead;
 
     if (
