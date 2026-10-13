@@ -7,9 +7,18 @@
       "values": [
         "Idle",
         "Patrol",
+        "Chase",
         "Attack",
         "Stunned",
         "Dead"
+      ],
+      "package": "SewerAction"
+    },
+    {
+      "name": "EnemyFacing",
+      "values": [
+        "Left",
+        "Right"
       ],
       "package": "SewerAction"
     },
@@ -298,20 +307,133 @@
           "scalar": "u8",
           "lanes": 1,
           "enumName": "EnemyState",
-          "default": "Idle"
+          "default": "Patrol"
         },
         {
-          "name": "decisionRemaining",
+          "name": "facing",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "EnemyFacing",
+          "default": "Left"
+        },
+        {
+          "name": "patrolMinX",
           "kind": "f32",
           "scalar": "f32",
           "lanes": 1,
-          "default": 0,
-          "min": 0,
-          "doc": "Simulation-time delay until the next decision."
+          "default": -2,
+          "doc": "Inclusive left edge of the authored patrol route."
+        },
+        {
+          "name": "patrolMaxX",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 2,
+          "doc": "Inclusive right edge of the authored patrol route."
+        },
+        {
+          "name": "patrolSpeed",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 1.25,
+          "min": 0
+        },
+        {
+          "name": "chaseSpeed",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 2.75,
+          "min": 0
+        },
+        {
+          "name": "detectionRangeX",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 5,
+          "min": 0
+        },
+        {
+          "name": "detectionRangeY",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 2,
+          "min": 0
+        },
+        {
+          "name": "stopDistance",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 1.25,
+          "min": 0
+        },
+        {
+          "name": "collisionHalfWidth",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0.35,
+          "min": 0
+        },
+        {
+          "name": "edgeProbeDistance",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0.08,
+          "min": 0
+        },
+        {
+          "name": "turnPauseSteps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 18
+        },
+        {
+          "name": "turnPauseStepsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        },
+        {
+          "name": "targetMemorySteps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 90
+        },
+        {
+          "name": "targetMemoryStepsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        },
+        {
+          "name": "targetDetected",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "lastKnownTargetX",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0
         }
       ],
       "package": "SewerAction",
-      "doc": "Deterministic soldier decision state; visuals derive animation from it."
+      "doc": "Deterministic soldier configuration, decisions and chase memory."
     },
     {
       "name": "CameraFeedback",
@@ -754,10 +876,35 @@
           "default": 1,
           "min": 0.01,
           "doc": "Square cell size in world units."
+        },
+        {
+          "name": "columns",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0,
+          "max": 32,
+          "doc": "Active columns in the packed static occupancy rows."
+        },
+        {
+          "name": "rows",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0,
+          "max": 32,
+          "doc": "Active rows in the packed static occupancy rows."
+        },
+        {
+          "name": "solidRows",
+          "kind": "array",
+          "scalar": "u32",
+          "lanes": 32,
+          "doc": "Immutable packed index derived exclusively by BuildRoomCollision from the same static cells it spawns."
         }
       ],
       "package": "SewerAction",
-      "doc": "World mapping for deterministic platform collision cells."
+      "doc": "World mapping and builder-owned immutable lookup index for deterministic platform collision cells."
     },
     {
       "name": "Player",

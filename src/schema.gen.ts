@@ -13,9 +13,18 @@ export const schemaIr = {
       "values": [
         "Idle",
         "Patrol",
+        "Chase",
         "Attack",
         "Stunned",
         "Dead"
+      ],
+      "package": "SewerAction"
+    },
+    {
+      "name": "EnemyFacing",
+      "values": [
+        "Left",
+        "Right"
       ],
       "package": "SewerAction"
     },
@@ -304,20 +313,133 @@ export const schemaIr = {
           "scalar": "u8",
           "lanes": 1,
           "enumName": "EnemyState",
-          "default": "Idle"
+          "default": "Patrol"
         },
         {
-          "name": "decisionRemaining",
+          "name": "facing",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "EnemyFacing",
+          "default": "Left"
+        },
+        {
+          "name": "patrolMinX",
           "kind": "f32",
           "scalar": "f32",
           "lanes": 1,
-          "default": 0,
-          "min": 0,
-          "doc": "Simulation-time delay until the next decision."
+          "default": -2,
+          "doc": "Inclusive left edge of the authored patrol route."
+        },
+        {
+          "name": "patrolMaxX",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 2,
+          "doc": "Inclusive right edge of the authored patrol route."
+        },
+        {
+          "name": "patrolSpeed",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 1.25,
+          "min": 0
+        },
+        {
+          "name": "chaseSpeed",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 2.75,
+          "min": 0
+        },
+        {
+          "name": "detectionRangeX",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 5,
+          "min": 0
+        },
+        {
+          "name": "detectionRangeY",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 2,
+          "min": 0
+        },
+        {
+          "name": "stopDistance",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 1.25,
+          "min": 0
+        },
+        {
+          "name": "collisionHalfWidth",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0.35,
+          "min": 0
+        },
+        {
+          "name": "edgeProbeDistance",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0.08,
+          "min": 0
+        },
+        {
+          "name": "turnPauseSteps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 18
+        },
+        {
+          "name": "turnPauseStepsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        },
+        {
+          "name": "targetMemorySteps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 90
+        },
+        {
+          "name": "targetMemoryStepsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        },
+        {
+          "name": "targetDetected",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "lastKnownTargetX",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0
         }
       ],
       "package": "SewerAction",
-      "doc": "Deterministic soldier decision state; visuals derive animation from it."
+      "doc": "Deterministic soldier configuration, decisions and chase memory."
     },
     {
       "name": "CameraFeedback",
@@ -760,10 +882,35 @@ export const schemaIr = {
           "default": 1,
           "min": 0.01,
           "doc": "Square cell size in world units."
+        },
+        {
+          "name": "columns",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0,
+          "max": 32,
+          "doc": "Active columns in the packed static occupancy rows."
+        },
+        {
+          "name": "rows",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0,
+          "max": 32,
+          "doc": "Active rows in the packed static occupancy rows."
+        },
+        {
+          "name": "solidRows",
+          "kind": "array",
+          "scalar": "u32",
+          "lanes": 32,
+          "doc": "Immutable packed index derived exclusively by BuildRoomCollision from the same static cells it spawns."
         }
       ],
       "package": "SewerAction",
-      "doc": "World mapping for deterministic platform collision cells."
+      "doc": "World mapping and builder-owned immutable lookup index for deterministic platform collision cells."
     },
     {
       "name": "Player",
@@ -1299,11 +1446,18 @@ registerSchema(schemaIr);
 export const EnemyState = {
   Idle: 0,
   Patrol: 1,
-  Attack: 2,
-  Stunned: 3,
-  Dead: 4,
+  Chase: 2,
+  Attack: 3,
+  Stunned: 4,
+  Dead: 5,
 } as const;
-export type EnemyStateName = 'Idle' | 'Patrol' | 'Attack' | 'Stunned' | 'Dead';
+export type EnemyStateName = 'Idle' | 'Patrol' | 'Chase' | 'Attack' | 'Stunned' | 'Dead';
+
+export const EnemyFacing = {
+  Left: 0,
+  Right: 1,
+} as const;
+export type EnemyFacingName = 'Left' | 'Right';
 
 export const GamePhase = {
   Booting: 0,
@@ -1454,16 +1608,48 @@ export const Weapon = typeToken<WeaponViews, WeaponValue>('Weapon', 'component',
 
 export interface EnemyBrainViews {
   state: Uint8Array;
-  /** Simulation-time delay until the next decision. */
-  decisionRemaining: Float32Array;
+  facing: Uint8Array;
+  /** Inclusive left edge of the authored patrol route. */
+  patrolMinX: Float32Array;
+  /** Inclusive right edge of the authored patrol route. */
+  patrolMaxX: Float32Array;
+  patrolSpeed: Float32Array;
+  chaseSpeed: Float32Array;
+  detectionRangeX: Float32Array;
+  detectionRangeY: Float32Array;
+  stopDistance: Float32Array;
+  collisionHalfWidth: Float32Array;
+  edgeProbeDistance: Float32Array;
+  turnPauseSteps: Uint32Array;
+  turnPauseStepsRemaining: Uint32Array;
+  targetMemorySteps: Uint32Array;
+  targetMemoryStepsRemaining: Uint32Array;
+  targetDetected: Uint8Array;
+  lastKnownTargetX: Float32Array;
 }
 export interface EnemyBrainValue {
   state: EnemyStateName | number;
-  /** Simulation-time delay until the next decision. */
-  decisionRemaining: number;
+  facing: EnemyFacingName | number;
+  /** Inclusive left edge of the authored patrol route. */
+  patrolMinX: number;
+  /** Inclusive right edge of the authored patrol route. */
+  patrolMaxX: number;
+  patrolSpeed: number;
+  chaseSpeed: number;
+  detectionRangeX: number;
+  detectionRangeY: number;
+  stopDistance: number;
+  collisionHalfWidth: number;
+  edgeProbeDistance: number;
+  turnPauseSteps: number;
+  turnPauseStepsRemaining: number;
+  targetMemorySteps: number;
+  targetMemoryStepsRemaining: number;
+  targetDetected: boolean;
+  lastKnownTargetX: number;
 }
-/** Deterministic soldier decision state; visuals derive animation from it. (component, sim) */
-export const EnemyBrain = typeToken<EnemyBrainViews, EnemyBrainValue>('EnemyBrain', 'component', { sig: 'state:enum:1,decisionRemaining:f32:1', read: (v: EnemyBrainViews, i: number, o: Record<string, unknown>) => { o.state = $r.enm('EnemyState', v.state[i]!); o.decisionRemaining = v.decisionRemaining[i]; return o; } });
+/** Deterministic soldier configuration, decisions and chase memory. (component, sim) */
+export const EnemyBrain = typeToken<EnemyBrainViews, EnemyBrainValue>('EnemyBrain', 'component', { sig: 'state:enum:1,facing:enum:1,patrolMinX:f32:1,patrolMaxX:f32:1,patrolSpeed:f32:1,chaseSpeed:f32:1,detectionRangeX:f32:1,detectionRangeY:f32:1,stopDistance:f32:1,collisionHalfWidth:f32:1,edgeProbeDistance:f32:1,turnPauseSteps:u32:1,turnPauseStepsRemaining:u32:1,targetMemorySteps:u32:1,targetMemoryStepsRemaining:u32:1,targetDetected:bool:1,lastKnownTargetX:f32:1', read: (v: EnemyBrainViews, i: number, o: Record<string, unknown>) => { o.state = $r.enm('EnemyState', v.state[i]!); o.facing = $r.enm('EnemyFacing', v.facing[i]!); o.patrolMinX = v.patrolMinX[i]; o.patrolMaxX = v.patrolMaxX[i]; o.patrolSpeed = v.patrolSpeed[i]; o.chaseSpeed = v.chaseSpeed[i]; o.detectionRangeX = v.detectionRangeX[i]; o.detectionRangeY = v.detectionRangeY[i]; o.stopDistance = v.stopDistance[i]; o.collisionHalfWidth = v.collisionHalfWidth[i]; o.edgeProbeDistance = v.edgeProbeDistance[i]; o.turnPauseSteps = v.turnPauseSteps[i]; o.turnPauseStepsRemaining = v.turnPauseStepsRemaining[i]; o.targetMemorySteps = v.targetMemorySteps[i]; o.targetMemoryStepsRemaining = v.targetMemoryStepsRemaining[i]; o.targetDetected = v.targetDetected[i] !== 0; o.lastKnownTargetX = v.lastKnownTargetX[i]; return o; } });
 
 export interface CameraFeedbackViews {
   /** Whether transient feedback still needs presentation frames. */
@@ -1677,6 +1863,12 @@ export interface PlatformCollisionGridViews {
   originY: Float32Array;
   /** Square cell size in world units. */
   cellSize: Float32Array;
+  /** Active columns in the packed static occupancy rows. */
+  columns: Uint32Array;
+  /** Active rows in the packed static occupancy rows. */
+  rows: Uint32Array;
+  /** Immutable packed index derived exclusively by BuildRoomCollision from the same static cells it spawns. */
+  solidRows: Uint32Array;
 }
 export interface PlatformCollisionGridValue {
   /** World x coordinate of cell (0, 0) lower-left corner. */
@@ -1685,9 +1877,15 @@ export interface PlatformCollisionGridValue {
   originY: number;
   /** Square cell size in world units. */
   cellSize: number;
+  /** Active columns in the packed static occupancy rows. */
+  columns: number;
+  /** Active rows in the packed static occupancy rows. */
+  rows: number;
+  /** Immutable packed index derived exclusively by BuildRoomCollision from the same static cells it spawns. */
+  solidRows: number[];
 }
-/** World mapping for deterministic platform collision cells. (resource, sim) */
-export const PlatformCollisionGrid = typeToken<PlatformCollisionGridViews, PlatformCollisionGridValue>('PlatformCollisionGrid', 'resource', { sig: 'originX:f32:1,originY:f32:1,cellSize:f32:1', read: (v: PlatformCollisionGridViews, i: number, o: Record<string, unknown>) => { o.originX = v.originX[i]; o.originY = v.originY[i]; o.cellSize = v.cellSize[i]; return o; } });
+/** World mapping and builder-owned immutable lookup index for deterministic platform collision cells. (resource, sim) */
+export const PlatformCollisionGrid = typeToken<PlatformCollisionGridViews, PlatformCollisionGridValue>('PlatformCollisionGrid', 'resource', { sig: 'originX:f32:1,originY:f32:1,cellSize:f32:1,columns:u32:1,rows:u32:1,solidRows:array:32', read: (v: PlatformCollisionGridViews, i: number, o: Record<string, unknown>) => { o.originX = v.originX[i]; o.originY = v.originY[i]; o.cellSize = v.cellSize[i]; o.columns = v.columns[i]; o.rows = v.rows[i]; o.solidRows = $r.lanes(v.solidRows, i, 32, o.solidRows); return o; } });
 
 export interface PlayerViews {
   /** Maximum horizontal speed in world units per second. */

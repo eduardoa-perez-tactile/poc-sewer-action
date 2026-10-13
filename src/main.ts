@@ -13,6 +13,7 @@ export { WarmProjectilePool } from './combat/warm-projectile-pool.ts';
 export { FirePlayerWeapon } from './combat/fire-player-weapon.ts';
 export { AdvanceProjectiles } from './combat/advance-projectiles.ts';
 export { ApplyDamage } from './combat/apply-damage.ts';
+export { AdvanceSoldierAI } from './enemy/advance-soldier-ai.ts';
 export { DrivePlayerAnimation } from './presentation/drive-player-animation.ts';
 export { BuildGameplayPresentation } from './presentation/build-gameplay-presentation.ts';
 export { FollowPlayerCamera } from './presentation/follow-player-camera.ts';
