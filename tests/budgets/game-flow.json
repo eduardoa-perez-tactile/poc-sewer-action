@@ -1,0 +1,20 @@
+{
+  "replay": "tests/replays/flow_recorded_route_starts_pauses_resumes_dies_retries_wins_and_plays_again.greplay",
+  "structural": {
+    "drawCallsMax": 16,
+    "pipelinesCreatedDuringPlay": 0,
+    "gcPausesOver4msMax": 0
+  },
+  "devices": {
+    "android-low-compat": {
+      "frameTimeP95Ms": 33.3,
+      "gpuTimeP95Ms": 23.3,
+      "scriptTimeP95Ms": 8,
+      "memoryMB": 350,
+      "jsHeapMB": 32,
+      "loadMs": 2500,
+      "hitchFrames": 0,
+      "gcMaxMs": 8
+    }
+  }
+}

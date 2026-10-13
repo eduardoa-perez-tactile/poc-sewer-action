@@ -1,0 +1,12 @@
+{
+  "$schemaVersion": 2,
+  "id": "title",
+  "resources": {
+    "GameFeelComparison": { "config": "settings/game-feel.json" },
+    "GameState": { "initialized": true, "phase": "Title" },
+    "GameplayUI": { "enabled": true }
+  },
+  "entities": [
+    { "name": "Session flow", "id": "flow", "LocalTransform": {}, "SessionFlow": {} }
+  ]
+}

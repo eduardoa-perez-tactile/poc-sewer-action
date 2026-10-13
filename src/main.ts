@@ -52,3 +52,14 @@ export { DriveFinalCues } from './presentation/drive-final-cues.ts';
 export { ApplyComparison } from './comparison/apply-comparison.ts';
 export { ComparisonUI } from './comparison/comparison.ui.tsx';
 export { DriveShotFeedback } from './comparison/drive-shot-feedback.ts';
+
+export { AdvanceSessionFlow } from './game-flow/advance-session-flow.ts';
+export { BuildGameplayUI } from './game-flow/build-gameplay-ui.ts';
+export { FitGameplayFrame } from './game-flow/fit-gameplay-frame.ts';
+export { GameFlowUI } from './game-flow/game-flow.ui.tsx';
+
+export { PreserveFlowInputs } from './game-flow/preserve-flow-inputs.ts';
+export { HoldSessionClips } from './game-flow/hold-session-clips.ts';
+
+export { InitializeSessionScene } from './game-flow/initialize-session-scene.ts';
+export { InitializeSessionLook } from './game-flow/initialize-session-look.ts';

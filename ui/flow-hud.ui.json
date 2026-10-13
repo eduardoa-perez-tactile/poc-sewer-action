@@ -1,0 +1,85 @@
+{
+  "$schemaVersion": 1,
+  "guid": "2def8fb4-0fd6-4001-aef6-c3055f4a5a44",
+  "name": "flow-hud",
+  "kind": "widget",
+  "transition": {
+    "type": "instant"
+  },
+  "properties": {
+    "health": {
+      "type": "text",
+      "default": ""
+    },
+    "route": {
+      "type": "text",
+      "default": ""
+    },
+    "dash": {
+      "type": "text",
+      "default": ""
+    }
+  },
+  "root": "root",
+  "nodes": {
+    "root": {
+      "type": "element",
+      "style": {
+        "dir": "row",
+        "gap": 20,
+        "pad": 12,
+        "bg": "#09131c"
+      },
+      "children": [
+        "health",
+        "route",
+        "dash",
+        "pause"
+      ]
+    },
+    "health": {
+      "type": "label",
+      "text": "{health}",
+      "style": {
+        "grow": 1,
+        "h": 144,
+        "fontSize": 32,
+        "fitMin": 22,
+        "color": "#edf5ee",
+        "textAlign": "center"
+      }
+    },
+    "route": {
+      "type": "label",
+      "text": "{route}",
+      "style": {
+        "grow": 1,
+        "h": 144,
+        "fontSize": 32,
+        "fitMin": 22,
+        "color": "#edf5ee",
+        "textAlign": "center"
+      }
+    },
+    "dash": {
+      "type": "label",
+      "text": "{dash}",
+      "style": {
+        "grow": 1,
+        "h": 144,
+        "fontSize": 32,
+        "fitMin": 22,
+        "color": "#edf5ee",
+        "textAlign": "center"
+      }
+    },
+    "pause": {
+      "type": "codeArea",
+      "key": "pause",
+      "style": {
+        "w": 260,
+        "h": 144
+      }
+    }
+  }
+}

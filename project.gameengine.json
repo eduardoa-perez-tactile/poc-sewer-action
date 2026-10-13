@@ -27,7 +27,9 @@
           "assets/rooms/**",
           "scenes/main.scene.json",
           "scenes/comparison.scene.json",
-          "scenes/complete-sewer.scene.json"
+          "scenes/complete-sewer.scene.json",
+          "scenes/sewer-run.scene.json",
+          "scenes/title.scene.json"
         ]
       }
     }
@@ -36,6 +38,6 @@
   "bundles": [{ "name": "base", "include": ["**"], "delivery": "in-app", "exclude": ["assets/audio/sfx/rainbowlaser.ogg"] }],
   "targets": ["ios", "android"],
   "platforms": ["web"],
-  "startScene": "scenes/complete-sewer.scene.json",
+  "startScene": "scenes/title.scene.json",
   "check": { "smoke": { "frames": 120, "uiNodes": 64 } }
 }

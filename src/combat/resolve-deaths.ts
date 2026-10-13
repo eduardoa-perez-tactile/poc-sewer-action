@@ -11,7 +11,7 @@ export const ResolveDeaths = defineSystem({
   resources: [write(GameState)],
   runOn: [ActorDied],
   run(ctx, { players, enemies }) {
-    if (ctx.is(GameState, 'phase', 'Completed')) return;
+    if (ctx.is(GameState, 'phase', 'Completed') || ctx.is(GameState, 'phase', 'Paused') || ctx.is(GameState, 'phase', 'Title')) return;
     ctx.events.forEach(ActorDied, (death) => {
       for (const chunk of players.chunks()) {
         for (let row = 0; row < chunk.length; row++) {

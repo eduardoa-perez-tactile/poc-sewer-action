@@ -12,7 +12,7 @@ export const ApplyDamage = defineSystem({
   resources: [read(GameState)],
   runOn: [DamageRequested],
   run(ctx, { health, reactions, finals }) {
-    if (ctx.is(GameState, 'phase', 'Completed')) return;
+    if (ctx.is(GameState, 'phase', 'Completed') || ctx.is(GameState, 'phase', 'Paused') || ctx.is(GameState, 'phase', 'Title')) return;
     ctx.events.forEach(DamageRequested, (damage) => {
       for (const chunk of finals.chunks()) for (let row = 0; row < chunk.length; row++) if (chunk.entity(row) === damage.target && chunk.col(FinalSoldier).active[row] === 0) return;
       for (const chunk of health.chunks()) {

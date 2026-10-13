@@ -110,6 +110,7 @@ export const PlayerAnimationPresentation = component(
   'PlayerAnimationPresentation',
   {
     clip: asset('clip2d', { doc: 'Current authored flipbook selected by presentation.' }),
+    paused: bool({ doc: 'Whether the flow paused this presentation clock.' }),
   },
   { sim: false, doc: 'Presentation-only animation controller state; never read by gameplay.' },
 );

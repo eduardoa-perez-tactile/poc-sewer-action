@@ -36,6 +36,15 @@ export const DrivePlayerAnimation = defineSystem({
         const moving = Math.abs(motion.horizontalVelocity[row]!) > 0.1;
         let clip = 'art/player/idle.clip2d.json';
 
+        if (ctx.is(GameState, 'phase', 'Paused')) {
+          chunk.setField(PlayerAnimationPresentation, row, 'paused', true);
+          chunk.setField(SpriteAnimation, row, 'playing', false);
+          continue;
+        }
+        if (chunk.col(PlayerAnimationPresentation).paused[row]) {
+          chunk.setField(PlayerAnimationPresentation, row, 'paused', false);
+          chunk.setField(SpriteAnimation, row, 'playing', true);
+        }
         const completed = ctx.is(GameState, 'phase', 'Completed');
         if (completed) {
           clip = 'art/player/idle.clip2d.json';

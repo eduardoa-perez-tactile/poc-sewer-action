@@ -1,7 +1,7 @@
 import { bool, component, enumOf, f32, resource, u32, vec2 } from '@gameengine/schema';
 
 const gamePhase = () =>
-  enumOf('GamePhase', ['Booting', 'Playing', 'PlayerDead', 'Completed'], {
+  enumOf('GamePhase', ['Booting', 'Playing', 'PlayerDead', 'Completed', 'Title', 'Paused'], {
     default: 'Booting',
     doc: 'Authoritative vertical-slice phase.',
   });

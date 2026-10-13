@@ -1,5 +1,5 @@
 import { type Chunk, type EntityId, assetKey, Bounds2D, Clip2D, clip2DFrame, clip2DInfo, defineSystem, entityAt, LocalTransform, query, read, RenderTime, Sprite, VisualOffset, write } from '@gameengine/runtime';
-import { GameFeelComparison, EnemyBrain, Health, HitReaction, RestartRequested, SoldierVisual, SoldierVisualState } from '../schema.gen.ts';
+import { GameplayUI, GameState, GameFeelComparison, EnemyBrain, Health, HitReaction, RestartRequested, SoldierVisual, SoldierVisualState } from '../schema.gen.ts';
 
 /** The attack clock remains on the actor. This proxy samples that clock without advancing it. */
 export const DriveSoldierAnimation = defineSystem({
@@ -8,9 +8,9 @@ export const DriveSoldierAnimation = defineSystem({
     actors: query(read(Bounds2D), read(EnemyBrain), read(Health), read(HitReaction), read(Clip2D), read(LocalTransform), write(Sprite)),
     visuals: query(write(SoldierVisual), read(LocalTransform), write(Sprite), write(VisualOffset)),
   },
-  resources: [read(RenderTime), write(SoldierVisualState), read(GameFeelComparison)], events: [RestartRequested],
+  resources: [read(RenderTime), write(SoldierVisualState), read(GameFeelComparison), read(GameState), read(GameplayUI)], events: [RestartRequested],
   after: ['DriveEnemyDamagePresentation'],
-  runIf: { any: [{ changed: GameFeelComparison }, { changed: [EnemyBrain, Health, HitReaction, Clip2D, LocalTransform] }, { event: RestartRequested }, { resource: SoldierVisualState, field: 'active', value: true }] },
+  runIf: [{ any: [{ resource: GameplayUI, field: 'enabled', value: false }, { resource: GameState, field: 'phase', op: '!=', value: 'PlayerDead' }] }, { any: [{ resource: GameplayUI, field: 'enabled', value: false }, { resource: GameState, field: 'phase', op: '!=', value: 'Completed' }] }, { resource: GameState, field: 'phase', op: '!=', value: 'Paused' }, { any: [{ changed: GameFeelComparison }, { changed: [EnemyBrain, Health, HitReaction, Clip2D, LocalTransform] }, { event: RestartRequested }, { resource: SoldierVisualState, field: 'active', value: true }] }],
   run(ctx, { actors, visuals }) {
     let active = false;
     const actorRows = new Map<EntityId, { chunk: Chunk; row: number }>();

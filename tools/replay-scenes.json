@@ -33,5 +33,13 @@
     "budgets": [
       "comparison.json"
     ]
+  },
+  "scenes/title.scene.json": {
+    "replays": [
+      "tests/replays/flow_recorded_route_starts_pauses_resumes_dies_retries_wins_and_plays_again.greplay"
+    ],
+    "budgets": [
+      "game-flow.json"
+    ]
   }
 }
