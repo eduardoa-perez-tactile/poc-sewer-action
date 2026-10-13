@@ -1,14 +1,12 @@
 import { burstAt, clip2DInfo, defineSystem, ParticleSystem, query, read, RenderTime, write } from '@gameengine/runtime';
-import { GameFeelComparison, FinalEncounter, CombatEffect, CombatVisual, CombatVisualState, RestartRequested } from '../schema.gen.ts';
+import { GameFeelComparison, CombatEffect, CombatVisual, CombatVisualState, RestartRequested } from '../schema.gen.ts';
 
 export const DriveCombatEffects = defineSystem({
   name: 'DriveCombatEffects', stage: 'LateUpdate',
-  queries: { hosts: query(write(CombatVisual), write(ParticleSystem)), finals: query(read(FinalEncounter)) },
+  query: query(write(CombatVisual), write(ParticleSystem)),
   resources: [read(RenderTime), write(CombatVisualState), read(GameFeelComparison)], events: [CombatEffect, RestartRequested],
   runIf: { any: [{ changed: GameFeelComparison }, { event: CombatEffect }, { event: RestartRequested }, { resource: CombatVisualState, field: 'active', value: true }] },
-  run(ctx, { hosts, finals }) {
-    let prioritizeBomb = false;
-    for (const chunk of finals.chunks()) for (let row = 0; row < chunk.length; row++) prioritizeBomb ||= chunk.is(FinalEncounter, row, 'phase', 'Bombardment') || chunk.is(FinalEncounter, row, 'phase', 'ExitOpen') || chunk.is(FinalEncounter, row, 'phase', 'Won');
+  run(ctx, hosts) {
     const restart = ctx.events.count(RestartRequested) > 0;
     const enabled = ctx.is(GameFeelComparison, 'particles', true);
     const lastStep = ctx.resource(CombatVisualState).lastStep[0]!;
@@ -24,8 +22,6 @@ export const DriveCombatEffects = defineSystem({
       if (event.step <= lastStep) return;
       newestStep = Math.max(newestStep, event.step);
       if (!enabled) return;
-      // The final arena reserves its tight draw headroom for bombs and hit/explosion feedback.
-      if (prioritizeBomb && event.kind === 'muzzle') return;
       for (const chunk of hosts.chunks()) for (let row = 0; row < chunk.length; row++) {
         if (!chunk.is(CombatVisual, row, 'kind', event.kind)) continue;
         const state = chunk.col(CombatVisual);

@@ -4,6 +4,7 @@ import { previewView, views } from '@gameengine/ui';
 import { CameraFollowState, RoomCameraBounds, DamageRequested, EnemyBrain, FinalEncounter, FinalWarning, FlowRequested, GameState, GameplayUI, Health, LevelProgress, Player, PlayerControl, PlayerDashState, PlayerMotion, Projectile, SessionFlow, WaterContact, Weapon, SoldierVisual } from '../src/schema.gen.ts';
 import { TitleView, HudView, PauseView, DeathView, CompletionView } from '../src/views/game-flow.view.tsx';
 import { completeRoute } from './complete-route.ts';
+import { hudControlHeight } from '../src/game-flow/fit-gameplay-frame.ts';
 const TITLE = { scene: 'scenes/title.scene.json' };
 const RUN = { scene: 'scenes/sewer-run.scene.json' };
 
@@ -11,7 +12,7 @@ worldTest('flow title confirm starts a fresh run and pause navigation returns to
   await loaded(); await step(2);
   expect(views.top()).toBe('Title'); expect(quality.targetFps().cap).toBe(30);
   input.action('menuConfirm', 1); await step(4); input.action('menuConfirm', 0); await step(2);
-  expect(world.resource(GameState).phase).toBe('Playing'); expect(views.top()).toBe('Hud');
+  expect(world.resource(GameState).phase).toBe('Playing'); expect(views.top()).toBe('Comparison');
   expect(world.entities(Player).length).toBe(1); expect(quality.targetFps().cap).toBe(null);
   input.action('pause', 1); await step(1); input.action('pause', 0); await step(1);
   expect(views.top()).toBe('Pause');
@@ -61,7 +62,7 @@ worldTest('flow death confirm retries once with full health and completion offer
   input.emit(DamageRequested, { target: entityString(player), amount: 5, bypassInvulnerability: true }); await step(2);
   expect(views.top()).toBe('Death'); expect(world.resource(GameState).phase).toBe('PlayerDead');
   input.action('menuConfirm', 1); await step(1); input.action('menuConfirm', 0); await step(2);
-  expect(views.top()).toBe('Hud'); expect(world.get(player, Health).current).toBe(5);
+  expect(views.top()).toBe('Comparison'); expect(world.get(player, Health).current).toBe(5);
   // Completion remains simulation-owned; a terminal fixture isolates menu validation and full reset.
   world.setResource(GameState, { phase: 'Completed' });
   world.insert(world.entities(LevelProgress)[0]!, LevelProgress, { finished: true, checkpoint: 3, cleared: 4 });
@@ -91,15 +92,15 @@ worldTest('flow recorded route starts pauses resumes dies retries wins and plays
   expect(world.resource(RoomCameraBounds).right).toBe(56);
   input.action('menuConfirm', 1); await step(5); input.action('menuConfirm', 0); await step(2);
   expect(world.get(world.entities(LevelProgress)[0]!, LevelProgress).checkpoint).toBe(0);
-  expect(views.top()).toBe('Hud');
+  expect(views.top()).toBe('Comparison');
 }, TITLE);
 
 renderTest('flow pointer presses reach start pause resume death retry and completion actions', async ({ world, input, step, render, ui, loaded }) => {
   await loaded(); input.view(1920, 1080, 1); await step(2);
   const press = async (id: string) => { render.stats({ width: 1920, height: 1080 }); await ui.press(id); await step(5); };
-  await press('flow-start'); expect(views.top()).toBe('Hud');
+  await press('flow-start'); expect(views.top()).toBe('Comparison');
   await press('flow-pause'); expect(views.top()).toBe('Pause');
-  await press('flow-resume'); expect(views.top()).toBe('Hud');
+  await press('flow-resume'); expect(views.top()).toBe('Comparison');
   const p = world.entities(Player)[0]!;
   input.emit(DamageRequested, { target: entityString(p), amount: 5, bypassInvulnerability: true }); await step(2);
   await press('flow-restart'); expect(world.get(p, Health).current).toBe(5);
@@ -117,7 +118,7 @@ renderTest('flow every view sample fits landscape safe areas and reserves the co
   ] as const) {
     input.view(width, height, scale, [...safe]); await step(1);
     for (const view of [TitleView, HudView, PauseView, DeathView, CompletionView]) for (const sample of Object.keys(view.samples)) {
-      previewView({ view: view.name, sample });
+      previewView({ view: view.name, model: { ...view.samples[sample], controlHeight: hudControlHeight(width, height, scale) } });
       const stats = render.stats({ width, height }); expect(stats.drawCalls).toBeLessThanOrEqual(16);
       const buttons = ui.interactables().filter(c => c.hittable && c.id?.startsWith('flow-') && c.id !== 'flow-panel' && c.id !== 'flow-hud');
       expect(buttons.length).toBe(view === TitleView || view === HudView ? 1 : 2);

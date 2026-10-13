@@ -1,17 +1,17 @@
 import { expect, worldTest, renderTest } from './first-room-test.ts';
 import { worldTest as routeTest, renderTest as routeRenderTest } from './complete-level-test.ts';
 import { completeRoute } from './complete-route.ts';
-import { entityString, LoadingResumed, LocalTransform, ParticleSystem, Sprite, Camera, VisualOffset } from '@gameengine/runtime';
+import { entityString, Disabled, LoadingResumed, LocalTransform, ParticleSystem, Sprite, Camera, VisualOffset } from '@gameengine/runtime';
 import { previewView, views } from '@gameengine/ui';
 import { GameFeelComparison, ComparisonDef, ComparisonRequested, AudioCue, CameraFeedback, CameraFollowState, CombatEffect, CombatVisual, CombatVisualState, EnemyBrain, GameState, HitReaction, Player, WaterEntered, WaterSplash, WaterSplashState, SoldierVisual, RestartRequested } from '../src/schema.gen.ts';
 import { COMPARISON_LAYERS, comparisonIntent, comparisonMode } from '../src/comparison/comparison-model.ts';
 import { ComparisonView } from '../src/views/comparison.view.tsx';
 import { loadData } from '@gameengine/runtime';
 
-worldTest('comparison content defaults preserve the original presentation and explicitly hide exposure', ({ world }) => {
+worldTest('comparison content boots polished with discoverable bonus exposure', ({ world }) => {
   const config = loadData(ComparisonDef, 'settings/game-feel.json');
-  expect(config.exposure).toBe('hidden');
-  expect([config.shake, config.recoil, config.particles, config.flashes, config.audio]).toEqual([false, false, true, true, true]);
+  expect(config.exposure).toBe('bonus');
+  expect([config.shake, config.recoil, config.particles, config.flashes, config.audio]).toEqual([true, true, true, true, true]);
   const model = { exposure: 'bonus' as const, open: true, shake: true, recoil: true, particles: true, flashes: true, audio: true };
   expect(comparisonMode(model)).toBe('Polished');
   const baseline = { ...model, ...comparisonIntent(model, 'baseline') };
@@ -31,6 +31,7 @@ worldTest('comparison content defaults preserve the original presentation and ex
 
 worldTest('comparison controller handles every intent once including retained events and hidden policy', async ({ world, step, input }) => {
   await step(3);
+  world.setResource(GameFeelComparison, { exposure: 'hidden' }); await step(1);
   input.emit(ComparisonRequested, { action: 'open' }); await step(2);
   expect(world.resource(GameFeelComparison).open).toBe(false);
   expect(views.top()).toBe(null);
@@ -53,7 +54,8 @@ worldTest('comparison controller handles every intent once including retained ev
 
 for (const layer of ['shake', 'recoil'] as const) worldTest(`comparison ${layer} presents accepted shots and immediately clears disabled feedback`, async ({ world, step, input }) => {
   await step(3);
-  world.setResource(GameState, { initialized: true, phase: 'PlayerDead' });
+  world.setResource(GameState, { initialized: true, phase: 'Playing' });
+  for (const enemy of world.entities(EnemyBrain)) world.insert(enemy, Disabled, {});
   world.setResource(GameFeelComparison, { exposure: 'developer', shake: layer === 'shake', recoil: layer === 'recoil' });
   input.emit(AudioCue, { kind: 'Shot', step: 100 }); await step(1);
   const feedback = world.resource(CameraFeedback);
@@ -71,7 +73,8 @@ for (const layer of ['shake', 'recoil'] as const) worldTest(`comparison ${layer}
 
 worldTest('comparison particles cancel bounded combat and water hosts without replaying suppressed entries', async ({ world, step, input }) => {
   await step(3);
-  world.setResource(GameState, { initialized: true, phase: 'PlayerDead' });
+  world.setResource(GameState, { initialized: true, phase: 'Playing' });
+  for (const enemy of world.entities(EnemyBrain)) world.insert(enemy, Disabled, {});
   world.setResource(GameFeelComparison, { exposure: 'developer' });
   input.emit(CombatEffect, { kind: 'hit', position: [0, 0], step: 100 });
   input.emit(WaterEntered, { player: entityString(world.entities(Player)[0]!), position: [0, 0], entryStep: 100 }); await step(1);
@@ -104,13 +107,14 @@ worldTest('comparison flashes change only the visible soldier tint during an acc
   const hash = world.hash();
   world.setResource(GameFeelComparison, { flashes: false }); expect(world.hash()).toBe(hash);
   await step(1); expect(world.get(visual, Sprite).color[1]).toBe(1);
-  input.emit(ComparisonRequested, { action: 'flashes', enabled: true }); await step(1);
+  world.setResource(GameFeelComparison, { flashes: true }); await step(1);
   expect(world.get(visual, Sprite).color[1]).toBeCloseTo(0.42);
 });
 
 worldTest('comparison audio suppresses all six cue lanes without stale playback or voice growth', async ({ world, step, input, audio, loaded }) => {
   await loaded();
-  world.setResource(GameState, { initialized: true, phase: 'PlayerDead' });
+  world.setResource(GameState, { initialized: true, phase: 'Playing' });
+  for (const enemy of world.entities(EnemyBrain)) world.insert(enemy, Disabled, {});
   world.setResource(GameFeelComparison, { exposure: 'developer', audio: false });
   const cues = (stamp: number) => {
     for (const kind of ['Shot', 'Laser', 'PlayerDeath', 'EnemyDeath']) input.emit(AudioCue, { kind, step: stamp });
@@ -199,8 +203,8 @@ for (const mode of ['baseline', 'polished'] as const) routeTest(`comparison ${mo
   await completeRoute(ctx, () => {
     ctx.world.setResource(GameFeelComparison, { exposure: 'developer', ...comparisonIntent({ ...ctx.world.resource(GameFeelComparison), exposure: 'developer' }, mode) });
   }, observe);
-  expect(ctx.world.hash()).toBe('62ac4c0acd9d2d5a');
-  expect(digest.toString(16)).toBe('8c00b28d');
+  expect(ctx.world.hash()).toBe('ad456cdff1eecb82');
+  expect(digest.toString(16)).toBe('94e92b24');
 });
 
 worldTest('comparison panel replay warms baseline polished and every presentation layer', async ({ world, step, input }) => {

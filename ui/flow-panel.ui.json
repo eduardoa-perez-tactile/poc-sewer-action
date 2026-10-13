@@ -21,9 +21,9 @@
     "root": {
       "type": "element",
       "style": {
-        "pad": 32,
-        "gap": 20,
-        "bg": "#09131c",
+        "pad": 24,
+        "gap": 12,
+        "bg": "#101f27",
         "justify": "center"
       },
       "children": [
@@ -38,10 +38,10 @@
       "type": "label",
       "text": "{title}",
       "style": {
-        "h": 88,
-        "fontSize": 72,
+        "h": 72,
+        "fontSize": 64,
         "fitMin": 40,
-        "color": "#a7e7c1",
+        "color": "#baf185",
         "textAlign": "center"
       }
     },
@@ -49,8 +49,8 @@
       "type": "label",
       "text": "{detail}",
       "style": {
-        "h": 72,
-        "fontSize": 32,
+        "h": 48,
+        "fontSize": 30,
         "fitMin": 22,
         "color": "#edf5ee",
         "textAlign": "center"
@@ -60,14 +60,14 @@
       "type": "codeArea",
       "key": "actions",
       "style": {
-        "h": 148
+        "h": 96
       }
     },
     "help": {
       "type": "label",
-      "text": "Select: W/S or stick  |  Confirm: Enter or A  |  Back: Q or B",
+      "text": "Select: arrows / stick  |  Confirm: Enter / A  |  Back: Q / B",
       "style": {
-        "h": 48,
+        "h": 36,
         "fontSize": 26,
         "fitMin": 18,
         "color": "#c5d5db",
@@ -76,9 +76,9 @@
     },
     "controls": {
       "type": "label",
-      "text": "Move A/D  \u2022  Jump W  \u2022  Fire F  \u2022  Dash Shift  \u2022  Pause P / Start",
+      "text": "Move arrows / A,D  \u2022  Jump right mouse / Space  \u2022  Fire mouse / F  \u2022  Dash Shift  \u2022  Feel C",
       "style": {
-        "h": 48,
+        "h": 36,
         "fontSize": 26,
         "fitMin": 18,
         "color": "#c5d5db",

@@ -1,4 +1,9 @@
-.comparison-screen { font-family: "fonts/Abel-Regular"; align-items: flex-end; justify-content: flex-start; padding: 20px; pointer-events: none; }
-.comparison-panel { width: 1880px; max-width: 100%; pointer-events: auto; }
-.comparison-launcher { width: 220px; height: 72px; background-color: #28434d; color: #edf5ee; font-size: 30px; text-fit: 20px 30px; pointer-events: auto; }
+.comparison-screen { font-family: "fonts/Abel-Regular"; align-items: flex-end; justify-content: flex-end; padding: 16px; pointer-events: none; }
+.comparison-panel { width: 1040px; max-width: 100%; pointer-events: auto; }
+.comparison-launcher { width: 180px; height: 56px; background-color: #28413c; color: #baf185; font-size: 26px; text-fit: 20px 26px; pointer-events: auto; }
 .comparison-hidden { display: none; }
+.comparison-panel { background-color: #101f27; padding: 12px; gap: 8px; }
+.comparison-heading { height: 32px; font-size: 28px; color: #baf185; }
+.comparison-row { width: 100%; flex-direction: row; gap: 8px; }
+.comparison-control { flex-grow: 1; min-width: 0; background-color: #28413c; color: #f4f0d8; font-size: 23px; text-fit: 18px 23px; pointer-events: auto; }
+.comparison-on { background-color: #426346; color: #baf185; }

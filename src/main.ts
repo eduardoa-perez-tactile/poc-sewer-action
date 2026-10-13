@@ -52,6 +52,9 @@ export { DriveFinalCues } from './presentation/drive-final-cues.ts';
 export { ApplyComparison } from './comparison/apply-comparison.ts';
 export { ComparisonUI } from './comparison/comparison.ui.tsx';
 export { DriveShotFeedback } from './comparison/drive-shot-feedback.ts';
+export { MapComparisonControls } from './comparison/map-comparison-controls.ts';
+export { MapPointerControls } from './comparison/map-pointer-controls.ts';
+export { DrivePlayerMotionEffects } from './presentation/drive-player-motion-effects.ts';
 
 export { AdvanceSessionFlow } from './game-flow/advance-session-flow.ts';
 export { BuildGameplayUI } from './game-flow/build-gameplay-ui.ts';

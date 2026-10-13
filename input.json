@@ -2,23 +2,135 @@
   "$schemaVersion": 1,
   "actions": {
     "moveX": [
-      { "negative": "KeyA", "positive": "KeyD" },
-      { "axis": 0 }
+      {
+        "negative": "KeyA",
+        "positive": "KeyD"
+      },
+      {
+        "negative": "ArrowLeft",
+        "positive": "ArrowRight"
+      },
+      {
+        "axis": 0
+      }
     ],
-    "jump": [{ "key": "KeyW" }, { "button": 0 }],
-    "dash": [{ "key": "ShiftLeft" }, { "button": 4 }],
-    "shoot": [{ "key": "KeyF" }, { "button": 7 }],
-    "crouch": [{ "key": "KeyS" }, { "button": 5 }],
-    "pause": [{ "key": "KeyP" }, { "button": 9 }],
+    "jump": [
+      {
+        "key": "KeyW"
+      },
+      {
+        "button": 0
+      },
+      {
+        "key": "ArrowUp"
+      },
+      {
+        "key": "Space"
+      }
+    ],
+    "dash": [
+      {
+        "key": "ShiftLeft"
+      },
+      {
+        "button": 4
+      },
+      {
+        "key": "ShiftRight"
+      },
+      {
+        "button": 2
+      }
+    ],
+    "shoot": [
+      {
+        "key": "KeyF"
+      },
+      {
+        "button": 7
+      }
+    ],
+    "crouch": [
+      {
+        "key": "KeyS"
+      },
+      {
+        "button": 5
+      },
+      {
+        "key": "ArrowDown"
+      }
+    ],
+    "pause": [
+      {
+        "key": "KeyP"
+      },
+      {
+        "button": 9
+      },
+      {
+        "key": "Escape"
+      }
+    ],
     "menuX": [
-      { "negative": "KeyA", "positive": "KeyD" },
-      { "axis": 0 }
+      {
+        "negative": "KeyA",
+        "positive": "KeyD"
+      },
+      {
+        "negative": "ArrowLeft",
+        "positive": "ArrowRight"
+      },
+      {
+        "axis": 0
+      }
     ],
     "menuY": [
-      { "negative": "KeyW", "positive": "KeyS" },
-      { "axis": 1 }
+      {
+        "negative": "KeyW",
+        "positive": "KeyS"
+      },
+      {
+        "negative": "ArrowUp",
+        "positive": "ArrowDown"
+      },
+      {
+        "axis": 1
+      }
     ],
-    "menuConfirm": [{ "key": "Enter" }, { "button": 0 }],
-    "menuBack": [{ "key": "KeyQ" }, { "button": 1 }]
+    "menuConfirm": [
+      {
+        "key": "Enter"
+      },
+      {
+        "button": 0
+      }
+    ],
+    "menuBack": [
+      {
+        "key": "KeyQ"
+      },
+      {
+        "button": 1
+      }
+    ],
+    "feelToggle": [
+      {
+        "key": "KeyC"
+      },
+      {
+        "button": 8
+      }
+    ],
+    "feelBaseline": [
+      {
+        "key": "Digit1"
+      }
+    ],
+    "feelPolished": [
+      {
+        "key": "Digit2"
+      }
+    ]
   }
 }

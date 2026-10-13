@@ -47,33 +47,28 @@ export const BuildRoomCollision = defineSystem({
         }
       }
     }
-    if (levelEntity) {
-      // The installed host does not emit Tilemap geometry. Merge its authored solid runs into
-      // static ledge silhouettes so traversal remains readable without per-tile render entities.
-      for (let y = 0; y < solids.height; y++) {
-        let x = 0;
-        while (x < solids.width) {
-          if (!solids.isWalkable(x, y)) { x++; continue; }
-          const start = x;
-          while (x < solids.width && solids.isWalkable(x, y)) x++;
-          const width = (x - start) * mapping.cellSize;
-          const left = mapping.originX + start * mapping.cellSize;
-          const bottom = mapping.originY + y * mapping.cellSize;
-          ctx.commands.spawn({
-            LocalTransform: { position: [left + width / 2, bottom + mapping.cellSize / 2, 0] },
-            Shape: { size: [width, mapping.cellSize], color: '#3f461fff', sortingLayer: 'World' },
-            TerrainVisual: { row: y, columns: x - start },
-          });
-          // Bright finite rim marks the exact collision surface, including raised platforms.
-          ctx.commands.spawn({
-            LocalTransform: { position: [left + width / 2, bottom + mapping.cellSize - 0.025, 0] },
-            Shape: { size: [width, 0.05], color: '#a29650ff', sortingLayer: 'World', order: 1 },
-            TerrainVisual: { row: y, columns: x - start },
-          });
-        }
+    // Native tilemap geometry is absent on this host. Each row run uses an authored strip
+    // baked from the same occupancy; edge cells use supplied left/right corner tiles.
+    // One sprite per run keeps the terrain on the existing environment atlas, with no
+    // stretched source texels and no per-step work. First-room and full-route share it.
+    const terrainSet = tilemap.includes('complete-sewer') ? 'complete-sewer' : 'first-sewer-room';
+    for (let y = 0; y < solids.height; y++) {
+      let x = 0;
+      while (x < solids.width) {
+        if (!solids.isWalkable(x, y)) { x++; continue; }
+        const start = x;
+        while (x < solids.width && x < start + 64 && solids.isWalkable(x, y)) x++;
+        const width = (x - start) * mapping.cellSize;
+        const left = mapping.originX + start * mapping.cellSize;
+        const bottom = mapping.originY + y * mapping.cellSize;
+        ctx.commands.spawn({
+          LocalTransform: { position: [left + width / 2, bottom + mapping.cellSize / 2, 0] },
+          Sprite: { image: `art/environment/terrain/${terrainSet}-${y}-${start}`, size: [width, mapping.cellSize], sortingLayer: 'World' },
+          TerrainVisual: { row: y, columns: x - start },
+        });
       }
-      ctx.commands.insert(levelEntity, LevelCollisionIndex, { words });
     }
+    if (levelEntity) ctx.commands.insert(levelEntity, LevelCollisionIndex, { words });
     ctx.set(PlatformCollisionGrid, {
       originX: mapping.originX,
       originY: mapping.originY,

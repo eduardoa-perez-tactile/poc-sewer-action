@@ -3,6 +3,11 @@ import type { SystemContext } from '@gameengine/runtime';
 import { CameraFeedback, CameraFollowState, GameFeelComparison } from '../schema.gen.ts';
 
 const BUMP_DECAY = 0.72;
+
+/** Same impulse envelope at 30, 60 and 120 presentation frames per second. */
+export function cameraImpulseDecay(realDelta: number): number {
+  return Math.pow(BUMP_DECAY, Math.max(0, realDelta) * 60);
+}
 const SETTLE_EPSILON = 0.001;
 
 type PresentationContext = Pick<SystemContext, 'get' | 'set'>;
@@ -33,8 +38,8 @@ export const DriveCameraFeedback = defineSystem({
     const phase = ctx.get(RenderTime).frame;
     const shakeX = shakeTime > 0 ? Math.sin(phase * 2.399) * feedback.shake * shakeScale : 0;
     const shakeY = shakeTime > 0 ? Math.sin(phase * 3.883) * feedback.shake * shakeScale : 0;
-    const bumpX = !ctx.is(GameFeelComparison, 'recoil', true) || Math.abs(feedback.bump[0]) <= SETTLE_EPSILON ? 0 : feedback.bump[0] * BUMP_DECAY;
-    const bumpY = !ctx.is(GameFeelComparison, 'recoil', true) || Math.abs(feedback.bump[1]) <= SETTLE_EPSILON ? 0 : feedback.bump[1] * BUMP_DECAY;
+    const bumpX = !ctx.is(GameFeelComparison, 'recoil', true) || Math.abs(feedback.bump[0]) <= SETTLE_EPSILON ? 0 : feedback.bump[0] * cameraImpulseDecay(ctx.get(RenderTime).realDelta);
+    const bumpY = !ctx.is(GameFeelComparison, 'recoil', true) || Math.abs(feedback.bump[1]) <= SETTLE_EPSILON ? 0 : feedback.bump[1] * cameraImpulseDecay(ctx.get(RenderTime).realDelta);
 
     for (const chunk of cameras.chunks()) {
       const offset = chunk.col(VisualOffset);

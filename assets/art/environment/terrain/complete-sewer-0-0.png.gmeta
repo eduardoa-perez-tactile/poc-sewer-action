@@ -1,0 +1,8 @@
+guid = "61b788c2-ffac-489c-9c8f-05f7ef9b98a8"
+importer = "texture"
+
+[settings]
+atlas = "environment"
+compression = "none"
+trim = false
+art_check = false
