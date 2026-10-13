@@ -1,5 +1,5 @@
 import { defineSystem, LocalTransform, query, read, withTag, write } from '@gameengine/runtime';
-import { ActorDied, Alive, Cadaver, CadaverSettling, EnemyBrain, GameState, HitReacting, HitReaction, Player, PlayerControl, PlayerMotion } from '../schema.gen.ts';
+import { ActorDied, AudioCue, Alive, Cadaver, CadaverSettling, EnemyBrain, GameState, HitReacting, HitReaction, Player, PlayerControl, PlayerMotion } from '../schema.gen.ts';
 
 export const ResolveDeaths = defineSystem({
   name: 'ResolveDeaths',
@@ -22,6 +22,7 @@ export const ResolveDeaths = defineSystem({
           control.jumpHeld[row] = 0;
           motion.horizontalVelocity[row] = 0;
           motion.verticalVelocity[row] = 0;
+          ctx.events.emit(AudioCue, { kind: 'PlayerDeath', step: ctx.step });
           ctx.commands.remove(death.actor, Alive);
           ctx.commands.remove(death.actor, HitReacting);
           ctx.setField(GameState, 'phase', 'PlayerDead');
@@ -37,6 +38,7 @@ export const ResolveDeaths = defineSystem({
           chunk.setField(EnemyBrain, row, 'state', 'Dead');
           chunk.setField(EnemyBrain, row, 'attackKind', 'None');
           brain.attackTelegraphed[row] = 0;
+          ctx.events.emit(AudioCue, { kind: 'EnemyDeath', step: ctx.step });
           ctx.commands.remove(death.actor, Alive);
           ctx.commands.remove(death.actor, HitReacting);
           ctx.commands.insert(death.actor, Cadaver, {

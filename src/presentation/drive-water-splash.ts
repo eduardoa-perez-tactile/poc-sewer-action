@@ -1,4 +1,4 @@
-import { audio, clip2DInfo, defineSystem, query, RenderTime, read, Sprite, SpriteAnimation, VisualOffset, write } from '@gameengine/runtime';
+import { clip2DInfo, defineSystem, query, RenderTime, read, Sprite, SpriteAnimation, VisualOffset, write } from '@gameengine/runtime';
 import { RestartRequested, WaterEntered, WaterSplash, WaterSplashState } from '../schema.gen.ts';
 
 export const DriveWaterSplash = defineSystem({
@@ -39,7 +39,6 @@ export const DriveWaterSplash = defineSystem({
           chunk.set(SpriteAnimation, row, { frames: clip.frames.map((frame) => frame.sprite).join(','), fps: 1 / clip.frames[0]!.duration, loop: false, playing: true, time: 0, frame: 0 });
           chunk.set(VisualOffset, row, { position: [entry.position[0], entry.position[1], 0] });
           chunk.setField(Sprite, row, 'visible', true);
-          audio.play('audio/sfx/water-splash', { bus: 'SFX', maxVoices: 1 });
         });
         active ||= remaining[row]! > 0;
       }

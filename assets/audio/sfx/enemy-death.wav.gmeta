@@ -4,3 +4,6 @@ importer = "audio"
 [settings]
 mono = true
 cooldown = 0.08
+codec = "adpcm"
+loudness = -16
+normalize = true

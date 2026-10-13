@@ -38,3 +38,5 @@ export { WarmSoldierVisual } from "./presentation/warm-soldier-visual.ts";
 export { DriveSoldierAnimation } from "./presentation/drive-soldier-animation.ts";
 
 export { DriveCombatEffects } from "./presentation/drive-combat-effects.ts";
+
+export { DriveGameplayAudio } from './audio/drive-gameplay-audio.ts';

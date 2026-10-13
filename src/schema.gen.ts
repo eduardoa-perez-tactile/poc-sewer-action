@@ -9,6 +9,16 @@ export const schemaIr = {
   "package": "SewerAction",
   "enums": [
     {
+      "name": "AudioCueKind",
+      "values": [
+        "Shot",
+        "Laser",
+        "PlayerDeath",
+        "EnemyDeath"
+      ],
+      "package": "SewerAction"
+    },
+    {
       "name": "EnemyProjectileKind",
       "values": [
         "Bullet",
@@ -285,6 +295,49 @@ export const schemaIr = {
       ],
       "package": "SewerAction",
       "doc": "Stops the animation adapter between movement, combat and settling bursts."
+    },
+    {
+      "name": "AudioCue",
+      "kind": "event",
+      "sim": false,
+      "fields": [
+        {
+          "name": "kind",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "AudioCueKind"
+        },
+        {
+          "name": "step",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Accepted gameplay consequence, write-only from sim to audio."
+    },
+    {
+      "name": "GameplayAudioState",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "lastSteps",
+          "kind": "array",
+          "scalar": "u32",
+          "lanes": 6
+        },
+        {
+          "name": "nextSteps",
+          "kind": "array",
+          "scalar": "u32",
+          "lanes": 6
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Fixed-step cue deduplication and absolute cooldown deadlines; never read by gameplay."
     },
     {
       "name": "ActorDied",
@@ -2077,6 +2130,14 @@ export const schemaIr = {
 } as const;
 registerSchema(schemaIr);
 
+export const AudioCueKind = {
+  Shot: 0,
+  Laser: 1,
+  PlayerDeath: 2,
+  EnemyDeath: 3,
+} as const;
+export type AudioCueKindName = 'Shot' | 'Laser' | 'PlayerDeath' | 'EnemyDeath';
+
 export const EnemyProjectileKind = {
   Bullet: 0,
   Bomb: 1,
@@ -2243,6 +2304,28 @@ export interface SoldierVisualStateValue {
 }
 /** Stops the animation adapter between movement, combat and settling bursts. (resource, presentation-only) */
 export const SoldierVisualState = typeToken<SoldierVisualStateViews, SoldierVisualStateValue>('SoldierVisualState', 'resource', { sig: 'active:bool:1', read: (v: SoldierVisualStateViews, i: number, o: Record<string, unknown>) => { o.active = v.active[i] !== 0; return o; } });
+
+export interface AudioCueViews {
+  kind: Uint8Array;
+  step: Uint32Array;
+}
+export interface AudioCueValue {
+  kind: AudioCueKindName | number;
+  step: number;
+}
+/** Accepted gameplay consequence, write-only from sim to audio. (event, presentation-only) */
+export const AudioCue = typeToken<AudioCueViews, AudioCueValue>('AudioCue', 'event', { sig: 'kind:enum:1,step:u32:1', read: (v: AudioCueViews, i: number, o: Record<string, unknown>) => { o.kind = $r.enm('AudioCueKind', v.kind[i]!); o.step = v.step[i]; return o; } });
+
+export interface GameplayAudioStateViews {
+  lastSteps: Uint32Array;
+  nextSteps: Uint32Array;
+}
+export interface GameplayAudioStateValue {
+  lastSteps: number[];
+  nextSteps: number[];
+}
+/** Fixed-step cue deduplication and absolute cooldown deadlines; never read by gameplay. (resource, presentation-only) */
+export const GameplayAudioState = typeToken<GameplayAudioStateViews, GameplayAudioStateValue>('GameplayAudioState', 'resource', { sig: 'lastSteps:array:6,nextSteps:array:6', read: (v: GameplayAudioStateViews, i: number, o: Record<string, unknown>) => { o.lastSteps = $r.lanes(v.lastSteps, i, 6, o.lastSteps); o.nextSteps = $r.lanes(v.nextSteps, i, 6, o.nextSteps); return o; } });
 
 export interface ActorDiedViews {
   actor: Uint32Array;

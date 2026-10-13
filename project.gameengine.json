@@ -13,11 +13,11 @@
     "pixelsPerUnit": 100
   },
   "atlas": { "auto": true, "maxPageSize": { "desktop": 4096, "mobile": 2048 }, "pot": false },
-  "audio": { "maxVoices": 24, "overrides": { "phone-low": { "maxVoices": 12 } } },
+  "audio": { "banks": ["audio/core.bank"], "loudness": -16, "normalize": true, "maxVoices": 24, "overrides": { "phone-low": { "maxVoices": 12 } } },
   "ui": { "referenceResolution": [1920, 1080], "orientation": "landscape" },
   "assets": {
     "groups": {
-      "boot": { "include": ["assets/art/start-screen.png", "assets/art/effects/water-splash.clip2d.json", "assets/art/effects/water-splash/**", "assets/audio/sfx/water-splash.wav", "prefabs/player-projectile.prefab.json", "prefabs/enemy-bullet.prefab.json", "prefabs/enemy-bomb.prefab.json", "assets/art/effects/muzzle.clip2d.json", "assets/art/effects/hit.clip2d.json", "assets/art/effects/explosion.clip2d.json", "assets/art/effects/*.vfx.json", "assets/art/effects/hit/**", "assets/art/effects/hit-sheet.png", "assets/art/effects/bullet/muzzle-flash.png"] },
+      "boot": { "include": ["assets/art/start-screen.png", "assets/art/effects/water-splash.clip2d.json", "assets/art/effects/water-splash/**", "assets/audio/sfx/*.wav", "prefabs/player-projectile.prefab.json", "prefabs/enemy-bullet.prefab.json", "prefabs/enemy-bomb.prefab.json", "assets/art/effects/muzzle.clip2d.json", "assets/art/effects/hit.clip2d.json", "assets/art/effects/explosion.clip2d.json", "assets/art/effects/*.vfx.json", "assets/art/effects/hit/**", "assets/art/effects/hit-sheet.png", "assets/art/effects/bullet/muzzle-flash.png"] },
       "gameplay": {
         "include": [
           "assets/art/environment/**",
@@ -30,7 +30,8 @@
       }
     }
   },
-  "bundles": [{ "name": "base", "include": ["**"], "delivery": "in-app" }],
+  "memory": { "budgets": { "phone-low": { "total": "192MB", "textures": "128MB", "audio": "32MB" } } },
+  "bundles": [{ "name": "base", "include": ["**"], "delivery": "in-app", "exclude": ["assets/audio/sfx/rainbowlaser.ogg"] }],
   "targets": ["ios", "android"],
   "platforms": ["web"],
   "startScene": "scenes/main.scene.json",
