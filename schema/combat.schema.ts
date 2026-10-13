@@ -99,6 +99,7 @@ export const DamageRequested = event(
     source: entity(),
     target: entity(),
     amount: u16({ min: 1 }),
+    bypassInvulnerability: bool({ default: false, doc: 'Environmental entry damage must not leave an invulnerable player stranded alive in water.' }),
     knockback: vec2({ default: [0, 0] }),
   },
   { sim: true, doc: 'Combat and hazards request damage; the health system validates and applies it.' },

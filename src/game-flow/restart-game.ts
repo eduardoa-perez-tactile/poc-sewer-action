@@ -21,13 +21,14 @@ import {
   Projectile,
   RestartRequested,
   Weapon,
+  WaterContact,
 } from '../schema.gen.ts';
 
 export const RestartGame = defineSystem({
   name: 'RestartGame',
   after: ['AdvanceCadavers'],
   queries: {
-    players: query(read(Player), read(PlayerRestartState), read(ActorSpawn), write(Health), write(HitReaction), write(LocalTransform), write(PlayerControl), write(PlayerDashState), write(PlayerGroundContact), write(PlayerMotion), write(Weapon)),
+    players: query(read(Player), read(PlayerRestartState), read(ActorSpawn), write(Health), write(HitReaction), write(LocalTransform), write(PlayerControl), write(PlayerDashState), write(PlayerGroundContact), write(PlayerMotion), write(Weapon), write(WaterContact)),
     enemies: query(write(EnemyBrain), read(EnemyRestartState), read(ActorSpawn), write(Health), write(HitReaction), write(LocalTransform)),
     cadavers: query(read(Cadaver)),
     projectiles: query(read(Projectile)),
@@ -52,6 +53,8 @@ export const RestartGame = defineSystem({
         chunk.set(PlayerGroundContact, row, { grounded });
         chunk.set(PlayerMotion, row, { horizontalVelocity: 0, verticalVelocity: 0, groundedForMovement: grounded, facing, coyoteStepsRemaining: 0, jumpBufferStepsRemaining: 0, airJumpsRemaining: restart.airJumps[row]!, jumpWasHeld: false, ignoreGroundContact: false });
         chunk.setField(Weapon, row, 'cooldownStepsRemaining', 0);
+        chunk.setField(WaterContact, row, 'inside', false);
+        chunk.setField(WaterContact, row, 'nextSplashStep', 0);
         ctx.commands.insert(entity, Alive, {});
       }
     }

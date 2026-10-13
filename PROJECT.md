@@ -48,3 +48,12 @@ blocker while development and verification use the desktop host.
 - Mechanics reference: https://github.com/eduardoa-perez-tactile/poc-game-feel
 - Project repository: https://github.com/eduardoa-perez-tactile/poc-sewer-action
 - Engine releases: https://github.com/tactilegames/game-engine-releases
+
+## Water hazards (issue #21)
+
+- The authored water surface is y = -3 across the first room. Player entry requests 5 damage through the health owner, bypassing combat invulnerability so a recent soldier hit cannot prevent drowning. Water is an entry hazard: sustained contact does not repeat damage.
+- Contact treats overlapping water volumes as one region. A 30-step absolute splash cooldown suppresses rapid exit/re-entry; suppressed entries never produce delayed splashes while still submerged. Restart clears contact/deadline and hides the preallocated splash slot.
+- The supplied five-frame, 0.5-second splash clip and mono sound run only in presentation. Entry-step deduplication prevents replaying the same event on the following frame. Contact and inactive presentation skip unchanged work; 12 focused hash traces matched before/after the contact optimization.
+- Existing replay inputs and golden pixels were preserved; replay hashes/checkpoints and pinned test hashes were updated for the authored simulation schema/state. Water adds a recorded movement/death/restart replay, a single reviewed splash golden and a structural budget.
+- Architecture review: no remaining must/should findings. Performance review at one player/one water volume: water replay peaks at 6/7 draws, zero pipelines created during play and zero GC pauses over 4 ms; preserve batching as content grows. Release desktop V8 mobile-tier sample: step p95 0.313 ms, water marker 0.0092 ms, inactive splash 0 ms, RSS about 70.2 MiB and heap about 3.5 MiB. These are desktop relative measurements; real GPU/thermal/phone timings remain unmeasured.
+- V8 and phone-low residency/render coverage are supported. Hermes parity remains blocked by open issue #6 (missing Hermes host). Browser packaging remains separately unavailable in the engine. Android package-size dry-run is unavailable because the installed engine lacks its platform template; Android asset cooking succeeded.

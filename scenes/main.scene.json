@@ -42,6 +42,8 @@
     {
       "name": "WaterEdge",
       "id": "water-edge",
+      "Bounds2D": { "shape": "Aabb", "size": [16, 1.5], "offset": [-5.5, -0.75], "layer": 16, "mask": 1 },
+      "Hazard": { "kind": "Water", "damage": 5 },
       "LocalTransform": { "position": [5.5, -3, 0] },
       "RoomLandmark": { "kind": "WaterEdge" }
     },
@@ -82,7 +84,7 @@
       "id": "player",
       "ActorSpawn": { "position": [-5.25, -2.5] },
       "Alive": {},
-      "Bounds2D": { "shape": "Aabb", "size": [0.7, 1.5], "offset": [0, 0.75], "mask": 8 },
+      "Bounds2D": { "shape": "Aabb", "size": [0.7, 1.5], "offset": [0, 0.75], "mask": 24 },
       "Health": { "current": 5, "maximum": 5 },
       "HitReaction": { "steps": 10 },
       "LocalTransform": { "position": [-5.25, -2.5, 0] },
@@ -100,6 +102,7 @@
         "sortingLayer": "Characters"
       },
       "SpriteAnimation": { "frames": "art/player/idle/idle1", "fps": 1 },
+      "WaterContact": {},
       "Weapon": {}
     },
     {
@@ -219,6 +222,21 @@
         "loop": false
       },
       "VisualOffset": {}
+    },
+    {
+      "name": "WaterSplash",
+      "id": "water-splash",
+      "LocalTransform": {},
+      "Sprite": {
+        "image": "art/effects/water-splash/water-splash1",
+        "size": [1.92, 1.28],
+        "anchor": [0.5, 0],
+        "sortingLayer": "Effects",
+        "visible": false
+      },
+      "SpriteAnimation": { "frames": "art/effects/water-splash/water-splash1", "playing": false, "loop": false },
+      "VisualOffset": {},
+      "WaterSplash": {}
     }
   ]
 }

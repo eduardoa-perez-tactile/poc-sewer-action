@@ -3,7 +3,7 @@ import { ActorDied, DamageRequested, Health, HitReacting, HitReaction } from '..
 
 export const ApplyDamage = defineSystem({
   name: 'ApplyDamage',
-  after: ['AdvanceProjectiles', 'AdvanceEnemyProjectiles'],
+  after: ['AdvanceProjectiles', 'AdvanceEnemyProjectiles', 'ResolveWaterContact'],
   queries: {
     health: query(write(Health)),
     reactions: query(write(HitReaction)),
@@ -16,7 +16,7 @@ export const ApplyDamage = defineSystem({
           if (chunk.entity(row) !== damage.target) continue;
           const values = chunk.col(Health);
           const current = values.current[row]!;
-          if (current === 0 || ctx.step < values.invulnerableUntilStep[row]!) return;
+          if (current === 0 || (!damage.bypassInvulnerability && ctx.step < values.invulnerableUntilStep[row]!)) return;
           const next = damage.amount >= current ? 0 : current - damage.amount;
           values.current[row] = next;
           values.invulnerableUntilStep[row] = ctx.step + values.invulnerabilitySteps[row]!;

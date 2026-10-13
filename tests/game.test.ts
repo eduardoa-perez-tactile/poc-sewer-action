@@ -6,6 +6,7 @@ import {
   GameState,
   GameplayPresentation,
   Health,
+  Hazard,
   MenuIntent,
   ParallaxLayer,
   PlatformCollisionCell,
@@ -356,7 +357,7 @@ worldTest('parallax factors and water startup animation settle at bounded cost',
 
   const animatedWater = world.entities(SpriteAnimation).filter((entity) => {
     const frames = world.get(entity, SpriteAnimation).frames;
-    return frames.includes('water');
+    return frames.includes('environment/') && frames.includes('water');
   });
   expect(animatedWater.length).toBe(4);
   expect(animatedWater.map((entity) => world.get(entity, SpriteAnimation).fps).sort()).toEqual([4, 4, 6, 6]);
@@ -460,7 +461,7 @@ worldTest('held fire obeys fixed-step cadence, applies recoil, and reuses the wa
   expect(world.get(player!, Weapon).cooldownStepsRemaining).toBe(9);
   const firingPool = pool.stats().find((entry) => entry.name === 'player-projectiles')!;
   expect([firingPool.size, firingPool.free, firingPool.misses]).toEqual([12, 10, 0]);
-  expect(world.hash()).toBe('cabf20734527d7b4');
+  expect(world.hash()).toBe('c8e224939d86afc4');
 });
 
 worldTest('projectiles hit deterministic wall cells and return cleanly to the pool', async ({ world, step, input }) => {
@@ -484,6 +485,8 @@ worldTest('projectiles hit deterministic wall cells and return cleanly to the po
 });
 
 worldTest('projectile range expires on a fixed step and repeated cleanup never grows the pool', async ({ world, step, input }) => {
+  // Isolate the movement/weapon contract from the authored drowning volume.
+  for (const water of world.entities(Hazard)) world.insert(water, Hazard, { kind: 'Contact' });
   world.setResource(GameState, { initialized: true, phase: 'Playing' });
   world.setResource(RoomCollisionState, { built: true, cellCount: 0 });
   input.emit(LoadingResumed, { name: 'boot' });
@@ -563,6 +566,8 @@ worldTest('horizontal input accelerates and faces in both directions', async ({ 
 });
 
 worldTest('horizontal speed is capped by the player configuration', async ({ world, step, input }) => {
+  // Isolate the movement/weapon contract from the authored drowning volume.
+  for (const water of world.entities(Hazard)) world.insert(water, Hazard, { kind: 'Contact' });
   await step(1);
   const [player] = world.entities(Player);
 
@@ -846,7 +851,7 @@ worldTest('platform collision stops at walls and cannot tunnel at extreme dash s
 
   expect(world.get(player, LocalTransform).position[0]).toBeCloseTo(24.58);
   expect(world.get(player, PlayerMotion).horizontalVelocity).toBe(0);
-  expect(world.hash()).toBe('f83d3b0e456234b9');
+  expect(world.hash()).toBe('9a252842c58c1a3b');
 });
 
 worldTest('platform collision resolves a diagonal floor-wall corner without penetration', async ({ world, step }) => {
@@ -871,7 +876,7 @@ worldTest('platform collision resolves a diagonal floor-wall corner without pene
   expect(position[0]).toBeCloseTo(30.58);
   expect(position[1]).toBeCloseTo(0.5);
   expect(world.get(player, PlayerGroundContact).grounded).toBe(true);
-  expect(world.hash()).toBe('f48219c5c4176a04');
+  expect(world.hash()).toBe('c71d0cbfa61ae794');
 });
 
 worldTest('small-step assistance climbs only ledges within its configured boundary', async ({ world, step, input }) => {
@@ -902,7 +907,7 @@ worldTest('small-step assistance climbs only ledges within its configured bounda
   }
   expect(world.get(player, LocalTransform).position[0]).toBeLessThanOrEqual(41.58);
   expect(world.get(player, LocalTransform).position[1]).toBeCloseTo(0.5);
-  expect(world.hash()).toBe('10f660f9ffe50f1f');
+  expect(world.hash()).toBe('019cb81f3ca1b877');
 });
 
 worldTest('cliff edges end ground contact exactly after support and preserve coyote integration', async ({ world, step, input }) => {
@@ -1069,7 +1074,7 @@ worldTest('dash mechanics produce a stable deterministic state hash', async ({ w
   input.action('dash', 1);
   await step(9);
 
-  expect(world.hash()).toBe('697ee9e76f7b638c');
+  expect(world.hash()).toBe('22cb38ccc86c0e33');
 });
 
 worldTest('jump mechanics produce a stable deterministic state hash', async ({ world, step, input }) => {
@@ -1083,7 +1088,7 @@ worldTest('jump mechanics produce a stable deterministic state hash', async ({ w
   input.action('moveX', -0.75);
   await step(17);
 
-  expect(world.hash()).toBe('b4737d24004c42ff');
+  expect(world.hash()).toBe('a4dcf36c4df1fbc1');
 });
 
 worldTest('horizontal movement produces a stable deterministic state hash', async ({ world, step, input }) => {
@@ -1098,7 +1103,7 @@ worldTest('horizontal movement produces a stable deterministic state hash', asyn
   }
   await step(5);
 
-  expect(world.hash()).toBe('72ca3fc310834dea');
+  expect(world.hash()).toBe('988f2c881d47d826');
 });
 
 worldTest('camera look-ahead follows authoritative velocity and reverses direction', async ({ world, step, input }) => {

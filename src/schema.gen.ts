@@ -258,6 +258,14 @@ export const schemaIr = {
           "min": 1
         },
         {
+          "name": "bypassInvulnerability",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "Environmental entry damage must not leave an invulnerable player stranded alive in water."
+        },
+        {
           "name": "knockback",
           "kind": "vec2",
           "scalar": "f32",
@@ -1134,6 +1142,104 @@ export const schemaIr = {
       "doc": "Data-driven environmental damage contract."
     },
     {
+      "name": "WaterContact",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "inside",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "splashCooldownSteps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 30,
+          "min": 1
+        },
+        {
+          "name": "nextSplashStep",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Player contact with the union of water volumes. Entry damage is independent of splash cooldown."
+    },
+    {
+      "name": "WaterEntered",
+      "kind": "event",
+      "sim": true,
+      "fields": [
+        {
+          "name": "player",
+          "kind": "entity",
+          "scalar": "u32",
+          "lanes": 2
+        },
+        {
+          "name": "position",
+          "kind": "vec2",
+          "scalar": "f32",
+          "lanes": 2
+        },
+        {
+          "name": "entryStep",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Accepted water entry fact; presentation observes this without affecting the hazard outcome."
+    },
+    {
+      "name": "WaterSplash",
+      "kind": "component",
+      "sim": false,
+      "fields": [
+        {
+          "name": "secondsRemaining",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "min": 0
+        },
+        {
+          "name": "lastEntryStep",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "One preallocated splash slot for the single-player slice, hidden when its one-shot clip ends."
+    },
+    {
+      "name": "WaterSplashState",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "active",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Run gate for bounded splash presentation; stops all adapter work once hidden."
+    },
+    {
       "name": "MenuIntent",
       "kind": "event",
       "sim": true,
@@ -1978,16 +2084,20 @@ export interface DamageRequestedViews {
   source: Uint32Array;
   target: Uint32Array;
   amount: Uint16Array;
+  /** Environmental entry damage must not leave an invulnerable player stranded alive in water. */
+  bypassInvulnerability: Uint8Array;
   knockback: Float32Array;
 }
 export interface DamageRequestedValue {
   source: EntityId;
   target: EntityId;
   amount: number;
+  /** Environmental entry damage must not leave an invulnerable player stranded alive in water. */
+  bypassInvulnerability: boolean;
   knockback: [number, number];
 }
 /** Combat and hazards request damage; the health system validates and applies it. (event, sim) */
-export const DamageRequested = typeToken<DamageRequestedViews, DamageRequestedValue>('DamageRequested', 'event', { sig: 'source:entity:2,target:entity:2,amount:u16:1,knockback:vec2:2', read: (v: DamageRequestedViews, i: number, o: Record<string, unknown>) => { o.source = $r.ent(v.source, i); o.target = $r.ent(v.target, i); o.amount = v.amount[i]; o.knockback = $r.lanes(v.knockback, i, 2, o.knockback); return o; } });
+export const DamageRequested = typeToken<DamageRequestedViews, DamageRequestedValue>('DamageRequested', 'event', { sig: 'source:entity:2,target:entity:2,amount:u16:1,bypassInvulnerability:bool:1,knockback:vec2:2', read: (v: DamageRequestedViews, i: number, o: Record<string, unknown>) => { o.source = $r.ent(v.source, i); o.target = $r.ent(v.target, i); o.amount = v.amount[i]; o.bypassInvulnerability = v.bypassInvulnerability[i] !== 0; o.knockback = $r.lanes(v.knockback, i, 2, o.knockback); return o; } });
 
 export interface EnemyAttackPoolStateViews {
   warmed: Uint8Array;
@@ -2370,6 +2480,52 @@ export interface HazardValue {
 }
 /** Data-driven environmental damage contract. (component, sim) */
 export const Hazard = typeToken<HazardViews, HazardValue>('Hazard', 'component', { sig: 'kind:enum:1,damage:u16:1,repeatSeconds:f32:1', read: (v: HazardViews, i: number, o: Record<string, unknown>) => { o.kind = $r.enm('HazardKind', v.kind[i]!); o.damage = v.damage[i]; o.repeatSeconds = v.repeatSeconds[i]; return o; } });
+
+export interface WaterContactViews {
+  inside: Uint8Array;
+  splashCooldownSteps: Uint32Array;
+  nextSplashStep: Uint32Array;
+}
+export interface WaterContactValue {
+  inside: boolean;
+  splashCooldownSteps: number;
+  nextSplashStep: number;
+}
+/** Player contact with the union of water volumes. Entry damage is independent of splash cooldown. (component, sim) */
+export const WaterContact = typeToken<WaterContactViews, WaterContactValue>('WaterContact', 'component', { sig: 'inside:bool:1,splashCooldownSteps:u32:1,nextSplashStep:u32:1', read: (v: WaterContactViews, i: number, o: Record<string, unknown>) => { o.inside = v.inside[i] !== 0; o.splashCooldownSteps = v.splashCooldownSteps[i]; o.nextSplashStep = v.nextSplashStep[i]; return o; } });
+
+export interface WaterEnteredViews {
+  player: Uint32Array;
+  position: Float32Array;
+  entryStep: Uint32Array;
+}
+export interface WaterEnteredValue {
+  player: EntityId;
+  position: [number, number];
+  entryStep: number;
+}
+/** Accepted water entry fact; presentation observes this without affecting the hazard outcome. (event, sim) */
+export const WaterEntered = typeToken<WaterEnteredViews, WaterEnteredValue>('WaterEntered', 'event', { sig: 'player:entity:2,position:vec2:2,entryStep:u32:1', read: (v: WaterEnteredViews, i: number, o: Record<string, unknown>) => { o.player = $r.ent(v.player, i); o.position = $r.lanes(v.position, i, 2, o.position); o.entryStep = v.entryStep[i]; return o; } });
+
+export interface WaterSplashViews {
+  secondsRemaining: Float32Array;
+  lastEntryStep: Uint32Array;
+}
+export interface WaterSplashValue {
+  secondsRemaining: number;
+  lastEntryStep: number;
+}
+/** One preallocated splash slot for the single-player slice, hidden when its one-shot clip ends. (component, presentation-only) */
+export const WaterSplash = typeToken<WaterSplashViews, WaterSplashValue>('WaterSplash', 'component', { sig: 'secondsRemaining:f32:1,lastEntryStep:u32:1', read: (v: WaterSplashViews, i: number, o: Record<string, unknown>) => { o.secondsRemaining = v.secondsRemaining[i]; o.lastEntryStep = v.lastEntryStep[i]; return o; } });
+
+export interface WaterSplashStateViews {
+  active: Uint8Array;
+}
+export interface WaterSplashStateValue {
+  active: boolean;
+}
+/** Run gate for bounded splash presentation; stops all adapter work once hidden. (resource, presentation-only) */
+export const WaterSplashState = typeToken<WaterSplashStateViews, WaterSplashStateValue>('WaterSplashState', 'resource', { sig: 'active:bool:1', read: (v: WaterSplashStateViews, i: number, o: Record<string, unknown>) => { o.active = v.active[i] !== 0; return o; } });
 
 export interface MenuIntentViews {
   moveX: Float32Array;
