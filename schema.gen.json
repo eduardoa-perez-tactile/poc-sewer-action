@@ -3,6 +3,14 @@
   "package": "SewerAction",
   "enums": [
     {
+      "name": "EnemyProjectileKind",
+      "values": [
+        "Bullet",
+        "Bomb"
+      ],
+      "package": "SewerAction"
+    },
+    {
       "name": "EnemyState",
       "values": [
         "Idle",
@@ -19,6 +27,16 @@
       "values": [
         "Left",
         "Right"
+      ],
+      "package": "SewerAction"
+    },
+    {
+      "name": "EnemyAttackKind",
+      "values": [
+        "None",
+        "Shoot",
+        "CrouchShoot",
+        "Bomb"
       ],
       "package": "SewerAction"
     },
@@ -142,6 +160,91 @@
       ],
       "package": "SewerAction",
       "doc": "Combat and hazards request damage; the health system validates and applies it."
+    },
+    {
+      "name": "EnemyAttackPoolState",
+      "kind": "resource",
+      "sim": true,
+      "fields": [
+        {
+          "name": "warmed",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "One-shot enemy bullet and bomb pool bootstrap state."
+    },
+    {
+      "name": "EnemyProjectile",
+      "kind": "component",
+      "sim": true,
+      "fields": [
+        {
+          "name": "kind",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "EnemyProjectileKind",
+          "default": "Bullet"
+        },
+        {
+          "name": "velocityX",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0
+        },
+        {
+          "name": "velocityY",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0
+        },
+        {
+          "name": "gravity",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "min": 0
+        },
+        {
+          "name": "distanceRemaining",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 0,
+          "min": 0
+        },
+        {
+          "name": "lifetimeStepsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        },
+        {
+          "name": "damage",
+          "kind": "u16",
+          "scalar": "u16",
+          "lanes": 1,
+          "default": 1,
+          "min": 1
+        },
+        {
+          "name": "owner",
+          "kind": "entity",
+          "scalar": "u32",
+          "lanes": 2,
+          "optional": true
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Pooled fixed-step enemy bullet or ballistic bomb state."
     },
     {
       "name": "Health",
@@ -430,10 +533,57 @@
           "scalar": "f32",
           "lanes": 1,
           "default": 0
+        },
+        {
+          "name": "attackKind",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "EnemyAttackKind",
+          "default": "None"
+        },
+        {
+          "name": "attackSequence",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0,
+          "doc": "Round-robin attack selection; deterministic and replayed."
+        },
+        {
+          "name": "attackRange",
+          "kind": "f32",
+          "scalar": "f32",
+          "lanes": 1,
+          "default": 4.5,
+          "min": 0
+        },
+        {
+          "name": "attackCooldownSteps",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 48,
+          "min": 1
+        },
+        {
+          "name": "attackCooldownStepsRemaining",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        },
+        {
+          "name": "attackTelegraphed",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false,
+          "doc": "True from attack start until its clip event releases the projectile."
         }
       ],
       "package": "SewerAction",
-      "doc": "Deterministic soldier configuration, decisions and chase memory."
+      "doc": "Deterministic soldier configuration, decisions, chase memory and ranged attack cadence."
     },
     {
       "name": "CameraFeedback",
