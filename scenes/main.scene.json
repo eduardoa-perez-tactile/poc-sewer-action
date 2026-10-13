@@ -2,6 +2,7 @@
   "$schemaVersion": 2,
   "id": "main",
   "resources": {
+    "GameFeelComparison": { "config": "settings/game-feel.json" },
     "PlatformCollisionGrid": { "originX": -8, "originY": -4.5, "cellSize": 0.5 },
     "RoomCameraBounds": { "left": -8, "right": 8, "bottom": -4.5, "top": 4.5 }
   },

@@ -1,0 +1,209 @@
+{
+  "$schemaVersion": 1,
+  "guid": "df8ac4bc-ea15-4d2d-bcea-e97bf20e35db",
+  "name": "comparison-panel",
+  "title": "Game-feel comparison",
+  "kind": "widget",
+  "transition": {
+    "type": "instant"
+  },
+  "properties": {
+    "mode": {
+      "type": "text",
+      "default": "Custom"
+    },
+    "shake": {
+      "type": "text",
+      "default": "Shake: ON"
+    },
+    "recoil": {
+      "type": "text",
+      "default": "Recoil: ON"
+    },
+    "particles": {
+      "type": "text",
+      "default": "Particles: ON"
+    },
+    "flashes": {
+      "type": "text",
+      "default": "Flashes: ON"
+    },
+    "audio": {
+      "type": "text",
+      "default": "Audio: ON"
+    }
+  },
+  "root": "root",
+  "nodes": {
+    "root": {
+      "type": "element",
+      "style": {
+        "gap": 8,
+        "pad": 16,
+        "bg": "#10232b"
+      },
+      "children": [
+        "header",
+        "controls",
+        "note"
+      ]
+    },
+    "header": {
+      "type": "element",
+      "style": {
+        "dir": "row",
+        "gap": 24,
+        "h": 40
+      },
+      "children": [
+        "title",
+        "mode"
+      ]
+    },
+    "title": {
+      "type": "label",
+      "text": "Game feel",
+      "style": {
+        "fontSize": 32,
+        "color": "#e1efed",
+        "w": 210,
+        "h": 40
+      }
+    },
+    "mode": {
+      "type": "label",
+      "text": "{mode}",
+      "style": {
+        "fontSize": 26,
+        "color": "#c0d0cc",
+        "w": 240,
+        "h": 40
+      }
+    },
+    "controls": {
+      "type": "element",
+      "style": {
+        "dir": "row",
+        "gap": 8
+      },
+      "children": [
+        "baseline",
+        "polished",
+        "shake",
+        "recoil",
+        "particles",
+        "flashes",
+        "audio",
+        "close"
+      ]
+    },
+    "note": {
+      "type": "label",
+      "text": "Visual recoil only. Same gameplay. Audio OFF skips new cues; tails finish within 1.104s.",
+      "style": {
+        "h": 32,
+        "fontSize": 22,
+        "fitMin": 18,
+        "color": "#c0d0cc"
+      }
+    },
+    "baseline": {
+      "type": "use",
+      "doc": "comparison-button",
+      "key": "comparison-baseline",
+      "style": {
+        "grow": 1
+      },
+      "props": {
+        "label": "Baseline"
+      }
+    },
+    "polished": {
+      "type": "use",
+      "doc": "comparison-button",
+      "key": "comparison-polished",
+      "style": {
+        "grow": 1
+      },
+      "props": {
+        "label": "Polished"
+      }
+    },
+    "shake": {
+      "type": "use",
+      "doc": "comparison-button",
+      "key": "comparison-shake",
+      "style": {
+        "grow": 1
+      },
+      "props": {
+        "label": {
+          "property": "shake"
+        }
+      }
+    },
+    "recoil": {
+      "type": "use",
+      "doc": "comparison-button",
+      "key": "comparison-recoil",
+      "style": {
+        "grow": 1
+      },
+      "props": {
+        "label": {
+          "property": "recoil"
+        }
+      }
+    },
+    "particles": {
+      "type": "use",
+      "doc": "comparison-button",
+      "key": "comparison-particles",
+      "style": {
+        "grow": 1
+      },
+      "props": {
+        "label": {
+          "property": "particles"
+        }
+      }
+    },
+    "flashes": {
+      "type": "use",
+      "doc": "comparison-button",
+      "key": "comparison-flashes",
+      "style": {
+        "grow": 1
+      },
+      "props": {
+        "label": {
+          "property": "flashes"
+        }
+      }
+    },
+    "audio": {
+      "type": "use",
+      "doc": "comparison-button",
+      "key": "comparison-audio",
+      "style": {
+        "grow": 1
+      },
+      "props": {
+        "label": {
+          "property": "audio"
+        }
+      }
+    },
+    "close": {
+      "type": "use",
+      "doc": "comparison-button",
+      "key": "comparison-close",
+      "style": {
+        "grow": 1
+      },
+      "props": {
+        "label": "Close"
+      }
+    }
+  }
+}

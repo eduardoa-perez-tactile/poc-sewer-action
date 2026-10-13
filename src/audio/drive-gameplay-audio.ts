@@ -1,5 +1,5 @@
-import { audio, defineSystem, write } from '@gameengine/runtime';
-import { AudioCue, CombatEffect, GameplayAudioState, RestartRequested, WaterEntered } from '../schema.gen.ts';
+import { audio, defineSystem, read, write } from '@gameengine/runtime';
+import { GameFeelComparison, AudioCue, CombatEffect, GameplayAudioState, RestartRequested, WaterEntered } from '../schema.gen.ts';
 
 // Mixer limits also apply across restart: one-shot tails finish naturally (no loops).
 // Explicit buses keep weapons/environment separate from character death vocals.
@@ -14,7 +14,7 @@ export const SOUND_CUES = [
 
 export const DriveGameplayAudio = defineSystem({
   name: 'DriveGameplayAudio', stage: 'LateUpdate',
-  resources: [write(GameplayAudioState)],
+  resources: [write(GameplayAudioState), read(GameFeelComparison)],
   runOn: [AudioCue, CombatEffect, WaterEntered, RestartRequested],
   run(ctx) {
     const state = ctx.resource(GameplayAudioState);
@@ -32,6 +32,7 @@ export const DriveGameplayAudio = defineSystem({
       if (step < state.nextSteps[lane]!) return;
       const cue = SOUND_CUES[lane]!;
       state.nextSteps[lane] = step + cue.cooldownSteps;
+      if (!ctx.is(GameFeelComparison, 'audio', true)) return;
       audio.play(cue.sound, { bus: cue.bus, maxVoices: cue.maxVoices, priority: cue.priority });
     };
     ctx.events.forEach(AudioCue, (cue) => {

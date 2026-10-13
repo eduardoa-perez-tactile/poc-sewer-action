@@ -1,29 +1,31 @@
 import { burstAt, clip2DInfo, defineSystem, ParticleSystem, query, read, RenderTime, write } from '@gameengine/runtime';
-import { FinalEncounter, CombatEffect, CombatVisual, CombatVisualState, RestartRequested } from '../schema.gen.ts';
+import { GameFeelComparison, FinalEncounter, CombatEffect, CombatVisual, CombatVisualState, RestartRequested } from '../schema.gen.ts';
 
 export const DriveCombatEffects = defineSystem({
   name: 'DriveCombatEffects', stage: 'LateUpdate',
   queries: { hosts: query(write(CombatVisual), write(ParticleSystem)), finals: query(read(FinalEncounter)) },
-  resources: [read(RenderTime), write(CombatVisualState)], events: [CombatEffect, RestartRequested],
-  runIf: { any: [{ event: CombatEffect }, { event: RestartRequested }, { resource: CombatVisualState, field: 'active', value: true }] },
+  resources: [read(RenderTime), write(CombatVisualState), read(GameFeelComparison)], events: [CombatEffect, RestartRequested],
+  runIf: { any: [{ changed: GameFeelComparison }, { event: CombatEffect }, { event: RestartRequested }, { resource: CombatVisualState, field: 'active', value: true }] },
   run(ctx, { hosts, finals }) {
     let prioritizeBomb = false;
     for (const chunk of finals.chunks()) for (let row = 0; row < chunk.length; row++) prioritizeBomb ||= chunk.is(FinalEncounter, row, 'phase', 'Bombardment') || chunk.is(FinalEncounter, row, 'phase', 'ExitOpen') || chunk.is(FinalEncounter, row, 'phase', 'Won');
     const restart = ctx.events.count(RestartRequested) > 0;
+    const enabled = ctx.is(GameFeelComparison, 'particles', true);
     const lastStep = ctx.resource(CombatVisualState).lastStep[0]!;
     let newestStep = lastStep;
     const delta = ctx.resource(RenderTime).realDelta[0]!;
     let active = false;
     for (const chunk of hosts.chunks()) for (let row = 0; row < chunk.length; row++) {
       const state = chunk.col(CombatVisual);
-      for (let slot = 0; slot < 4; slot++) state.remaining[row * 4 + slot] = restart ? 0 : Math.max(0, state.remaining[row * 4 + slot]! - delta);
-      if (restart) chunk.setField(ParticleSystem, row, 'effect', null);
+      for (let slot = 0; slot < 4; slot++) state.remaining[row * 4 + slot] = restart || !enabled ? 0 : Math.max(0, state.remaining[row * 4 + slot]! - delta);
+      if (restart || !enabled) chunk.setField(ParticleSystem, row, 'effect', null);
     }
     if (!restart) ctx.events.forEach(CombatEffect, (event) => {
       if (event.step <= lastStep) return;
+      newestStep = Math.max(newestStep, event.step);
+      if (!enabled) return;
       // The final arena reserves its tight draw headroom for bombs and hit/explosion feedback.
       if (prioritizeBomb && event.kind === 'muzzle') return;
-      newestStep = Math.max(newestStep, event.step);
       for (const chunk of hosts.chunks()) for (let row = 0; row < chunk.length; row++) {
         if (!chunk.is(CombatVisual, row, 'kind', event.kind)) continue;
         const state = chunk.col(CombatVisual);

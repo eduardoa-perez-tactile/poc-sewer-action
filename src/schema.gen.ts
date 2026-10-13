@@ -28,6 +28,30 @@ export const schemaIr = {
       "package": "SewerAction"
     },
     {
+      "name": "ComparisonAction",
+      "values": [
+        "open",
+        "close",
+        "baseline",
+        "polished",
+        "shake",
+        "recoil",
+        "particles",
+        "flashes",
+        "audio"
+      ],
+      "package": "SewerAction"
+    },
+    {
+      "name": "ComparisonExposure",
+      "values": [
+        "hidden",
+        "developer",
+        "bonus"
+      ],
+      "package": "SewerAction"
+    },
+    {
       "name": "EnemyState",
       "values": [
         "Idle",
@@ -275,6 +299,13 @@ export const schemaIr = {
           "scalar": "u8",
           "lanes": 1,
           "default": false
+        },
+        {
+          "name": "flashesApplied",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true
         },
         {
           "name": "time",
@@ -794,6 +825,135 @@ export const schemaIr = {
       ],
       "package": "SewerAction",
       "doc": "Deterministic weapon cadence and damage configuration."
+    },
+    {
+      "name": "ComparisonRequested",
+      "kind": "event",
+      "sim": false,
+      "fields": [
+        {
+          "name": "enabled",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "action",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "ComparisonAction"
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "View/controller presentation intent; never consumed by simulation."
+    },
+    {
+      "name": "EnemyFlashState",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "enabled",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Last applied flash choice; global tint refresh only when this choice changes."
+    },
+    {
+      "name": "GameFeelComparison",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "config",
+          "kind": "asset",
+          "scalar": "u32",
+          "lanes": 1,
+          "assetType": "data",
+          "default": "settings/game-feel.json"
+        },
+        {
+          "name": "initialized",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "exposure",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "ComparisonExposure",
+          "default": "hidden"
+        },
+        {
+          "name": "open",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "shake",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "recoil",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": false
+        },
+        {
+          "name": "particles",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true
+        },
+        {
+          "name": "flashes",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true
+        },
+        {
+          "name": "audio",
+          "kind": "bool",
+          "scalar": "u8",
+          "lanes": 1,
+          "default": true
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Presentation choices only. No gameplay system reads this resource."
+    },
+    {
+      "name": "ShotFeedbackState",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "lastStep",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1,
+          "default": 0
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Accepted shot deduplication, including cues suppressed by comparison choices."
     },
     {
       "name": "EnemyBrain",
@@ -2320,6 +2480,47 @@ export const schemaIr = {
   "services": [],
   "data": [
     {
+      "name": "ComparisonDef",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "exposure": {
+            "enum": [
+              "hidden",
+              "developer",
+              "bonus"
+            ]
+          },
+          "shake": {
+            "type": "boolean"
+          },
+          "recoil": {
+            "type": "boolean"
+          },
+          "particles": {
+            "type": "boolean"
+          },
+          "flashes": {
+            "type": "boolean"
+          },
+          "audio": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "exposure",
+          "shake",
+          "recoil",
+          "particles",
+          "flashes",
+          "audio"
+        ],
+        "additionalProperties": false
+      },
+      "package": "SewerAction",
+      "doc": "Shipped product choice. Developer exposure is opened by the optional QA cheat; bonus exposes a launcher."
+    },
+    {
       "name": "SewerLevelDef",
       "schema": {
         "type": "object",
@@ -2491,6 +2692,26 @@ export const EnemyProjectileKind = {
 } as const;
 export type EnemyProjectileKindName = 'Bullet' | 'Bomb';
 
+export const ComparisonAction = {
+  open: 0,
+  close: 1,
+  baseline: 2,
+  polished: 3,
+  shake: 4,
+  recoil: 5,
+  particles: 6,
+  flashes: 7,
+  audio: 8,
+} as const;
+export type ComparisonActionName = 'open' | 'close' | 'baseline' | 'polished' | 'shake' | 'recoil' | 'particles' | 'flashes' | 'audio';
+
+export const ComparisonExposure = {
+  hidden: 0,
+  developer: 1,
+  bonus: 2,
+} as const;
+export type ComparisonExposureName = 'hidden' | 'developer' | 'bonus';
+
 export const EnemyState = {
   Idle: 0,
   Patrol: 1,
@@ -2640,6 +2861,7 @@ export interface SoldierVisualViews {
   clip: Uint32Array;
   previousPosition: Float32Array;
   initialized: Uint8Array;
+  flashesApplied: Uint8Array;
   time: Float32Array;
   frame: Uint32Array;
 }
@@ -2648,11 +2870,12 @@ export interface SoldierVisualValue {
   clip: string | null;
   previousPosition: [number, number];
   initialized: boolean;
+  flashesApplied: boolean;
   time: number;
   frame: number;
 }
 /** Presentation proxy; the actor retains the authoritative attack Clip2D clock. (component, presentation-only) */
-export const SoldierVisual = typeToken<SoldierVisualViews, SoldierVisualValue>('SoldierVisual', 'component', { sig: 'actor:entity:2,clip:asset:1,previousPosition:vec2:2,initialized:bool:1,time:f32:1,frame:u32:1', read: (v: SoldierVisualViews, i: number, o: Record<string, unknown>) => { o.actor = $r.ent(v.actor, i); o.clip = $r.asset(v.clip[i]!); o.previousPosition = $r.lanes(v.previousPosition, i, 2, o.previousPosition); o.initialized = v.initialized[i] !== 0; o.time = v.time[i]; o.frame = v.frame[i]; return o; } });
+export const SoldierVisual = typeToken<SoldierVisualViews, SoldierVisualValue>('SoldierVisual', 'component', { sig: 'actor:entity:2,clip:asset:1,previousPosition:vec2:2,initialized:bool:1,flashesApplied:bool:1,time:f32:1,frame:u32:1', read: (v: SoldierVisualViews, i: number, o: Record<string, unknown>) => { o.actor = $r.ent(v.actor, i); o.clip = $r.asset(v.clip[i]!); o.previousPosition = $r.lanes(v.previousPosition, i, 2, o.previousPosition); o.initialized = v.initialized[i] !== 0; o.flashesApplied = v.flashesApplied[i] !== 0; o.time = v.time[i]; o.frame = v.frame[i]; return o; } });
 
 export interface SoldierVisualStateViews {
   active: Uint8Array;
@@ -2883,6 +3106,60 @@ export interface WeaponValue {
 }
 /** Deterministic weapon cadence and damage configuration. (component, sim) */
 export const Weapon = typeToken<WeaponViews, WeaponValue>('Weapon', 'component', { sig: 'fireIntervalSteps:u32:1,cooldownStepsRemaining:u32:1,projectileSpeed:f32:1,projectileRange:f32:1,recoilSpeed:f32:1,damage:u16:1', read: (v: WeaponViews, i: number, o: Record<string, unknown>) => { o.fireIntervalSteps = v.fireIntervalSteps[i]; o.cooldownStepsRemaining = v.cooldownStepsRemaining[i]; o.projectileSpeed = v.projectileSpeed[i]; o.projectileRange = v.projectileRange[i]; o.recoilSpeed = v.recoilSpeed[i]; o.damage = v.damage[i]; return o; } });
+
+export interface ComparisonRequestedViews {
+  enabled: Uint8Array;
+  action: Uint8Array;
+}
+export interface ComparisonRequestedValue {
+  enabled: boolean;
+  action: ComparisonActionName | number;
+}
+/** View/controller presentation intent; never consumed by simulation. (event, presentation-only) */
+export const ComparisonRequested = typeToken<ComparisonRequestedViews, ComparisonRequestedValue>('ComparisonRequested', 'event', { sig: 'enabled:bool:1,action:enum:1', read: (v: ComparisonRequestedViews, i: number, o: Record<string, unknown>) => { o.enabled = v.enabled[i] !== 0; o.action = $r.enm('ComparisonAction', v.action[i]!); return o; } });
+
+export interface EnemyFlashStateViews {
+  enabled: Uint8Array;
+}
+export interface EnemyFlashStateValue {
+  enabled: boolean;
+}
+/** Last applied flash choice; global tint refresh only when this choice changes. (resource, presentation-only) */
+export const EnemyFlashState = typeToken<EnemyFlashStateViews, EnemyFlashStateValue>('EnemyFlashState', 'resource', { sig: 'enabled:bool:1', read: (v: EnemyFlashStateViews, i: number, o: Record<string, unknown>) => { o.enabled = v.enabled[i] !== 0; return o; } });
+
+export interface GameFeelComparisonViews {
+  config: Uint32Array;
+  initialized: Uint8Array;
+  exposure: Uint8Array;
+  open: Uint8Array;
+  shake: Uint8Array;
+  recoil: Uint8Array;
+  particles: Uint8Array;
+  flashes: Uint8Array;
+  audio: Uint8Array;
+}
+export interface GameFeelComparisonValue {
+  config: string | null;
+  initialized: boolean;
+  exposure: ComparisonExposureName | number;
+  open: boolean;
+  shake: boolean;
+  recoil: boolean;
+  particles: boolean;
+  flashes: boolean;
+  audio: boolean;
+}
+/** Presentation choices only. No gameplay system reads this resource. (resource, presentation-only) */
+export const GameFeelComparison = typeToken<GameFeelComparisonViews, GameFeelComparisonValue>('GameFeelComparison', 'resource', { sig: 'config:asset:1,initialized:bool:1,exposure:enum:1,open:bool:1,shake:bool:1,recoil:bool:1,particles:bool:1,flashes:bool:1,audio:bool:1', read: (v: GameFeelComparisonViews, i: number, o: Record<string, unknown>) => { o.config = $r.asset(v.config[i]!); o.initialized = v.initialized[i] !== 0; o.exposure = $r.enm('ComparisonExposure', v.exposure[i]!); o.open = v.open[i] !== 0; o.shake = v.shake[i] !== 0; o.recoil = v.recoil[i] !== 0; o.particles = v.particles[i] !== 0; o.flashes = v.flashes[i] !== 0; o.audio = v.audio[i] !== 0; return o; } });
+
+export interface ShotFeedbackStateViews {
+  lastStep: Uint32Array;
+}
+export interface ShotFeedbackStateValue {
+  lastStep: number;
+}
+/** Accepted shot deduplication, including cues suppressed by comparison choices. (resource, presentation-only) */
+export const ShotFeedbackState = typeToken<ShotFeedbackStateViews, ShotFeedbackStateValue>('ShotFeedbackState', 'resource', { sig: 'lastStep:u32:1', read: (v: ShotFeedbackStateViews, i: number, o: Record<string, unknown>) => { o.lastStep = v.lastStep[i]; return o; } });
 
 export interface EnemyBrainViews {
   state: Uint8Array;
@@ -3591,6 +3868,19 @@ export interface PlayerStepInputValue {
 }
 /** Unconditionally overwritten input sample consumed in the same fixed step. (resource, sim) */
 export const PlayerStepInput = typeToken<PlayerStepInputViews, PlayerStepInputValue>('PlayerStepInput', 'resource', { sig: 'jumpRequested:bool:1,dashRequested:bool:1', read: (v: PlayerStepInputViews, i: number, o: Record<string, unknown>) => { o.jumpRequested = v.jumpRequested[i] !== 0; o.dashRequested = v.dashRequested[i] !== 0; return o; } });
+
+/** Shipped product choice. Developer exposure is opened by the optional QA cheat; bonus exposes a launcher. */
+export type ComparisonDefData = {
+  exposure: "hidden" | "developer" | "bonus";
+  shake: boolean;
+  recoil: boolean;
+  particles: boolean;
+  flashes: boolean;
+  audio: boolean;
+};
+/** A loaded ComparisonDef as `loadData` returns it (frozen). */
+export type ReadonlyComparisonDefData = DataRecord<ComparisonDefData>;
+export const ComparisonDef = dataToken<ComparisonDefData>('ComparisonDef');
 
 /** Complete sewer route, spawn manifest, checkpoints and issue-25 transition hook. */
 export type SewerLevelDefData = {

@@ -1,14 +1,14 @@
 import { clip2DInfo, defineSystem, query, RenderTime, read, Sprite, SpriteAnimation, VisualOffset, write } from '@gameengine/runtime';
-import { RestartRequested, WaterEntered, WaterSplash, WaterSplashState } from '../schema.gen.ts';
+import { GameFeelComparison, RestartRequested, WaterEntered, WaterSplash, WaterSplashState } from '../schema.gen.ts';
 
 export const DriveWaterSplash = defineSystem({
   name: 'DriveWaterSplash',
   stage: 'LateUpdate',
   query: query(write(WaterSplash), write(Sprite), write(SpriteAnimation), write(VisualOffset)),
-  resources: [read(RenderTime), write(WaterSplashState)],
+  resources: [read(RenderTime), write(WaterSplashState), read(GameFeelComparison)],
   events: [WaterEntered, RestartRequested],
   runIf: { any: [
-    { event: WaterEntered }, { event: RestartRequested },
+    { changed: GameFeelComparison }, { event: WaterEntered }, { event: RestartRequested },
     { resource: WaterSplashState, field: 'active', value: true },
   ] },
   run(ctx, slots) {
@@ -17,10 +17,13 @@ export const DriveWaterSplash = defineSystem({
     for (const chunk of slots.chunks()) {
       const remaining = chunk.col(WaterSplash).secondsRemaining;
       for (let row = 0; row < chunk.length; row++) {
-        if (restart) {
+        if (restart || !ctx.is(GameFeelComparison, 'particles', true)) {
           remaining[row] = 0;
           chunk.setField(Sprite, row, 'visible', false);
           chunk.setField(SpriteAnimation, row, 'playing', false);
+          ctx.events.forEach(WaterEntered, (entry) => {
+            if (entry.entryStep > chunk.col(WaterSplash).lastEntryStep[row]!) chunk.col(WaterSplash).lastEntryStep[row] = entry.entryStep;
+          });
           continue;
         }
         if (remaining[row]! > 0) {

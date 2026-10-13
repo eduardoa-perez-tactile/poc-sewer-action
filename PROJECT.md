@@ -141,3 +141,30 @@ blocker while development and verification use the desktop host.
 - Inspection/tuning and measurement limits: `docs/level/ISSUE-25.md`. Real phone GPU/thermal,
   cold loading and idle skipping remain unmeasured; Hermes #6, browser packaging and the
   missing Android package template remain separate limits.
+
+## Optional presentation comparison (issue #26)
+
+- Typed `settings/game-feel.json` chooses hidden/developer/bonus exposure in every build. Default
+  hidden retains prior presentation; bonus exposes the MVC ribbon, developer uses optional
+  `feel.open` QA cheat. Baseline/Polished and five independent choices affect only LateUpdate:
+  shot shake, camera kick, fixed combat/water particles, soldier flashes and consequential audio.
+  Real weapon recoil, input mapping and every simulation rule remain unchanged.
+- Desired-state intents are idempotent. Disabled effects clear finite hosts and consume timestamps;
+  re-enabling cannot replay stale feedback. Audio OFF skips new cues; existing one-shot tails
+  finish within 1.104 seconds (stated in the panel); bus/settings ownership and nine-voice caps stay
+  intact. Static model/layout and finite feedback settle; no continuous panel animation is added.
+- 138 V8 tests cover both modes, intents/layers, eight screen extremes, voices, idle state and full
+  route render budgets. All 111 earlier T0 traces are identical; the 706-step Polished route also
+  matches the original trace at every step. Both modes pin rolling digest `8c00b28d`. Existing
+  replays, goldens, pools, atlases and gameplay caps remain unchanged. Comparison has its own
+  recorded flow/profile; fresh pipeline union adds Text (five records per tier), zero play-time
+  creation. Draws: fixture 9/10, optional open Polished full route 12/12, default complete 10/10.
+- One relative release desktop/no-GPU V8 sample before/hidden/open Polished: sim step p95
+  0.696/0.684/0.729 ms, mixed paused presentation p95 0.370/0.397/0.433 ms, RSS
+  72.19/74.81/74.02 MiB, heap 9.12/10.59/8.42 MiB; zero hitch steps or GC pauses >4 ms.
+  Settled adapters report zero time; ComparisonUI 0.0295 ms. These are relative host numbers, not
+  phone GPU/thermal/idle-skip evidence. Reported residency stays 2.77 MiB/192 MiB plus font/glyph
+  bytes omitted from that engine total (~0.353 MiB); audio remains 297,504 bytes/32 MiB.
+- Architecture has no must/should findings; performance has no blocker and notes tight draw
+  headroom. Inspect/tune through `docs/presentation/ISSUE-26.md`. Hermes #6, browser packaging,
+  real phone measurement and the missing Android package template remain separate limits.

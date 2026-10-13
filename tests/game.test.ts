@@ -2,6 +2,7 @@ import { expect, renderTest, type TestWorld, worldTest } from './first-room-test
 import { ActionState, Bounds2D, Camera, clip2DInfo, Disabled, LoadingResumed, LocalTransform, NavGrid, pool, Sprite, SpriteAnimation, Tilemap, VisualOffset, WorldView } from '@gameengine/runtime';
 import {
   CameraFeedback,
+  GameFeelComparison,
   CameraFollowState,
   GameState,
   GameplayPresentation,
@@ -1159,6 +1160,7 @@ worldTest('a settled camera immediately re-clamps after a live safe-area resize'
 worldTest('presentation camera feedback is invisible to simulation hashes', async ({ world, step }) => {
   await step(2);
   const hash = world.hash();
+  world.setResource(GameFeelComparison, { shake: true, recoil: true });
   world.setResource(CameraFeedback, { active: true, bump: [0.7, -0.2], shake: 0.4, shakeTime: 0.3 });
   world.setResource(CameraFollowState, { center: [1.25, -0.5], target: [1.25, -0.5], lookAhead: 1, settled: true });
   expect(world.hash()).toBe(hash);

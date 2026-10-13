@@ -5,6 +5,7 @@ export const SoldierVisual = component('SoldierVisual', {
   clip: asset('clip2d', { default: 'art/soldier/idle.clip2d.json' }),
   previousPosition: vec2(),
   initialized: bool({ default: false }),
+  flashesApplied: bool({ default: true }),
   time: f32({ default: 0 }),
   frame: u32({ default: 0 }),
 }, { sim: false, doc: 'Presentation proxy; the actor retains the authoritative attack Clip2D clock.' });

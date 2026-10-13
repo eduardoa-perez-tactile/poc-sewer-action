@@ -25,5 +25,13 @@
     "budgets": [
       "complete-sewer.json"
     ]
+  },
+  "scenes/comparison.scene.json": {
+    "replays": [
+      "tests/replays/comparison_panel_replay_warms_baseline_polished_and_every_presentation_layer.greplay"
+    ],
+    "budgets": [
+      "comparison.json"
+    ]
   }
 }

@@ -48,3 +48,7 @@ export { RequestCheckpointRestart } from './game-flow/request-checkpoint-restart
 
 export { AdvanceFinalEncounter } from './game-flow/advance-final-encounter.ts';
 export { DriveFinalCues } from './presentation/drive-final-cues.ts';
+
+export { ApplyComparison } from './comparison/apply-comparison.ts';
+export { ComparisonUI } from './comparison/comparison.ui.tsx';
+export { DriveShotFeedback } from './comparison/drive-shot-feedback.ts';
