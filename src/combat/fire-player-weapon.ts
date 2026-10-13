@@ -1,5 +1,5 @@
 import { defineSystem, LocalTransform, pool, query, read, write } from '@gameengine/runtime';
-import { CombatEffect, GameState, Player, PlayerActionState, PlayerMotion, Projectile, ProjectilePoolState, Weapon } from '../schema.gen.ts';
+import { AudioCue, CombatEffect, GameState, Player, PlayerActionState, PlayerMotion, Projectile, ProjectilePoolState, Weapon } from '../schema.gen.ts';
 import { PLAYER_PROJECTILE_POOL } from './warm-projectile-pool.ts';
 
 const MUZZLE_FORWARD = 0.62;
@@ -38,6 +38,7 @@ export const FirePlayerWeapon = defineSystem({
           damage: weapon.damage[row]!,
           owner: chunk.entity(row),
         });
+        ctx.events.emit(AudioCue, { kind: 'Shot', step: ctx.step });
         ctx.events.emit(CombatEffect, { kind: 'muzzle', position: [x, y], step: ctx.step });
         weapon.cooldownStepsRemaining[row] = weapon.fireIntervalSteps[row]!;
         motion.horizontalVelocity[row] = motion.horizontalVelocity[row]! - direction * weapon.recoilSpeed[row]!;

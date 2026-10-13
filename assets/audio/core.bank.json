@@ -1,0 +1,10 @@
+{
+  "sounds": [
+    "audio/sfx/shot",
+    "audio/sfx/laser",
+    "audio/sfx/player-death",
+    "audio/sfx/enemy-death",
+    "audio/sfx/explosion",
+    "audio/sfx/water-splash"
+  ]
+}

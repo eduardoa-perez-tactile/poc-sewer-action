@@ -75,3 +75,18 @@ blocker while development and verification use the desktop host.
   p95 1.183 ms, RSS 86.1 MiB, heap 9.36 MiB; phone-low cooked residency is 2.54 MiB. Real phone
   GPU/thermal/idle-skipping measurements remain outstanding; Hermes #6 and web packaging remain
   separate blockers.
+
+## Consequential audio (issue #23)
+
+- Six boot-preloaded mono effects route weapons/environment to SFX and death vocals to Voice.
+  Accepted gameplay facts feed one event-only audio adapter; six fixed presentation lanes
+  suppress timestamp duplicates and cooldown cues. Sim never reads mixer state.
+- Per-sound voice caps sum to 9, below phone-low's 12. Restart cancels same-frame/stale cues;
+  finite existing tails finish within 1.104 seconds under the same caps. Idle audio does no work.
+- The supplied 75-second stereo laser recording remains source-only; a derived 0.35-second
+  mono cue bounds its playback and memory. Proven preload, derivation, routing, cooldowns,
+  reports and device limitations are documented in `docs/audio/ISSUE-23.md`.
+- Phone-low decoded audio is 297,504 bytes / 32 MiB; total cooked residency 2.771 MiB / 192 MiB.
+  All 87 prior hash traces, replays, goldens, atlases, pools and pipeline warm-ups are preserved.
+  V8 and cooked phone-low checks pass; Hermes #6, browser packaging and the missing Android
+  package template remain separate verification limits.

@@ -3,6 +3,16 @@
   "package": "SewerAction",
   "enums": [
     {
+      "name": "AudioCueKind",
+      "values": [
+        "Shot",
+        "Laser",
+        "PlayerDeath",
+        "EnemyDeath"
+      ],
+      "package": "SewerAction"
+    },
+    {
       "name": "EnemyProjectileKind",
       "values": [
         "Bullet",
@@ -279,6 +289,49 @@
       ],
       "package": "SewerAction",
       "doc": "Stops the animation adapter between movement, combat and settling bursts."
+    },
+    {
+      "name": "AudioCue",
+      "kind": "event",
+      "sim": false,
+      "fields": [
+        {
+          "name": "kind",
+          "kind": "enum",
+          "scalar": "u8",
+          "lanes": 1,
+          "enumName": "AudioCueKind"
+        },
+        {
+          "name": "step",
+          "kind": "u32",
+          "scalar": "u32",
+          "lanes": 1
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Accepted gameplay consequence, write-only from sim to audio."
+    },
+    {
+      "name": "GameplayAudioState",
+      "kind": "resource",
+      "sim": false,
+      "fields": [
+        {
+          "name": "lastSteps",
+          "kind": "array",
+          "scalar": "u32",
+          "lanes": 6
+        },
+        {
+          "name": "nextSteps",
+          "kind": "array",
+          "scalar": "u32",
+          "lanes": 6
+        }
+      ],
+      "package": "SewerAction",
+      "doc": "Fixed-step cue deduplication and absolute cooldown deadlines; never read by gameplay."
     },
     {
       "name": "ActorDied",
